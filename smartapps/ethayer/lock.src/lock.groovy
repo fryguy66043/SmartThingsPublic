@@ -120,7 +120,8 @@ def notificationPage() {
   dynamicPage(name: 'notificationPage', title: 'Notification Settings') {
     section {
       paragraph 'Some options only work on select locks'
-      if (!state.supportsKeypadData) {
+//jdf      if (!state.supportsKeypadData) {
+      if (false) {
         paragraph 'This lock only reports manual messages.\n It does not support code on lock or lock on keypad.'
       }
       if (phone == null && !notification && !recipients) {
@@ -137,7 +138,8 @@ def notificationPage() {
         if (phone != null || notification || recipients) {
           input(name: 'notifyManualLock', title: 'On Manual Turn (Lock)', type: 'bool', required: false, image: 'https://images.lockmanager.io/app/v1/images/lock.png')
           input(name: 'notifyManualUnlock', title: 'On Manual Turn (Unlock)', type: 'bool', required: false, image: 'https://images.lockmanager.io/app/v1/images/unlock-alt.png')
-          if (state.supportsKeypadData) {
+//jdf          if (state.supportsKeypadData) {
+          if (true) {
             input(name: 'notifyKeypadLock', title: 'On Keypad Press to Lock', type: 'bool', required: false, image: 'https://images.lockmanager.io/app/v1/images/unlock-alt.png')
           }
         }
@@ -157,7 +159,8 @@ def askAlexaPage() {
     section('Que Messages with the Ask Alexa app') {
       input(name: 'alexaManualLock', title: 'On Manual Turn (Lock)', type: 'bool', required: false, image: 'https://images.lockmanager.io/app/v1/images/lock.png')
       input(name: 'alexaManualUnlock', title: 'On Manual Turn (Unlock)', type: 'bool', required: false, image: 'https://images.lockmanager.io/app/v1/images/unlock-alt.png')
-      if (state.supportsKeypadData) {
+//jdf      if (state.supportsKeypadData) {
+      if (true) {
         input(name: 'alexaKeypadLock', title: 'On Keypad Press to Lock', type: 'bool', required: false, image: 'https://images.lockmanager.io/app/v1/images/unlock-alt.png')
       }
     }

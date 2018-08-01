@@ -76,7 +76,7 @@ def lockHandler(evt) {
     def method = ""
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     
-	log.debug "name: ${evt.name} / displayName: ${evt.displayName} / value: ${evt.value} / data: ${evt?.data} / size: ${evt.data.size()}"
+	log.debug "name: ${evt.name} / displayName: ${evt.displayName} / value: ${evt.value} / data: ${evt?.data} / size: ${evt?.data?.size()}"
 
 	index = dataString.indexOf("codeName")
 	if (index > -1) {
