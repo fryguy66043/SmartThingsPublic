@@ -58,13 +58,14 @@ def initialize() {
 
 def appHandler(evt) {
 	log.debug "appHandler: ${evt.value}"
-
+/*
 	def lockCommands = myLock.supportedCommands
     log.debug "Commands: ${lockCommands}"
     def caps = myLock.capabilities
     caps.commands.each { comm ->
     	log.debug "Command Name: ${comm.name}"
     }
+*/    
 }
 
 def lockHandler(evt) {

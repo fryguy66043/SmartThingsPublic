@@ -170,6 +170,8 @@ def appHandler(evt) {
 //	log.debug "thermostat.name = ${thermostat.name}"
 //    hvacSensor.setMyThermostatName(thermostat.name)
 
+//	hvacSensor.resetMonthlyCycles()
+/*
     if (hvacSensor) {
     	hvacSensor.refresh()
     	def hvacMode = hvacSensor.currentValue("mode") 
@@ -191,6 +193,7 @@ def appHandler(evt) {
 	        hvacSensor.setPointTemp(thermostat.currentValue("heatingSetpoint"))
         }
     }
+*/    
 	log.debug "lowTempUpdate = ${lowTempUpdate} / lowTempValue = ${lowTempValue} / highTempUpdate = ${highTempUpdate} / highTempValue = ${highTempValue} / tempDay = ${tempDay}"
     if ((lowTempUpdate || highTempUpdate) && tempDay != "None") {
     	log.debug "Calling tempUpdate()"
@@ -199,17 +202,23 @@ def appHandler(evt) {
 	evaluate(evt)
 //	log.debug "Reset time: ${resetTime}"
 
-//	sendWeeklyUpdate(evt)
-//    sendYearlyUpdate(evt)
+	sendWeeklyUpdate(evt)
+    sendYearlyUpdate(evt)
 }
 
 def resetHandler() {
 	Calendar localCalendar = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
 	int day = localCalendar.get(Calendar.DAY_OF_WEEK)
+    int dayOfMonth = localCalendar.get(Calendar.DAY_OF_MONTH)
 	
     state.windowReminder = false
     state.windowReminderDateTime = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
-    hvacSensor.resetCycles()
+    if (dayOfMonth == 1) {
+    	hvacSensor.resetMonthlyCycles()
+    }
+    else {
+	    hvacSensor.resetCycles()
+    }
 
 	if (localCalendar.get(Calendar.YEAR) != state.currYearDisp) {
 		state.prevYearDisp = state.currYearDisp
