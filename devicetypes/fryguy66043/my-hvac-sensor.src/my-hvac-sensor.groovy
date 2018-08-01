@@ -50,7 +50,8 @@ metadata {
         command "setInsideTemp"
         command "setOutsideTemp"
         command "setPointTemp"
-        command "resetCycles"
+        command "resetDailyCycles"
+        command "resetMonthlyCycles"
         command "reset"
 	}
 
@@ -132,7 +133,7 @@ def parse(String description) {
 	log.trace "parse($description)"
 }
 
-def resetCycles() {
+def resetDailyCycles() {
 	log.debug "resetting cycles for today..."
     def cycleCnt = 0
     def cycleTodayCnt = 0
@@ -141,10 +142,18 @@ def resetCycles() {
     sendEvent(name: "heatCyclesToday", value: 0)
 
     cycleCnt = (device.currentValue("coolCycles")) ? device.currentValue("coolCycles") : 0
-    sendEvent(name: "cool", value: "Today: ${cycleTodayCnt} / Total: ${cycleCnt}\nLast Cycle Start: N/A")
+    sendEvent(name: "cool", value: "Today: ${cycleTodayCnt} / Month: ${cycleCnt}\nLast Cycle Start: N/A")
     cycleCnt = (device.currentValue("heatCycles")) ? device.currentValue("heatCycles") : 0
-    sendEvent(name: "heat", value: "Today: ${cycleTodayCnt} / Total: ${cycleCnt}\nLast Cycle Start: N/A")                    
+    sendEvent(name: "heat", value: "Today: ${cycleTodayCnt} / Month: ${cycleCnt}\nLast Cycle Start: N/A")                    
     refresh()
+}
+
+def resetMonthlyCycles() {
+	log.debug "resetting cycles for the month..."
+    
+    sendEvent(name: "coolCycles", value: 0)
+    sendEvent(name: "heatCycles", value: 0)
+    resetDailyCycles()
 }
 
 def setMyThermostatName(tName) {

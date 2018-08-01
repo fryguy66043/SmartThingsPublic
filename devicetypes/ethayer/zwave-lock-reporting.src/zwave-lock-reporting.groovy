@@ -73,12 +73,15 @@ metadata {
 		valueTile("battery", "device.battery", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
 			state "battery", label:'${currentValue}% battery', unit:""
 		}
+        standardTile("nothing", "device.nothing", decoration: "flat", width: 2, height: 2) {
+        	state "default", label: 'Nothing'
+        }
 		standardTile("refresh", "device.lock", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
 			state "default", label:'', action:"refresh.refresh", icon:"st.secondary.refresh"
 		}
 
 		main "toggle"
-		details(["toggle", "lock", "unlock", "battery", "refresh"])
+		details(["toggle", "lock", "unlock", "battery", "nothing", "refresh"])
 	}
 }
 
