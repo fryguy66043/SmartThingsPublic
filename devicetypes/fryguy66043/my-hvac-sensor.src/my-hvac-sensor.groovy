@@ -108,6 +108,8 @@ def installed() {
 	log.trace "Executing 'installed'"
     sendEvent(name: "heatCycles", value: 0)
     sendEvent(name: "coolCycles", value: 0)
+    sendEvent(name: "coolCyclesToday", value: 0)
+    sendEvent(name: "heatCyclesToday", value: 0)
 	initialize()
 }
 
@@ -267,7 +269,7 @@ def setOperatingState(val) {
     if (coolCycleCnt == 0 || coolCycleTodayCnt == 0) {
         sendEvent(name: "coolCycles", value: coolCycleCnt)
         sendEvent(name: "coolCyclesToday", value: coolCycleTodayCnt)
-        sendEvent(name: "cool", value: "Today: ${coolCycleTodayCnt} / Total: ${coolCycleCnt}\nLast Cycle Start: N/A") //${date}")
+        sendEvent(name: "cool", value: "Today: ${coolCycleTodayCnt} / Month: ${coolCycleCnt}\nLast Cycle Start: N/A") //${date}")
     }
     heatCycleCnt = (device.currentValue("heatCycles")) ? device.currentValue("heatCycles") : 0
     heatCycleTodayCnt = (device.currentValue("heatCyclesToday")) ? device.currentValue("heatCyclesToday") : 0
@@ -275,7 +277,7 @@ def setOperatingState(val) {
     	log.debug "Setting heat cycle values"
         sendEvent(name: "heatCycles", value: heatCycleCnt)
         sendEvent(name: "heatCyclesToday", value: heatCycleTodayCnt)
-        sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Total: ${heatCycleCnt}\nLast Cycle Start: N/A")                    
+        sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: N/A")                    
     }
     
     if (val != device.currentValue("hvacOS")) {
@@ -287,7 +289,7 @@ def setOperatingState(val) {
                         if (!device.currentValue("coolCycleStop")) {
                             sendEvent(name: "coolCycleStop", value: date)
                             cycleStart = device.currentValue("coolCycleStart")
-                            sendEvent(name: "cool", value: "Today: ${coolCycleTodayCnt} / Total: ${coolCycleCnt}\nLast Cycle Start: ${cycleStart}\nLast Cycle Stop: ${date}")
+                            sendEvent(name: "cool", value: "Today: ${coolCycleTodayCnt} / Month: ${coolCycleCnt}\nLast Cycle Start: ${cycleStart}\nLast Cycle Stop: ${date}")
                         }
                         break
                     case "heat":
@@ -295,7 +297,7 @@ def setOperatingState(val) {
                         if (!device.currentValue("heatCycleStop")) {
                             sendEvent(name: "heatCycleStop", value: date)
                             cycleStart = device.currentValue("heatCycleStart")
-                            sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Total: ${heatCycleCnt}\nLast Cycle Start: ${cycleStart}\nLast Cycle Stop: ${date}")
+                            sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${cycleStart}\nLast Cycle Stop: ${date}")
                         }
                         break
                     case "emergencyHeat":
@@ -303,7 +305,7 @@ def setOperatingState(val) {
                         if (!device.currentValue("heatCycleStop")) {
                             sendEvent(name: "heatCycleStop", value: date)
                             cycleStart = device.currentValue("heatCycleStart")
-                            sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Total: ${heatCycleCnt}\nLast Cycle Start: ${cycleStart}\nLast Cycle Stop: ${date}")
+                            sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${cycleStart}\nLast Cycle Stop: ${date}")
                         }
                         break
                     case "off":
@@ -324,7 +326,7 @@ def setOperatingState(val) {
                         sendEvent(name: "coolCyclesToday", value: coolCycleTodayCnt + 1)
                         sendEvent(name: "coolCycleStart", value: date)
                         sendEvent(name: "coolCycleStop", value: "")
-                        sendEvent(name: "cool", value: "Today: ${coolCycleTodayCnt + 1} / Total: ${coolCycleCnt + 1}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")
+                        sendEvent(name: "cool", value: "Today: ${coolCycleTodayCnt + 1} / Month: ${coolCycleCnt + 1}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")
                         break
                     case "off":
                         sendEvent(name: "hvac", value: "off")
@@ -342,7 +344,7 @@ def setOperatingState(val) {
                         heatCycleTodayCnt = (device.currentValue("heatCyclesToday")) ? device.currentValue("heatCyclesToday") : 0
                         sendEvent(name: "heatCycles", value: heatCycleCnt + 1)
                         sendEvent(name: "heatCyclesToday", value: heatCycleTodayCnt + 1)
-                        sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt + 1} / Total: ${heatCycleCnt + 1}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
+                        sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt + 1} / Month: ${heatCycleCnt + 1}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
                     case "emergencyHeat":
                         sendEvent(name: "hvac", value: "heatHeating")
@@ -350,7 +352,7 @@ def setOperatingState(val) {
                         heatCycleTodayCnt = (device.currentValue("heatCyclesToday")) ? device.currentValue("heatCyclesToday") : 0
                         sendEvent(name: "heatCycles", value: heatCycleCnt + 1)
                         sendEvent(name: "heatCyclesToday", value: heatCycleTodayCnt + 1)
-                        sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt + 1} / Total: ${heatCycleCnt + 1}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
+                        sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt + 1} / Month: ${heatCycleCnt + 1}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
                     case "off":
                         sendEvent(name: "hvac", value: "off")

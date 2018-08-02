@@ -25,6 +25,7 @@ metadata {
 		capability "Health Check"
 		
         attribute "update", "string"
+        attribute "reportRequest", "string"
         attribute "trackingSince", "string"
         attribute "name", "string"
         attribute "trackingList", "string"
@@ -60,7 +61,7 @@ metadata {
             	attributeState "lastLocationDisp", label: '${currentValue}'
             }
         }
-		valueTile("locationDisp", "device.location", width: 6, height: 2) {
+		valueTile("location", "device.location", width: 6, height: 2) {
 			state("default", label:'${currentValue}')
 		}
         valueTile("since", "device.since", width: 6, height: 2) {
@@ -71,11 +72,11 @@ metadata {
         }
 
 		standardTile("refresh", "device.refresh", decoration: "flat", width: 2, height: 2) {
-			state "default", label: "", action: "refresh", icon:"st.secondary.refresh"
+			state "default", label: '', action: "refresh", icon:"st.secondary.refresh"
 		}
         
 		main "trackingTile"
-		details(["trackingTile", "location", "since", "tracking"])
+		details(["trackingTile", "location", "since", "tracking", "refresh"])
 	}
 }
 
@@ -162,7 +163,8 @@ private initialize() {
 }
 
 def refresh() {
-	log.debug "switch: request refresh()"
+	log.debug "Request refresh()"
 	def timestamp = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
     sendEvent(name: "update", value: timestamp)
+    sendEvent(name: "reportRequest", value: timestamp)
 }
