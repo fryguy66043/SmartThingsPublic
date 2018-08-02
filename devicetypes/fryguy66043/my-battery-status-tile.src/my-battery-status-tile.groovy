@@ -107,6 +107,7 @@ def setBatteryAlertLevel(val) {
 def setDeviceList(deviceList) {
 	log.debug "setDeviceList(${deviceList})"
 	if (deviceList) {
+    	ok()
     	sendEvent(name: "monitoredDevices", value: deviceList)
         sendEvent(name: "deviceStatusList", value: deviceList)
     }
@@ -122,7 +123,7 @@ def setDeviceAlertList(deviceList) {
 	 def alertDeviceList = "${device.currentValue("deviceAlertList")}"
     
     if (deviceList) {
-    	sendEvent(name: "switch", value: "alert")
+    	alert()
         if (deviceList != alertDeviceList) {
             sendEvent(name: "deviceAlertList", value: deviceList)
             sendEvent(name: "alertedDevices", value: "${date}\n${deviceList}")
@@ -130,7 +131,7 @@ def setDeviceAlertList(deviceList) {
     }
     else if (device.currentValue("deviceAlertList") != "None") {
     	log.debug "No unsecure devices..."
-        sendEvent(name: "switch", value: "ok")
+        ok()
     	sendEvent(name: "deviceAlertList", value: "None")
         sendEvent(name: "alertedDevices", value: "${date}\nNone")
     }
