@@ -89,6 +89,7 @@ def updated() {
 def initialize() {
     subscribe(app, appHandler)
     subscribe(homeSwitch, "switch", switchHandler)
+    subscribe(trackingSensor, "reportRequest", reportHandler)
     schedule(resetTime, resetHandler)
     if (loc2Switch) {
     	subscribe(loc2Switch, "switch", switchHandler)
@@ -117,7 +118,6 @@ def initialize() {
     if (loc10Switch) {
     	subscribe(loc10Switch, "switch", switchHandler)
     }
-    subscribe(trackingSensor, "update", trackingSensorHandler)
 }
 
 def appHandler(evt) {
@@ -133,23 +133,51 @@ def appHandler(evt) {
 //	    state.trackingDays = ["","","","","","",""]
 //*********************************************************************************    
 
+	reportHandler("Touch")
+}
+
+def reportHandler(evt) {
+	log.debug "reportHandler(${evt.value})"
+    Calendar localCalendar = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
+	int day = localCalendar.get(Calendar.DAY_OF_WEEK)
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+    def calDate = new Date()
+    def newDate = new Date()
+    log.debug "calDate = ${calDate.format("MM/dd", location.timeZone)}"
+    def dates = ["","","","","","",""]
+    use(groovy.time.TimeCategory) {
+    	log.debug "day = ${day}"
+    	for (int x = 0; x < 7; x++) {
+        	if (x+1 == day) {
+            	log.debug "today == ${x}"
+            	dates[x] = "${calDate.format("MM/dd", location.timeZone)}"
+            }
+            else if (x+1 < day) {
+            	newDate = calDate - (day-(x+1))
+            	dates[x] = newDate.format("MM/dd", location.timeZone)
+            }
+            else if (x+1 > day) {
+            	newDate = calDate - (day + (6 - x))
+            	dates[x] = newDate.format("MM/dd", location.timeZone)
+            }
+            log.debug "dates[${x}] == ${dates[x]}"
+        }
+    }
     def msg = "Tracking Data for: ${personName}\n${date}\n\n" +
-    	"SUN: ${state.trackingDays[0]}\n\n" +
-        "MON: ${state.trackingDays[1]}\n\n" +
-        "TUE: ${state.trackingDays[2]}\n\n" +
-        "WED: ${state.trackingDays[3]}\n\n" +
-        "THU: ${state.trackingDays[4]}\n\n" +
-        "FRI: ${state.trackingDays[5]}\n\n" +
-        "SAT: ${state.trackingDays[6]}"
+    	"SUN (${dates[0]}):\n${state.trackingDays[0]}\n\n" +
+        "MON (${dates[1]}):\n${state.trackingDays[1]}\n\n" +
+        "TUE (${dates[2]}):\n${state.trackingDays[2]}\n\n" +
+        "WED (${dates[3]}):\n${state.trackingDays[3]}\n\n" +
+        "THU (${dates[4]}):\n${state.trackingDays[4]}\n\n" +
+        "FRI (${dates[5]}):\n${state.trackingDays[5]}\n\n" +
+        "SAT (${dates[6]}):\n${state.trackingDays[6]}"
         
     if (phone) {
     	sendSms(phone, msg)
     }
-    trackingSensor.setTrackingList("${getDay(day)}:\n${state.trackingDays[day - 1]}")
-}
-
-def trackingSensorHandler(evt) {
+    if (sendPush) {
+    	sendPush(msg)
+    }
 }
 
 def resetHandler(evt) {
