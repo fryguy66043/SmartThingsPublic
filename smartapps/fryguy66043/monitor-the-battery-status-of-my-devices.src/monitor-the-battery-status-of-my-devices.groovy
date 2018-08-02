@@ -1,6 +1,10 @@
 /**
  *  Monitor the battery status of my devices
  *
+ *  This SmartApp allows you to monitor the battery status of all battery-operated devices.  You define an alert threshold and it will alert you via push or text
+ *  if the threshold is reached.  You can also optionally include the "My Battery Status Tile" to provide a visual indicator of battery levels and easily adjust
+ *  alert-level setting.
+ *
  *  Copyright 2018 Jeffrey Fry
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -13,6 +17,7 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  */
+ 
 definition(
     name: "Monitor the Battery Status of My Devices",
     namespace: "FryGuy66043",
@@ -25,6 +30,9 @@ definition(
 
 
 preferences {
+	section("Battery Status Tile?") {
+    	input "batteryTile", "device.myBatteryStatusTile", required: false, title: "Use Jeff's Battery Status Tile?"
+    }
 	section("Monitor These Devices With Batteries:"){
     	input "batteries", "capability.battery", required: true, multiple: true
     }
@@ -57,25 +65,58 @@ def updated() {
 }
 
 def initialize() {
+	log.debug "Initializing..."
 	subscribe(batteries, "battery", batteryHandler)
+    subscribe(batteryTile, "update", batteryTileUpdateHandler)
+    subscribe(batteryTile, "batteryAlertLevel", batteryAlertLevelHandler)
     subscribe(app, appHandler)
+
+	state.batteryAlertLevel = percentage
+    if (batteryTile) {
+    	batteryHandler()
+    }
+}
+
+def batteryAlertLevelHandler(evt) {
+	log.debug "batteryAlertLevelHandler(${evt?.value})"
+    if (batteryTile.currentValue("batteryAlertLevel") != state.batteryAlertLevel) {
+    	state.batteryAlertLevel = batteryTile.currentValue("batteryAlertLevel")
+        batteryHandler()
+    }
+}
+
+def batteryTileUpdateHandler(evt) {
+	log.debug "batteryTileUpdateHandler(${evt?.value})"
+    batteryHandler(evt)
 }
 
 def batteryHandler(evt) {
-    def msg = "${location} Battery % Is At/Below Threshold (${percentage}%)!\n\nBattery Status:\n"
+	log.debug "batteryHandler(${evt?.value})"
+    def msg = "${location}: Battery % is At/Below Alert Threshold of ${state.batteryAlertLevel}%\n\nBattery Status:\n"
+    def deviceList = ""
+    def alertList = ""
 	def cnt = 0
     def tCnt = 0
 
 	for (device in batteries) {
     	if (cnt > 0) {
         	msg = msg + "\n"
+            deviceList = deviceList + "\n"
         }
-        if (device.currentBattery <= percentage) {
+        if (device.currentBattery <= state.batteryAlertLevel) {
+            if (tCnt > 0) {
+                alertList = alertList + "\n"
+            }
+            alertList = alertList + "[${device.displayName}: ${device.currentBattery}%]"
         	tCnt++
         }
+        deviceList = deviceList + "[${device.displayName}: ${device.currentBattery}%]"
     	msg = msg + "${device.displayName} = ${device.currentBattery}%"
         cnt++
     }
+    batteryTile?.setDeviceList(deviceList)
+    batteryTile?.setDeviceAlertList(alertList)
+    batteryTile?.setBatteryAlertLevel("${state.batteryAlertLevel}")
 
 	if (tCnt > 0) {
         if (sendPush) {
