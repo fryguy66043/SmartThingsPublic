@@ -46,6 +46,7 @@ metadata {
 		standardTile("state", "device.switch", width: 2, height: 2) {
 			state("ok", label:'${name}', icon:"st.Lighting.light11", backgroundColor:"#00A0DC")
 			state("alert", label:'${name}', icon:"st.Lighting.light8", backgroundColor:"#e86d13")
+            state("off", label: '${name}', icon:"st.Lighting.light8", backgroundColor:"##ffffff")
 		}        
 
         valueTile("alertLevel", "device.alertLevel", decoration: "flat", width: 2, height: 2) {
@@ -74,6 +75,11 @@ def parse(String description) {
 	log.trace "parse($description)"
 }
 
+private off() {
+	log.debug "switch: off()"
+    sendEvent(name: "switch", value: "off")
+}
+
 private ok() {
 	log.debug "switch: ok()"
 	sendEvent(name: "switch", value: "ok")
@@ -91,6 +97,11 @@ def setBatteryAlertLevel(val) {
         sendEvent(name: "alertLevel", value: val)
         sendEvent(name: "alertControl", value: val)
     }
+    else {
+    	sendEvent(name: "batteryAlertLevel", value: 10)
+        sendEvent(name: "alertLevel", value: 10)
+        sendEvent(name: "alertControl", value: 10)
+    }
 }
 
 def setDeviceList(deviceList) {
@@ -102,6 +113,7 @@ def setDeviceList(deviceList) {
     else {
     	sendEvent(name: "monitoredDevices", value: "None")
         sendEvent(name: "deviceStatusList", value: "None")
+        off()
     }
 }
 
@@ -127,6 +139,7 @@ def setDeviceAlertList(deviceList) {
 def installed() {
 	log.trace "Executing 'installed'"
 	initialize()
+	reset()
 }
 
 def updated() {
@@ -140,18 +153,16 @@ private initialize() {
 	sendEvent(name: "DeviceWatch-DeviceStatus", value: "online")
 	sendEvent(name: "healthStatus", value: "online")
 	sendEvent(name: "DeviceWatch-Enroll", value: [protocol: "cloud", scheme:"untracked"].encodeAsJson(), displayed: false)
-    refresh()
+	refresh()
 }
 
 def reset() {
 	log.debug "Resetting all values..."
-    
-	sendEvent(name: "deviceStatusList", value: "None")
-    sendEvent(name: "deviceAlertList", value: "None")
-    sendEvent(name: "batteryAlertLevel", value: 10)
-    sendEvent(name: "switch", value: "ok")
-    sendEvent(name: "monitoredDevices", value: "None")
-    sendEvent(name: "alertedDevices", value: "None")
+
+	setDeviceList()
+    setDeviceAlertList()
+    setBatteryAlertLevel()
+    off()
     refresh()
 }
 
