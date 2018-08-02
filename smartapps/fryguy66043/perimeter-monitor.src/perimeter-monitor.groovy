@@ -1,6 +1,7 @@
 /**
  *  Perimeter Monitor
  *  Monitors selected contact sensors, door controls, and locks and sets a virtual contact sensor to indicate if the perimeter is secure or not.
+ *  Works in conjuction with 'My Contact Sensor' device handler.
  *
  *  Copyright 2018 Jeffrey Fry
  *
@@ -34,8 +35,8 @@ preferences {
     section("Which Locks?") {
     	input "locks", "capability.lock", required: false, multiple: true, title: "Which Locks do you want to monitor?"
     }
-	section("Which Virtual Contact Sensor?") {
-    	input "perimeterSensor", "device.myContactSensor", required: true, title: "Which Contact Sensor do you want to indicate perimeter status?"
+	section("Choose 'My Contct Sensor'.") {
+    	input "perimeterSensor", "device.myContactSensor", required: true, title: "Choose 'My Contact Sensor' to update display in tile."
     }
     section("Send Realtime Updates?") {
     	input "realtimeUpdates", "bool", title: "Send realtime updates as activity occurs on selected devices?"
@@ -95,8 +96,8 @@ def perimeterSensorHandler(evt) {
     perimeterSensor.setMonitoredDeviceList(deviceList)
     perimeterSensor.setUnsecuredDeviceList("")
     virtualController()
-//    getStatus()
-//    getMonitoredDevices()
+    getStatus()
+    getMonitoredDevices()
 }
 
 def contactHandler(evt) {

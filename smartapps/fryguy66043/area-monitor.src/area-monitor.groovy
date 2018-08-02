@@ -108,8 +108,8 @@ def areaSensorHandler(evt) {
     areaSensor.setMonitoredDeviceList(deviceList)
     areaSensor.setUnsecuredDeviceList("")
     virtualController()
-//    getStatus()
-//    getMonitoredDevices()
+    getStatus()
+    getMonitoredDevices()
 }
 
 def allOnOffHandler(evt) {
