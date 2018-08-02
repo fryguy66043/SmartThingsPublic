@@ -35,6 +35,7 @@ metadata {
         command "setDeviceList"
         command "setDeviceAlertList"
         command "setBatteryAlertLevel"
+        command "adjustBatteryAlertLevel"
         command "reset"
 	}
 
@@ -93,14 +94,23 @@ private alert() {
 def setBatteryAlertLevel(val) {
 	log.debug "setBatteryAlertLevel(${val})"
     if (val) {
-    	sendEvent(name: "batteryAlertLevel", value: val)
         sendEvent(name: "alertLevel", value: val)
         sendEvent(name: "alertControl", value: val)
+        log.debug "running adjustBatteryAlertLevel in 5 seconds..."
+		runIn(5, adjustBatteryAlertLevel)
     }
     else {
     	sendEvent(name: "batteryAlertLevel", value: 10)
         sendEvent(name: "alertLevel", value: 10)
         sendEvent(name: "alertControl", value: 10)
+    }
+}
+
+def adjustBatteryAlertLevel(evt) {
+	log.debug "adjustBatterAlertLevel"
+	def val = device.currentValue("alertLevel")
+    if (val) {
+    	sendEvent(name: "batteryAlertLevel", value: val)
     }
 }
 
