@@ -163,9 +163,8 @@ def subscribeToEvents()
 
 def appHandler(evt) {
 	log.debug "Checking hvacSensor..."
-//    state.windowReminder = false
-//	hvacSensor.resetCycles()
-//	tempTest()
+
+//	hvacSensor.resetDailyCycles()
 
 //	log.debug "thermostat.name = ${thermostat.name}"
 //    hvacSensor.setMyThermostatName(thermostat.name)
@@ -217,7 +216,7 @@ def resetHandler() {
     	hvacSensor.resetMonthlyCycles()
     }
     else {
-	    hvacSensor.resetCycles()
+	    hvacSensor.resetDailyCycles()
     }
 
 	if (localCalendar.get(Calendar.YEAR) != state.currYearDisp) {
