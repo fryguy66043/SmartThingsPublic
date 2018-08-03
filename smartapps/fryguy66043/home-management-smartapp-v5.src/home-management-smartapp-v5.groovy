@@ -843,7 +843,7 @@ def arrivalHandler(evt)
         if (settings.arrivalAlarmRoutine) {
         	alarmMsg = settings.arrivalAlarmRoutine
         }
-        message = "${location} ${date}: First One Home! ${alarmMsg} / Mode: ${modeMsg}"
+        message = "${location} ${date}\n${whoIsHome()}: First One Home! ${alarmMsg} / Mode: ${modeMsg}"
         if (sendPush || arrivalPush) {
             sendPush(message)
         }
@@ -1745,6 +1745,15 @@ private getStatus() {
         }
     }
     state.change = false
+}
+
+private whoIsHome() {
+	log.debug "whoIsHome"
+    def result = ""
+    
+    result = "${presence1.findAll{it.currentValue("presence") == "present"}}"
+	log.debug "whoIsHome = ${result}"
+    return result
 }
 
 private anyOneHome() {
