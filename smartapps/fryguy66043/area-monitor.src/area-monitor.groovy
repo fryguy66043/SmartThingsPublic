@@ -66,6 +66,7 @@ def updated() {
 	log.debug "Updated with settings: ${settings}"
 
 	unsubscribe()
+    unschedule()
 	initialize()
 }
 
@@ -79,7 +80,7 @@ def initialize() {
     subscribe(areaSensor, "allOnOff", allOnOffHandler)
     state.unsecure = false
     state.change = false
-    runEvery1Minute(virtualController)
+    runEvery5Minutes(virtualController)
     
     def switchList = (switches) ? switches : "None"
     def contactList = (contacts) ? contacts : "None"

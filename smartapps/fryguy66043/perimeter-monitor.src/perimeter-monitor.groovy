@@ -60,6 +60,7 @@ def updated() {
 	log.debug "Updated with settings: ${settings}"
 
 	unsubscribe()
+    unschedule()
 	initialize()
 }
 
@@ -71,7 +72,7 @@ def initialize() {
     subscribe(perimeterSensor, "update", perimeterSensorHandler)
     state.unsecure = false
     state.change = false
-    runEvery1Minute(virtualController)
+    runEvery5Minutes(virtualController)
 	
     def contactList = (contacts) ? contacts : "None"
     def doorList = (doors) ? doors : "None"
