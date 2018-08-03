@@ -371,13 +371,13 @@ def installed()
     subscribe(presence1, "presence.not present", departureHandler)
     subscribe(app, appHandler)
 	subscribe(location, "sunsetTime", sunsetTimeHandler)
-    subscribe(location, "sunriseTime", sunriseTimeHandler)
 //schedule it to run today too
     scheduleTurnOn(location.currentValue("sunsetTime"))
     if (morningTimeOrSunrise == "Time") {
 		schedule(morningTime, morningHandler)
     }
     else {
+	    subscribe(location, "sunriseTime", sunriseTimeHandler)
     	scheduleSunriseTurnOn(location.currentValue("sunriseTime"))
     }
     schedule(nightTime, nightHandler)
