@@ -161,14 +161,15 @@ def resetMonthlyCycles() {
 def setMyThermostatName(tName) {
 	log.debug "setMyThermostatName(${tName})"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
+    def sinceDate = device.currentValue("runningSince")
     
 	if (tName) {
-    	if (tName != device.currentValue("myThermostatName")) {
+//    	if (tName != device.currentValue("myThermostatName")) {
             sendEvent(name: "myThermostatName", value: tName)
-            sendEvent(name: "runningSince", value: date)
-            sendEvent(name: "since", value: "${tName}\nRunning Since:\n${date}")
-            refresh("Changed Thermostat: ${tName}")
-        }
+//            sendEvent(name: "runningSince", value: date)
+            sendEvent(name: "since", value: "${tName}\nRunning Since:\n${sinceDate}")
+//            refresh("Changed Thermostat: ${tName}")
+//        }
     }
 }
 
@@ -236,7 +237,6 @@ def setMode(val) {
                 valid = false
                 break
         }
-        sendEvent(name: "hvacMode", value: val)
         if (valid) {
             log.debug "Setting mode to ${val}"
             sendEvent(name: "mode", value: val)
@@ -266,7 +266,10 @@ def setOperatingState(val) {
     }
     coolCycleCnt = (device.currentValue("coolCycles")) ? device.currentValue("coolCycles") : 0
     coolCycleTodayCnt = (device.currentValue("coolCyclesToday")) ? device.currentValue("coolCyclesToday") : 0
+    log.debug "setOperatingState Start: coolCycleCnt = ${coolCycleCnt} / coolCycleTodayCnt = ${coolCycleTodayCnt}"
+    log.debug "setOperatingState Device Start: coolCycles = ${device.currentValue("coolCycles")} / coolCyclesToday = ${device.currentValue("coolCyclesToday")}"
     if (coolCycleCnt == 0 || coolCycleTodayCnt == 0) {
+    	log.debug "Resetting cool cycle display: coolCycles = ${coolCycleCnt} / coolCyclesToday = ${coolCycleTodayCnt}"
         sendEvent(name: "coolCycles", value: coolCycleCnt)
         sendEvent(name: "coolCyclesToday", value: coolCycleTodayCnt)
         sendEvent(name: "cool", value: "Today: ${coolCycleTodayCnt} / Month: ${coolCycleCnt}\nLast Cycle Start: N/A") //${date}")
@@ -274,7 +277,7 @@ def setOperatingState(val) {
     heatCycleCnt = (device.currentValue("heatCycles")) ? device.currentValue("heatCycles") : 0
     heatCycleTodayCnt = (device.currentValue("heatCyclesToday")) ? device.currentValue("heatCyclesToday") : 0
     if (heatCycleCnt == 0 || heatCycleTodayCnt == 0) {
-    	log.debug "Setting heat cycle values"
+    	log.debug "Resetting heat cycle display: heatCycles = ${heatCycleCnt} / heatCyclesToday = ${heatCycleTodayCnt}"
         sendEvent(name: "heatCycles", value: heatCycleCnt)
         sendEvent(name: "heatCyclesToday", value: heatCycleTodayCnt)
         sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: N/A")                    
@@ -319,14 +322,16 @@ def setOperatingState(val) {
             case "cooling":
                 switch (mode) {
                     case "cool":
+    					log.debug "setOperatingState Pre-Change: coolCycleCnt = ${coolCycleCnt} / coolCycleTodayCnt = ${coolCycleTodayCnt}"
+                    	coolCycleCnt = coolCycleCnt + 1
+                        coolCycleTodayCnt = coolCycleTodayCnt + 1
                         sendEvent(name: "hvac", value: "coolCooling")
-                        coolCycleCnt = (device.currentValue("coolCycles")) ? device.currentValue("coolCycles") : 0
-                        coolCycleTodayCnt = (device.currentValue("coolCyclesToday")) ? device.currentValue("coolCyclesToday") : 0
-                        sendEvent(name: "coolCycles", value: coolCycleCnt + 1)
-                        sendEvent(name: "coolCyclesToday", value: coolCycleTodayCnt + 1)
+                        sendEvent(name: "coolCycles", value: coolCycleCnt)
+                        sendEvent(name: "coolCyclesToday", value: coolCycleTodayCnt)
                         sendEvent(name: "coolCycleStart", value: date)
                         sendEvent(name: "coolCycleStop", value: "")
-                        sendEvent(name: "cool", value: "Today: ${coolCycleTodayCnt + 1} / Month: ${coolCycleCnt + 1}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")
+                        sendEvent(name: "cool", value: "Today: ${coolCycleTodayCnt} / Month: ${coolCycleCnt}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")
+    					log.debug "setOperatingState Post-Change: coolCycleCnt = ${coolCycleCnt} / coolCycleTodayCnt = ${coolCycleTodayCnt}"
                         break
                     case "off":
                         sendEvent(name: "hvac", value: "off")
@@ -340,19 +345,19 @@ def setOperatingState(val) {
                 switch (mode) {
                     case "heat":
                         sendEvent(name: "hvac", value: "heatHeating")
-                        heatCycleCnt = (device.currentValue("heatCycles")) ? device.currentValue("heatCycles") : 0
-                        heatCycleTodayCnt = (device.currentValue("heatCyclesToday")) ? device.currentValue("heatCyclesToday") : 0
-                        sendEvent(name: "heatCycles", value: heatCycleCnt + 1)
-                        sendEvent(name: "heatCyclesToday", value: heatCycleTodayCnt + 1)
-                        sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt + 1} / Month: ${heatCycleCnt + 1}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
+                        heatCycleCnt = heatCycleCnt + 1
+                        heatCycleTodayCnt = heatCycleTodayCnt + 1
+                        sendEvent(name: "heatCycles", value: heatCycleCnt)
+                        sendEvent(name: "heatCyclesToday", value: heatCycleTodayCnt)
+                        sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
                     case "emergencyHeat":
                         sendEvent(name: "hvac", value: "heatHeating")
-                        heatCycleCnt = (device.currentValue("heatCycles")) ? device.currentValue("heatCycles") : 0
-                        heatCycleTodayCnt = (device.currentValue("heatCyclesToday")) ? device.currentValue("heatCyclesToday") : 0
-                        sendEvent(name: "heatCycles", value: heatCycleCnt + 1)
-                        sendEvent(name: "heatCyclesToday", value: heatCycleTodayCnt + 1)
-                        sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt + 1} / Month: ${heatCycleCnt + 1}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
+                        heatCycleCnt = heatCycleCnt + 1
+                        heatCycleTodayCnt = heatCycleTodayCnt + 1
+                        sendEvent(name: "heatCycles", value: heatCycleCnt)
+                        sendEvent(name: "heatCyclesToday", value: heatCycleTodayCnt)
+                        sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
                     case "off":
                         sendEvent(name: "hvac", value: "off")
@@ -378,6 +383,8 @@ def setOperatingState(val) {
         }
         refresh("Changed OS: ${val}")
     }
+    log.debug "setOperatingState End: coolCycleCnt = ${coolCycleCnt} / coolCycleTodayCnt = ${coolCycleTodayCnt}"
+    log.debug "setOperatingState Device End: coolCycles = ${device.currentValue("coolCycles")} / coolCyclesToday = ${device.currentValue("coolCyclesToday")}"
 }
 
 def setInsideTemp(val) {
@@ -419,10 +426,10 @@ def reset() {
 	log.debug "resetting all data..."
 	def timestamp = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
     sendEvent(name: "update", value: timestamp)
-    if (!device.currentValue("since")) {
+//    if (!device.currentValue("since")) {
     	def tName = (device.currentValue("myThermostatName")) ? device.currentValue("myThermostatName") : "Thermostat"
 	    sendEvent(name: "since", value: "${tName}\nRunning Since:\n${timestamp}")
-    }
+//    }
     sendEvent(name: "mode", value: "off")
     sendEvent(name: "operatingState", value: "idle")
     sendEvent(name: "cool", value: 0)
