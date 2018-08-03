@@ -167,7 +167,7 @@ def appHandler(evt) {
 //	hvacSensor.resetDailyCycles()
 
 //	log.debug "thermostat.name = ${thermostat.name}"
-//    hvacSensor.setMyThermostatName(thermostat.name)
+//    hvacSensor.setMyThermostatName("${thermostat.displayName}")
 
 //	hvacSensor.resetMonthlyCycles()
 /*
@@ -198,11 +198,11 @@ def appHandler(evt) {
     	log.debug "Calling tempUpdate()"
         tempUpdate()
     }
-	evaluate(evt)
+//	evaluate(evt)
 //	log.debug "Reset time: ${resetTime}"
 
-	sendWeeklyUpdate(evt)
-    sendYearlyUpdate(evt)
+//	sendWeeklyUpdate(evt)
+//    sendYearlyUpdate(evt)
 }
 
 def resetHandler() {
@@ -569,8 +569,8 @@ def temperatureHandler(evt)
     if (hvacSensor) {
         hvacSensor.setInsideTemp(tt)
         hvacSensor.setOutsideTemp(ot)
-        log.debug "thermostat.name = ${thermostat.name}"
-        hvacSensor.setMyThermostatName(thermostat.name)
+        log.debug "thermostat.name = ${thermostat.name} / displayName = ${thermostat?.displayName}"
+        hvacSensor.setMyThermostatName(thermostat.displayName)
     }
 
 // Check Day Records

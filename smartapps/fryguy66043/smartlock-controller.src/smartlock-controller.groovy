@@ -70,7 +70,7 @@ def appHandler(evt) {
 
 def lockHandler(evt) {
 	log.debug "lockHandler"
-    def dataString = "${evt.data}"
+    def dataString = "${evt?.data}"
     def index = 0
     def user = ""
     def method = ""
@@ -118,6 +118,7 @@ def lockHandler(evt) {
     }
     if (phone) {
     	sendSms(phone, msg)
+        sendSms(phone, "evt.data = ${dataString}")
     }
 }
 
