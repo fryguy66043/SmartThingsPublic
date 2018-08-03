@@ -406,6 +406,7 @@ def installed()
         state.unsecure = false
         state.change = false
         state.alert = false
+        state.userAlarm = false
         state.alertMessage = ""
         state.offSwitches = ""
         state.offAlertSwitches = ""
@@ -1002,12 +1003,16 @@ def alarmSensorHandler(evt) {
 
 def alarmAlertHandler(evt) {
 	log.debug "alarmAlertHandler: ${evt.value}"
-    if (alarmSensor.currentValue("alertState") == "silent") {
-    	log.debug "Alarm Dismissed"
-        def date = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
-        def msg = "${location} ${date}\nAlarm Dismissed!"
+    def date = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
+    def msg = ""
+    
+    def alarmAlertState = alarmSensor.currentValue("alertState")
+    if (alarmAlertState == "silent") {
+    	log.debug "${location} ${date}: Alarm Dismissed"
+        msg = "${location} ${date}: Alarm Dismissed!"
     	state.alert = false
         turnOffAlertLights()
+        state.userAlarm = false
         homeAlarm?.off()
         awayAlarm?.off()
         if (sendPush || alarmSendPush) {
@@ -1019,6 +1024,14 @@ def alarmAlertHandler(evt) {
         if (alarmPhone2) {
         	sendSms(alarmPhone2, msg)
         }
+    }
+    else if (alarmAlertState == "userAlarm") {
+    	log.debug "${location} ${date}: Alarm Activated By User"
+        msg = "${location} ${date}: Alarm Activated By User!"
+        state.alert = true
+        state.userAlarm = true
+        state.alertMessage = msg
+        virtualController()
     }
 }
 
@@ -1215,11 +1228,9 @@ def virtualController(evt) {
         }
     }
 
-	log.debug "unsecure = ${unsecure}"
-	if (unsecure || state.alert) {
-    	log.debug "Potential Alert triggered: Setting delay timer.\n${msg}"
-        
-        if (state.alert) {
+	log.debug "unsecure = ${unsecure} / state.alert = ${state.alert}"
+	if (unsecure || state.alert) {        
+        if (state.alert && !state.userAlarm) {
         	if (state.change && newResult) {
             	state.alertMessage = state.alertMessage + "\n${newResult}"
             }
@@ -1236,6 +1247,7 @@ def virtualController(evt) {
             }
         }
         else {
+	    	log.debug "Potential Alert triggered: Setting delay timer.\n${msg}"
             state.alertMessage = msg
             setAlertTimer()        
         }
@@ -1352,8 +1364,11 @@ private setAlertTimer() {
 }
 
 def checkAlert() {
-	log.debug "checkAlert"
-    if (alarmSensor.currentValue("alarmState") != "Disarmed") {
+	def alarmAlarmState = alarmSensor.currentValue("alarmState")
+    def alarmAlertState = alarmSensor.currentValue("alertState")
+	log.debug "checkAlert: alarmState = ${alarmAlarmState} / alertState = ${alarmAlertState}"
+    if (alarmAlarmState != "Disarmed" || alarmAlertState == "userAlarm") {
+    	log.debug "Trigger Alert!"
         alarmSensor.setAlert()
         triggerLights()
         state.alert = true
@@ -1381,8 +1396,12 @@ private triggerLights() {
     def daylight = getSunriseAndSunset()
     def turnOn = false
     def result = ""
+    def alarmAlarmState = alarmSensor.currentValue("alarmState")
     
-    switch (alarmSensor.currentValue("alarmState")) {
+    if (state.userAlarm) {
+    	alarmAlarmState = "Armed Home"
+    }
+    switch (alarmAlarmState) {
     	case "Armed Home":
         	log.debug "checking homeAlarm settings: ${homeAlarm} ${homeAlarmLightsSirens}"
             if (homeAlarm && homeAlarmLightsSirens != "OFF") {
@@ -1549,8 +1568,13 @@ private triggerLights() {
 }
 
 private turnOffAlertLights() {
-	log.debug "turnOffAlertLights"
-    switch (alarmSensor.currentValue("alarmState")) {
+    def alarmAlarmState = alarmSensor.currentValue("alarmState")
+    log.debug "turnOffAlertLights: alarmState = ${alarmAlarmState} / alertState = ${alarmSensor.currentValue("alertState")}"
+    
+    if (state.userAlarm) {
+    	alarmAlarmState = "Armed Home"
+    }
+    switch (alarmAlarmState) {
     	case "Armed Home":
             log.debug "state.offSwitches = ${state.offSwitches}"
             log.debug "homeAlertSwitches.size() = ${homeAlertSwitches.size()}"    
