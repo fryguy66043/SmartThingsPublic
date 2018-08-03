@@ -26,7 +26,7 @@ metadata {
 
 		attribute "update", "string"
         attribute "alarmState", "enum", ["Armed Away", "Armed Home", "Disarmed"]
-        attribute "alertState", "enum", ["alarm", "silent"]
+        attribute "alertState", "enum", ["alarm", "silent", "userAlarm"]
         attribute "lastAlarmDate", "string"
         attribute "lastAlarmDismissedDate", "string"
         attribute "lastArmedHomeDate", "string"
@@ -38,7 +38,9 @@ metadata {
         command "setDisarmed"
         command "setAlert"
         command "dismissAlert"
+        command "activateAlarm"
         command "updateSummary"
+        command "resetUserAlertCnt"
 	}
 
 	simulator {
@@ -53,26 +55,31 @@ metadata {
             state("armedAwayAlert", label: 'ALARM', icon: "st.security.alarm.on", backgroundColor:"#bc2323")
             state("armedHomeAlert", label: 'ALARM', icon: "st.security.alarm.on", backgroundColor: "#bc2323")
             state("disarmedAlert", label: 'DISARMED', icon: "st.security.alarm.on", backgroundColor: "#bc2323")
+            state("userAlert", label: 'USER', icon: "st.security.alarm.on", backgroundColor: "#bc2323")
 		}
 
 		standardTile("armAway", "device.setAlarm", decoration: "flat", width: 2, height: 2) {
-			state "default", label: "AWAY", action: "setArmedAway", icon:"st.security.alarm.on"
+			state "default", label: 'AWAY', action: "setArmedAway", icon:"st.security.alarm.on"
 		}
 		standardTile("armHome", "device.setAlarm", decoration: "flat", width: 2, height: 2) {
-			state "default", label: "HOME", action: "setArmedHome", icon:"st.security.alarm.on"
+			state "default", label: 'HOME', action: "setArmedHome", icon:"st.security.alarm.on"
 		}
 		standardTile("disarm", "device.setAlarm", decoration: "flat", width: 2, height: 2) {
-			state "default", label: "DISARM", action: "setDisarmed", icon:"st.security.alarm.off"
+			state "default", label: 'DISARM', action: "setDisarmed", icon:"st.security.alarm.off"
 		}
 		standardTile("dismiss", "device.setAlarm", decoration: "flat", width: 2, height: 2) {
-			state "default", label: "DISMISS", action: "dismissAlert", icon:"st.security.alarm.off"
+			state "default", label: 'DISMISS', action: "dismissAlert", icon:"st.security.alarm.off"
 		}
-        valueTile("summary", "device.summary", decoration: "flat", width: 6, height: 6) {
-        	state "default", label: '${currentValue}'
+        standardTile("alarm", "device.alarm", decoration: "flat", width: 2, height: 2) {
+ 	     	state "default", label: 'ACTIVATE ALARM', action: "activateAlarm", icon:"st.security.alarm.on"
         }
-        
+        valueTile("summary", "device.summary", decoration: "flat", width: 6, height: 6) {
+ 	      state "default", label: '${currentValue}'
+        }
+       
 		main "state"
-		details(["state", "armAway", "armHome", "disarm", "dismiss", "summary"])
+        
+		details(["state", "armAway", "armHome", "disarm", "dismiss", "alarm", "summary"])
 	}
 }
 
@@ -150,6 +157,13 @@ def setAlert() {
             sendEvent(name: "alertState", value: "alarm")
             alert = true
         	break
+        case "Disarmed":
+        	if (device.currentValue("alertState") == "userAlarm") {
+            	log.debug "set userAlert"
+                sendEvent(name: "contact", value: "userAlert")
+                alert = true
+            }
+            break
         default:
         	log.debug "unknown alarmState"
         	break
@@ -180,6 +194,9 @@ def dismissAlert() {
         	break
         case "Disarmed":
         	log.debug "dismiss homeAlert"
+            if (device.currentValue("alertState") == "userAlarm") {
+            	alarm = true
+            }
             sendEvent(name: "contact", value: "disarmed")
             sendEvent(name: "alertState", value: "silent")
             break
@@ -191,6 +208,29 @@ def dismissAlert() {
 	    sendEvent(name: "lastAlarmDismissedDate", value: date)
         updateSummary()
     }
+}
+
+private activateAlarm() {
+	log.debug "activateAlarm"
+    if (device.currentValue("alertState") != "userAlarm") {
+        state.userAlertCnt = (state.userAlertCnt) ? state.userAlertCnt : 0
+        state.userAlertCnt = state.userAlertCnt + 1
+        log.debug "activateAlarm: state.userAlertCnt = ${state.userAlertCnt}"
+        if (state.userAlertCnt > 2) {
+            log.debug "activateAlarm: state.userAlertCnt > 2.  Calling setAlert()"
+            sendEvent(name: "alertState", value: "userAlarm")
+            setAlert()
+        }
+        runIn(3, resetUserAlertCnt)
+    }
+    else {
+    	log.debug "User Alarm already activated..."
+    }
+}
+
+def resetUserAlertCnt() {
+	log.debug "resetUserAlertCnt: state.userAlertCnt = ${state.userAlertCnt}"
+    state.userAlertCnt = 0
 }
 
 private updateSummary() {
