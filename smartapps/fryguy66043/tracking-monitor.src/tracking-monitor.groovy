@@ -125,7 +125,6 @@ def appHandler(evt) {
     Calendar localCalendar = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
 	int day = localCalendar.get(Calendar.DAY_OF_WEEK)
     
-
 //** Uncomment this line to erase tracking information for today.  Used for testing.
 //    state.trackingDays[day-1] = ""
 //*********************************************************************************    
@@ -183,7 +182,7 @@ def reportHandler(evt) {
 def resetHandler(evt) {
 	log.debug "resetHandler"
     Calendar localCal = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
-	int day = localCalendar.get(Calendar.DAY_OF_WEEK)
+	int day = localCal.get(Calendar.DAY_OF_WEEK)
     
 	state.trackingDays[day - 1] = ""
 }
