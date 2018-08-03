@@ -418,6 +418,7 @@ def installed()
 def updated()
 {
 	unsubscribe()
+    unschedule()
     installed()
 }
 
