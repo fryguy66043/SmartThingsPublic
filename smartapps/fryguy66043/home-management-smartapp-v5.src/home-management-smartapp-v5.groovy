@@ -983,14 +983,45 @@ def disarmSwitchHandler(evt) {
 
 def alarmSensorHandler(evt) {
 	log.debug "alarmSensorHandler: ${evt.value} / state.alarmState = ${state.alarmState}"
+    def result = ""
+    def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
+    def msg = "${location} ${date}:"
+    
     if (state.alarmState != evt.value) {
     	log.debug "Alarm State changed from controller.  Synching SmartApp..."
     	switch (evt.value) {
         	case "Armed Home":
             	setArmedHome()
+                result = checkHomeDevices()
+                if(result) {
+                    def warn = "\nNOTICE: Alarm set to ${evt.value}, but the following devices are unsecure:\n${result}"
+                    msg = msg + warn
+                    log.debug "Alarm set to Armed Home, but devices are still unsecure!"
+                    if (sendPush || alarmSendPush) {
+                        sendPush(msg)
+                    }
+                    if (alarmPhone) {
+                        sendSms(alarmPhone, msg)
+                    }
+                    if (alarmPhone2) {
+                        sendSms(alarmPhone2, msg)
+                    }
+        		}	
             	break
             case "Armed Away":
             	setArmedAway()
+                result = checkAwayDevices()
+                if(result) {
+                    def warn = "\nNOTICE: Alarm set to ${evt.value}, but the following devices are unsecure:\n${result}"
+                    msg = msg + warn
+                    log.debug "Alarm set to Armed Away, but devices are still unsecure!"
+                    if (sendPush || alarmSendPush) {
+                        sendPush(msg)
+                    }
+                    if (alarmPhone) {
+                        sendSms(alarmPhone, msg)
+                    }
+        		}	
             	break
             case "Disarmed":
             	setDisarmed()
@@ -1248,7 +1279,9 @@ def virtualController(evt) {
         }
         else {
 	    	log.debug "Potential Alert triggered: Setting delay timer.\n${msg}"
-            state.alertMessage = msg
+     		if (!state.userAlarm) {
+	            state.alertMessage = msg
+            }
             setAlertTimer()        
         }
 	}
