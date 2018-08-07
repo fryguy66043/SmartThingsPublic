@@ -374,6 +374,17 @@ def temperatureHandler(evt) {
     
 	state.currTemp = ot
 
+	def wxLow = (myWxDevice.currentValue("actualLow")) ? myWxDevice.currentValue("actualLow") : 99
+    def wxHigh = (myWxDevice.currentValue("actualHigh")) ? myWxDevice.currentValue("actualHigh") : -99
+	if (ot > wxHigh) {
+    	log.debug "Setting actual high"
+    	myWxDevice.setActualHigh(ot)
+    }
+    if (ot < wxLow) {
+    	log.debug "Setting actual low"
+    	myWxDevice.setActualLow(ot)
+    }
+    
 // Check Day Records
     if (ot > state.weekHigh[day - 1]) {
     	state.weekHigh[day - 1] = ot
@@ -613,6 +624,8 @@ def resetSchedule(evt) {
 	state.weekPrecipInches[day - 1] = 0.0
     state.weekHigh[day - 1] = -99
     state.weekLow[day - 1] = 99
+    myWxDevice.setActualLow(99)
+    myWxDevice.setActualHigh(-99)
 
    state.weekPrecipInches[7] = state.weekPrecipInches[0] + state.weekPrecipInches[1] + state.weekPrecipInches[2] + state.weekPrecipInches[3] +
                                  state.weekPrecipInches[4] + state.weekPrecipInches[5] + state.weekPrecipInches[6]
