@@ -156,6 +156,7 @@ def subscribeToEvents()
     if (updateYearlyInterval != "Never") {
     	schedule(updateTime, updateYearlySchedule)
     }
+    runEvery1Minute(refreshHandler)
 
 	state.windowReminder = false    
     state.windowReminderDateTime = ""
@@ -163,7 +164,11 @@ def subscribeToEvents()
 
 def appHandler(evt) {
 	log.debug "Checking hvacSensor..."
+    def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
 
+	thermostat.refresh()
+	log.debug "${date}: thermostat.currentThermostat = ${thermostat.currentThermostat} / thermostat.currentValue("operatingState") = ${thermostat.currentValue("operatingState")}"
+    
 //	hvacSensor.resetDailyCycles()
 
 //	log.debug "thermostat.name = ${thermostat.name}"
@@ -203,6 +208,17 @@ def appHandler(evt) {
 
 //	sendWeeklyUpdate(evt)
 //    sendYearlyUpdate(evt)
+}
+
+def refreshHandler(evt) {
+	def curThermo = thermostat.currentThermostat
+    def curOS = thermostat.currentValue("thermostatOperatingState")
+    def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
+	log.debug "refreshHandler ${date}: thermostat.currentThermostat = ${curThermo} / currentOperatingState = ${curOS}"
+    thermostat.refresh()
+    if (curThermo != thermostat.currentThermostat) {
+    	log.debug "${date}: Refresh changed thermostat from ${curThermo} to ${thermostat.currentThermostat}\ncurrent operatingState went from ${curOS} to ${thermostat.currentValue("thermostatOperatingState")}"
+    }
 }
 
 def resetHandler() {
@@ -640,7 +656,7 @@ def thermostatModeHandler(evt)
 
 def thermostatOperatingStateHandler(evt)
 {
-//	sendSms(phone, "thermostatOperatingStateHandler")
+	log.debug "thermostatOperatingStateHandler(${evt.value})"
     evaluate(evt)
 }
 
