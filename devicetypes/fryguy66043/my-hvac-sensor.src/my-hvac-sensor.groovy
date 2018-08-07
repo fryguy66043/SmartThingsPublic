@@ -20,8 +20,8 @@
 metadata {
 	definition (name: "My HVAC Sensor", namespace: "FryGuy66043", author: "Jeffrey Fry") {
 		capability "Actuator"
-		capability "Switch"
-        capability "Thermostat"
+//		capability "Switch"
+//      capability "Thermostat"
 		capability "Refresh"
 		capability "Sensor"
 		capability "Health Check"
@@ -61,13 +61,19 @@ metadata {
 
 	tiles(scale: 2) {
 		standardTile("hvac", "device.hvac", width: 2, height: 2) {
-			state("off", label:'OFF', backgroundColor:"#CCCCCC")
-			state("heatIdle", label:'Idle', icon:"st.Home.home29", backgroundColor:"#d04e00")
-			state("heatHeating", label:'Heating', icon:"st.Home.home29", backgroundColor:"#bc2323")
-			state("emergHeatIdle", label:'Idle', icon:"st.Home.home29", backgroundColor:"#d04e00")
-			state("emergHeatHeating", label:'Heating', icon:"st.Home.home29", backgroundColor:"#bc2323")
-			state("coolIdle", label:'Idle', icon:"st.Weather.weather7", backgroundColor:"#1e9cbb")
-			state("coolCooling", label:'Cooling', icon:"st.Weather.weather7", backgroundColor:"#153591")
+			state("off", label:'', icon:"thermostat.heating-cooling-off", backgroundColor:"#CCCCCC")
+            state("heatIdle", label:'Idle', icon:"st.Home.home29", backgroundColor:"#d04e00")
+            state("heatHeating", label:'Heating', icon:"st.Home.home29", backgroundColor:"#bc2323")
+            state("emergHeatIdle", label:'Idle', icon:"st.Home.home29", backgroundColor:"#d04e00")
+            state("emergHeatHeating", label:'Heating', icon:"st.Home.home29", backgroundColor:"#bc2323")
+            state("coolIdle", label:'Idle', icon:"st.Weather.weather7", backgroundColor:"#1e9cbb")
+            state("coolCooling", label:'Cooling', icon:"st.Weather.weather7", backgroundColor:"#153591")
+//			state("heatIdle", label:'', icon:"st.thermostat.heat", backgroundColor:"#d04e00")
+//			state("heatHeating", label:'', icon:"st.thermostat.heating", backgroundColor:"#bc2323")
+//			state("emergHeatIdle", label:'', icon:"st.thermostat.emergency-heat", backgroundColor:"#d04e00")
+//			state("emergHeatHeating", label:'', icon:"st.thermostat.heating", backgroundColor:"#bc2323")
+//			state("coolIdle", label:'', icon:"st.thermostat.cool", backgroundColor:"#1e9cbb")
+//			state("coolCooling", label:'', icon:"st.thermostat.cooling", backgroundColor:"#153591")
             state("err", label: 'ERROR', icon:"st.Seasonal Fall.seasonal-fall-006", backgroundColor:"#f1d801")
 		}
         valueTile("setPoint", "device.setPoint", width: 2, height: 2) {

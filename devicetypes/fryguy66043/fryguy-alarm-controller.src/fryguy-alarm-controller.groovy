@@ -62,16 +62,16 @@ metadata {
 			state "default", label: 'AWAY', action: "setArmedAway", icon:"st.security.alarm.on"
 		}
 		standardTile("armHome", "device.setAlarm", decoration: "flat", width: 2, height: 2) {
-			state "default", label: 'HOME', action: "setArmedHome", icon:"st.security.alarm.on"
+			state "default", label: 'HOME', action: "setArmedHome", icon:"st.Home.home3"
 		}
 		standardTile("disarm", "device.setAlarm", decoration: "flat", width: 2, height: 2) {
 			state "default", label: 'DISARM', action: "setDisarmed", icon:"st.security.alarm.off"
 		}
 		standardTile("dismiss", "device.setAlarm", decoration: "flat", width: 2, height: 2) {
-			state "default", label: 'DISMISS', action: "dismissAlert", icon:"st.security.alarm.off"
+			state "default", label: 'DISMISS', action: "dismissAlert", icon:"st.custom.sonos.muted"
 		}
         standardTile("alarm", "device.alarm", decoration: "flat", width: 2, height: 2) {
- 	     	state "default", label: 'ACTIVATE ALARM', action: "activateAlarm", icon:"st.security.alarm.on"
+ 	     	state "default", label: 'ACTIVATE ALARM', action: "activateAlarm", icon:"st.alarm.beep.beep"
         }
         valueTile("summary", "device.summary", decoration: "flat", width: 6, height: 6) {
  	      state "default", label: '${currentValue}'

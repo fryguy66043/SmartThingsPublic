@@ -41,6 +41,10 @@ metadata {
 		attribute "sunriseDate", "string"
 		attribute "sunsetDate", "string"
 		attribute "lastUpdate", "string"
+        attribute "actualLow", "number"
+        attribute "actualLowTime", "string"
+        attribute "actualHigh", "number"
+        attribute "actualHighTime", "string"
         
         attribute "luxValue", "string"
         attribute "shortForecast", "string"
@@ -51,6 +55,8 @@ metadata {
         attribute "rainDisplay", "string"
 
 		command "refresh"
+        command "setActualLow"
+        command "setActualHigh"
 	}
 
 	preferences {
@@ -130,6 +136,10 @@ metadata {
 			state "default", label:'wind ${currentValue} mph'
 		}
 
+		valueTile("actual", "device.actual", decortion: "flat", width: 6, height: 2) {
+        	state "default", label: '${currentValue}'
+        }
+
 		valueTile("weather", "device.weather", decoration: "flat", width: 2, height: 2) {
 			state "default", label:'${currentValue}'
 		}
@@ -181,7 +191,7 @@ metadata {
 		}
 
 		main(["temperature", "weatherIcon","feelsLike"])
-		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "city", "percentPrecip", "rainDisplay", "forecast", "alert", "refresh", "rise", "set", "light", "lastUpdate"])}
+		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "actual", "city", "percentPrecip", "rainDisplay", "forecast", "alert", "refresh", "rise", "set", "light", "lastUpdate"])}
 //		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "city", "percentPrecip", "rainToday", "forecast", "alert", "refresh", "rise", "set", "light", "lastUpdate"])}
 //		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "city", "percentPrecip", "rainToday", "forecast", "refresh", "rise", "set", "lastUpdate"])}
 //		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "city", "percentPrecip", "rainToday", "forecast", "refresh", "rise", "set", "light", "lastUpdate"])}
@@ -204,6 +214,35 @@ def uninstalled() {
 }
 
 // handle commands
+
+def setActualLow(val) {
+	log.debug "setActualLow(${val})"
+    def time = new Date().format("h:mm a", location.timeZone)
+    
+    if (val) {
+    	def high = (device.currentValue("actualHigh")) ? device.currentValue("actualHigh") : -99
+        def highTime = (device.currentValue("actualHighTime")) ? device.currentValue("actualHighTime") : "N/A"
+    	def disp = "Low: ${val}° ${time}\nHigh: ${high}° ${highTime}"
+    	sendEvent(name: "actualLow", value: val)
+        sendEvent(name: "actualLowTime", value: time)
+        sendEvent(name: "actual", value: disp)
+    }
+}
+
+def setActualHigh(val) {
+	log.debug "setActualHigh(${val})"
+    def time = new Date().format("h:mm a", location.timeZone)
+    
+    if (val) {
+    	def low = (device.currentValue("actualLow")) ? device.currentValue("actualLow") : 99
+        def lowTime = (device.currentValue("actualLowTime")) ? device.currentValue("actualLowTime") : "N/A"
+    	def disp = "Low: ${low}° ${lowTime}\nHigh: ${val}° ${time}"
+    	sendEvent(name: "actualHigh", value: val)
+        sendEvent(name: "actualHighTime", value: time)
+        sendEvent(name: "actual", value: disp)
+    }
+}
+
 def poll() {
 	log.debug "WUSTATION: Executing 'poll', location: ${location.name}"
 
@@ -306,10 +345,10 @@ def poll() {
 		// Alerts
 		def alerts = get("alerts")?.alerts
 		def newKeys = alerts?.collect{it.type + it.date_epoch} ?: []
-		log.debug "WUSTATION: newKeys = $newKeys"
-		log.trace device.currentState("alertKeys")
+//		log.debug "WUSTATION: newKeys = $newKeys"
+//		log.trace device.currentState("alertKeys")
 		def oldKeys = device.currentState("alertKeys")?.jsonValue
-		log.debug "WUSTATION: oldKeys = $oldKeys"
+//		log.debug "WUSTATION: oldKeys = $oldKeys"
 
 		def noneString = "no current weather alerts"
 		if (!newKeys && oldKeys == null) {
@@ -383,7 +422,7 @@ private localDate(timeZone) {
 }
 
 private send(map) {
-	log.debug "WUSTATION: event: $map"
+//	log.debug "WUSTATION: event: $map"
 	sendEvent(map)
 }
 
@@ -403,7 +442,7 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
     def firstLightTime = sunriseDate.time - halfHour
     def lastLightTime = sunsetDate.time + halfHour
     def nowDisplay = new Date().format("h:mm a", location.timeZone)
-    log.debug "FL = ${firstLightDisplay} / Now = ${nowDisplay} / LL = ${lastLightDisplay}"
+//    log.debug "FL = ${firstLightDisplay} / Now = ${nowDisplay} / LL = ${lastLightDisplay}"
     
     def lux = 0
 	def now = new Date().time
@@ -435,7 +474,7 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
 		//adjust for dusk/dawn
 		def afterSunrise = now - firstLightTime
 		def beforeSunset = lastLightTime - now
-		
+/*		
         log.debug "now = ${now}"
         log.debug "afterSunrise == ${afterSunrise}"
         log.debug "beforeSunset == ${beforeSunset}"
@@ -443,15 +482,15 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
         log.debug "beforeSunset < 1.5HR = ${beforeSunset < (oneHour + halfHour)}"
         log.debug "1.5HR == ${oneHour + halfHour}"
         log.debug "afterSunrise/(oneHour + halfHour) == ${afterSunrise/(oneHour + halfHour)}"
-
+*/
 		if(afterSunrise < (oneHour + halfHour)) {
 			//dawn
 			lux = (long)(lux * (afterSunrise/(oneHour + halfHour)))
-            log.debug "afterSunrise Lux == ${lux}"
+//            log.debug "afterSunrise Lux == ${lux}"
 		} else if (beforeSunset < (oneHour + halfHour)) {
 			//dusk
 			lux = (long)(lux * (beforeSunset/(oneHour + halfHour)))
-            log.debug "beforeSunset Lux == ${lux}"
+//            log.debug "beforeSunset Lux == ${lux}"
 		}
 	}
 	else {
@@ -460,6 +499,6 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
 		lux = 10
 	}
 
-	log.debug "lux = ${lux}"
+//	log.debug "lux = ${lux}"
 	lux
 }

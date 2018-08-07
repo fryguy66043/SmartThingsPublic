@@ -20,7 +20,7 @@
 metadata {
 	definition (name: "My Contact Sensor", namespace: "FryGuy66043", author: "Jeffrey Fry") {
 		capability "Actuator"
-		capability "Contact Sensor"
+//		capability "Contact Sensor"
 		capability "Refresh"
 		capability "Sensor"
 		capability "Health Check"
