@@ -40,6 +40,8 @@ metadata {
         command "setLocationArrival"
         command "setLocationDeparture"
         command "setTrackingList"
+        command "setLastLocation"
+        command "reset"
 	}
 
 	simulator {
@@ -94,9 +96,19 @@ def setTrackingList(list) {
     sendEvent(name: "tracking", value: list)
 }
 
-def setLocationDeparture(loc) {
-	log.debug "setLocationDeparture(${loc})"
-    def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
+def setLastLocation(loc, time) {
+	log.debug "setLastLocation(${loc}, ${time})"
+    def date = (time) ? time : new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
+	if (loc) {
+        	sendEvent(name: "lastLocation", value: device.currentValue("currentLocation"))
+	    	sendEvent(name: "lastLocationDisp", value: "${device.currentValue("currentLocation")}\n${date}")
+	        sendEvent(name: "lastLocationArrivalTime", value: "${date}")
+    }
+}
+
+def setLocationDeparture(loc, time) {
+	log.debug "setLocationDeparture(${loc}, ${time})"
+    def date = (time) ? time : new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
 	if (loc) {
     	sendEvent(name: "switch", value: "off")
     	if (loc == device.currentValue("currentLocation")) {
@@ -115,9 +127,9 @@ def setLocationDeparture(loc) {
     }    
 }
 
-def setLocationArrival(loc) {
-	log.debug "setLocationArrival(${loc})"
-    def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
+def setLocationArrival(loc, time) {
+	log.debug "setLocationArrival(${loc}, ${time})"
+    def date = (time) ? time : new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
 	if (loc) {
     	sendEvent(name: "switch", value: "on")
     	if (device.currentValue("currentLocation") != "Away"){
@@ -167,4 +179,22 @@ def refresh() {
 	def timestamp = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
     sendEvent(name: "update", value: timestamp)
     sendEvent(name: "reportRequest", value: timestamp)
+}
+
+def reset() {
+	log.debug "Resetting all settings..."
+
+	sendEvent(name: "name", value: "")
+    sendEvent(name: "trackingList", value: "")
+    sendEvent(name: "currentLocation", value: "")
+    sendEvent(name: "currentLocationArrivalTime", value: "")
+    sendEvent(name: "lastLocation", value: "")
+    sendEvent(name: "lastLocationArrivalTime", value: "")
+    sendEvent(name: "lastLocationDepartureTime", value: "")
+    sendEvent(name: "locationDisp", value: "")
+    sendEvent(name: "lastLocationDisp", value: "")
+    sendEvent(name: "location", value: "")
+    sendEvent(name: "tracking", value: "")
+	off()    
+    initialize()
 }
