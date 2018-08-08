@@ -30,6 +30,13 @@ preferences {
     section("Select a SmartLock") {
     	input "myLock", "capability.lock", title: "Which SmartLock?"
     }
+    section("Enter User Names For Each Code") {
+    	input "code1", "text", required: false, title: "Code 1 User."
+    	input "code2", "text", required: false, title: "Code 2 User."
+    	input "code3", "text", required: false, title: "Code 3 User."
+    	input "code4", "text", required: false, title: "Code 4 User."
+    	input "code5", "text", required: false, title: "Code 5 User."
+    }
 	section("Send Push Notification?") {
         input "sendPush", "bool", required: false,
               title: "Send Push Notification when Locked/Unlocked?"
@@ -74,23 +81,60 @@ def lockHandler(evt) {
     def dataString = "${evt?.data}"
     def index = 0
     def user = ""
-    def method = "manual"
+    def codeId = ""
+    def method = "command"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     
 	log.debug "name: ${evt.name} / displayName: ${evt.displayName} / value: ${evt.value} / data: ${evt?.data} / size: ${evt?.data?.size()}"
     sendSms("9136679526", "${location}: evt.data = ${dataString}")
 
     def data = new JsonSlurper().parseText(evt.data)
-    log.debug "data.codeName = '${data?.codeName}' / data.method = '${data?.method}' / data.lockName = '${data?.lockName}'"
+    log.debug "data.codeName = '${data?.codeName}' / data.method = '${data?.method}' / data.lockName = '${data?.lockName}' / data.codeId = '${data?.codeId}'"
+    
     if (data.codeName) {
         user = data.codeName
         log.debug "user = ${user}"
+    }
+    if (data.codeId) {
+    	codeId = "${data.codeId}"
+        log.debug "codeId = ${codeId}"
     }
     if (data.method) {
         method = data.method
         log.debug "method = ${method}"
     }
 
+	if (evt.value == "unlocked") {
+    	if (!user && codeId) {
+        	log.debug "!user && codeId = ${codeId}"
+        	switch ("${codeId}") {
+            	case "1":
+                	user = code1
+                    log.debug "code1"
+                	break
+                case "2":
+                	user = code2
+                    log.debug "code2"
+                	break
+                case "3":
+                	user = code3
+                    log.debug "code3"
+                	break
+                case "4":
+                	user = code4
+                    log.debug "code4"
+                	break
+                case "5":
+                    log.debug "code5"
+                	user = code5
+                	break
+                default:
+                	user = "${codeId}"
+                	break
+            }
+        }
+        log.debug "user = ${user}"
+    }
 /*
 	index = dataString.indexOf("codeName")
 	if (index > -1) {
@@ -112,12 +156,16 @@ def lockHandler(evt) {
 */
 
 	def msg = "${location} ${date}: ${evt.displayName} was ${evt.value}"
+    log.debug "user = ${user} / method = ${method} / codeId = ${codeId}"
     if (user) {
-    	msg = msg + " by keypad code: ${user}."
+    	msg = msg + " by user code: ${user}."
     }
     else if (method) {
     	if (method == "manual") {
         	msg = msg + " manually."
+        }
+        else if (method == "command") {
+        	msg = msg + " by command."
         }
         else {
 	    	msg = msg + " by ${method}."
