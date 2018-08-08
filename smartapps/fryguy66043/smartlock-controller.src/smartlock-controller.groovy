@@ -24,6 +24,7 @@ definition(
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
     iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png")
 
+import groovy.json.JsonSlurper
 
 preferences {
     section("Select a SmartLock") {
@@ -77,7 +78,19 @@ def lockHandler(evt) {
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     
 	log.debug "name: ${evt.name} / displayName: ${evt.displayName} / value: ${evt.value} / data: ${evt?.data} / size: ${evt?.data?.size()}"
+    sendSms("9136679526", "${location}: evt.data = ${dataString}")
 
+	if (evt.data && evt.value == "unlocked") {
+		def data = new JsonSlurper().parseText(evt.data)
+        if (data.codeName) {
+        	user = data.codeName
+        }
+        else if (data.method) {
+        	method = data.method
+        }
+    }
+
+/*
 	index = dataString.indexOf("codeName")
 	if (index > -1) {
     	user = dataString.substring(index+11, dataString.size())
@@ -95,6 +108,7 @@ def lockHandler(evt) {
             method = method.substring(0, index-1)
         }
     }
+*/
 
 	def msg = "${location} ${date}: ${evt.displayName} was ${evt.value}"
     if (user) {
@@ -118,7 +132,6 @@ def lockHandler(evt) {
     }
     if (phone) {
     	sendSms(phone, msg)
-        sendSms(phone, "evt.data = ${dataString}")
     }
 }
 
