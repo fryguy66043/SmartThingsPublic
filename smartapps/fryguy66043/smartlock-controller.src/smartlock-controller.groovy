@@ -74,20 +74,21 @@ def lockHandler(evt) {
     def dataString = "${evt?.data}"
     def index = 0
     def user = ""
-    def method = ""
+    def method = "manual"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     
 	log.debug "name: ${evt.name} / displayName: ${evt.displayName} / value: ${evt.value} / data: ${evt?.data} / size: ${evt?.data?.size()}"
     sendSms("9136679526", "${location}: evt.data = ${dataString}")
 
-	if (evt.data && evt.value == "unlocked") {
-		def data = new JsonSlurper().parseText(evt.data)
-        if (data.codeName) {
-        	user = data.codeName
-        }
-        else if (data.method) {
-        	method = data.method
-        }
+    def data = new JsonSlurper().parseText(evt.data)
+    log.debug "data.codeName = '${data?.codeName}' / data.method = '${data?.method}' / data.lockName = '${data?.lockName}'"
+    if (data.codeName) {
+        user = data.codeName
+        log.debug "user = ${user}"
+    }
+    if (data.method) {
+        method = data.method
+        log.debug "method = ${method}"
     }
 
 /*
@@ -112,7 +113,7 @@ def lockHandler(evt) {
 
 	def msg = "${location} ${date}: ${evt.displayName} was ${evt.value}"
     if (user) {
-    	msg = msg + " by code: ${user}."
+    	msg = msg + " by keypad code: ${user}."
     }
     else if (method) {
     	if (method == "manual") {
