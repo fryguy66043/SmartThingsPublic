@@ -74,13 +74,14 @@ def initialize() {
 
 def appHandler(evt) {
 	log.debug "appHandler: ${evt.value}"
-
+	def testVal = (evt.value) ?: "Nope!"
+	log.debug "tesVal = ${testVal}"
 	
 //	def code = myLock.requestCode("1")
 //	log.debug "code = ${code}"
-	def codes = myLock.currentValue("lockCodes")
-    log.debug "codes = ${codes}"
-    myLock.poll()
+//	def codes = myLock.currentValue("lockCodes")
+//    log.debug "codes = ${codes}"
+//    myLock.poll()
     
 /*
 	def lockCommands = myLock.supportedCommands

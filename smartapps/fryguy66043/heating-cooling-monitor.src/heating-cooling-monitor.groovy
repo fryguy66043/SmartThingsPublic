@@ -167,37 +167,10 @@ def appHandler(evt) {
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
 
 	thermostat.refresh()
-	log.debug "${date}: thermostat.currentThermostat = ${thermostat.currentThermostat} / thermostat.currentValue("operatingState") = ${thermostat.currentValue("operatingState")}"
+//	log.debug "${date}: thermostat.currentThermostat = ${thermostat.currentThermostat} / thermostat.currentValue("thermostatOperatingState") = ${thermostat.currentValue("thermostatOperatingState")}"
     
 //	hvacSensor.resetDailyCycles()
 
-//	log.debug "thermostat.name = ${thermostat.name}"
-//    hvacSensor.setMyThermostatName("${thermostat.displayName}")
-
-//	hvacSensor.resetMonthlyCycles()
-/*
-    if (hvacSensor) {
-    	hvacSensor.refresh()
-    	def hvacMode = hvacSensor.currentValue("mode") 
-        if (hvacMode != thermostat.currentValue("thermostatMode")) {
-        	log.debug "Calling hvacSensor.setMode(${thermostat.currentValue("thermostatMode")})"
-        	hvacSensor.setMode(thermostat.currentValue("thermostatMode"))
-        }
-        def hvacOS = hvacSensor.currentValue("operatingState")
-        if (hvacOS != thermostat.currentValue("thermostatOperatingState")){
-        	log.debug "Calling hvacSensor.setOperatingState(${thermostat.currentValue("thermostatOperatingState")})"
-        	hvacSensor.setOperatingState(thermostat.currentValue("thermostatOperatingState"))
-        }
-        hvacSensor.setInsideTemp(thermostat.currentValue("temperature"))
-        hvacSensor.setOutsideTemp(outsideTemp.currentValue("temperature"))
-        if (hvacMode == "cool") {
-	        hvacSensor.setPointTemp(thermostat.currentValue("coolingSetpoint"))
-        }
-        else if (hvacMode == "heat") {
-	        hvacSensor.setPointTemp(thermostat.currentValue("heatingSetpoint"))
-        }
-    }
-*/    
 	log.debug "lowTempUpdate = ${lowTempUpdate} / lowTempValue = ${lowTempValue} / highTempUpdate = ${highTempUpdate} / highTempValue = ${highTempValue} / tempDay = ${tempDay}"
     if ((lowTempUpdate || highTempUpdate) && tempDay != "None") {
     	log.debug "Calling tempUpdate()"
@@ -206,8 +179,8 @@ def appHandler(evt) {
 //	evaluate(evt)
 //	log.debug "Reset time: ${resetTime}"
 
-//	sendWeeklyUpdate(evt)
-//    sendYearlyUpdate(evt)
+	sendWeeklyUpdate(evt)
+    sendYearlyUpdate(evt)
 }
 
 def refreshHandler(evt) {
@@ -927,9 +900,11 @@ private evaluate(evt)
 }
 
 private getDispTime(min) {
+	def days = 0
 	def hour = 0
     def minutes = 0
     def stringTime = ""
+    def dispDay = ""
     def dispHour = "0 Hr"
     def dispMin = "0 Min"
     def dispTime = "0 Hr 0 Min"
@@ -938,11 +913,17 @@ private getDispTime(min) {
     if (min > 59) {
     	stringTime = Double.toString(min / 60)
         hour = Double.valueOf(stringTime).intValue()
-        dispHour = Integer.toString(hour) + " Hr"
         minutes = min - (60 * hour)
     }
     dispMin = Integer.toString(minutes) + " Min"
-    dispTime = "${dispHour} ${dispMin}"
+    if (hour > 23) {
+    	stringTime = Double.toString(hour / 24)
+        days = Double.valueOf(stringTime).intValue()
+        dispDay = Integer.toString(days) + " Days "
+        hour = hour - (24 * days)
+    }
+    dispHour = Integer.toString(hour) + " Hr"
+    dispTime = "${dispDay}${dispHour} ${dispMin}"
 
     return dispTime
 }
