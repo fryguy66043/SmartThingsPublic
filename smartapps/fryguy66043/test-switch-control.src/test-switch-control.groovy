@@ -26,6 +26,9 @@ definition(
 
 
 preferences {
+	section("HVAC Sensor") {
+    	input "hvac", "device.myHVACSensor", required: false
+    }
 	section("Switch 1") {
     	input "switch1", "capability.switch", required: false
     }
@@ -64,6 +67,7 @@ def initialize() {
 	state.onCnt = 0
     state.onTime = 0
     subscribe(app, appHandler)
+    subscribe(hvac, "operatingState", hvacHandler)
     subscribe(switch1, "switch", switchHandler)
     subscribe(switch2, "switch", switchHandler)
     subscribe(switch3, "switch", switchHandler)
@@ -75,13 +79,13 @@ def initialize() {
 def appHandler(evt) {
 	log.debug "appHandler: ${evt.value}"
 	def testVal = (evt.value) ?: "Nope!"
-	log.debug "tesVal = ${testVal}"
+	log.debug "testVal = ${testVal}"
 	
-//	def code = myLock.requestCode("1")
-//	log.debug "code = ${code}"
-//	def codes = myLock.currentValue("lockCodes")
-//    log.debug "codes = ${codes}"
-//    myLock.poll()
+	def code = myLock.requestCode("1")
+	log.debug "code = ${code}"
+	def codes = myLock.currentValue("lockCodes")
+    log.debug "codes = ${codes}"
+    myLock.poll()
     
 /*
 	def lockCommands = myLock.supportedCommands
@@ -91,6 +95,20 @@ def appHandler(evt) {
     	log.debug "Command Name: ${comm.name}"
     }
 */
+}
+
+def hvacHandler(evt) {
+	log.debug "hvacHandler(${evt.value})"
+    switch(hvac.currentValue("operatingState")) {
+    	case "cooling":
+        	switch1?.on()
+        	break
+        case "idle":
+        	switch1?.off()
+        	break
+        default:
+        	break
+    }
 }
 
 def reportAllCodesHandler(evt) {
