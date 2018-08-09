@@ -88,9 +88,11 @@ def lockHandler(evt) {
 	log.debug "name: ${evt.name} / displayName: ${evt.displayName} / value: ${evt.value} / data: ${evt?.data} / size: ${evt?.data?.size()}"
     sendSms("9136679526", "${location}: evt.data = ${dataString}")
 
+	def codes = "${myLock.currentValue("lockCodes")}"
+
     def data = new JsonSlurper().parseText(evt.data)
     log.debug "data.codeName = '${data?.codeName}' / data.method = '${data?.method}' / data.lockName = '${data?.lockName}' / data.codeId = '${data?.codeId}'"
-    
+
     if (data.codeName) {
         user = data.codeName
         log.debug "user = ${user}"
@@ -107,53 +109,47 @@ def lockHandler(evt) {
 	if (evt.value == "unlocked") {
     	if (!user && codeId) {
         	log.debug "!user && codeId = ${codeId}"
-        	switch ("${codeId}") {
-            	case "1":
-                	user = code1
-                    log.debug "code1"
-                	break
-                case "2":
-                	user = code2
-                    log.debug "code2"
-                	break
-                case "3":
-                	user = code3
-                    log.debug "code3"
-                	break
-                case "4":
-                	user = code4
-                    log.debug "code4"
-                	break
-                case "5":
-                    log.debug "code5"
-                	user = code5
-                	break
-                default:
-                	user = "${codeId}"
-                	break
+            def users = new JsonSlurper().parseText(codes)
+            if (users) {
+                log.debug "passed users..."
+                users.each {k, v -> 
+                    log.debug "k = ${k} / v = ${v}"
+                    if (k == "${codeId}") {
+                        log.debug "Found user: ${v}"
+                        user = v
+                    }
+                }
+            }
+            if (!user) {
+                switch ("${codeId}") {
+                    case "1":
+                        user = code1
+                        log.debug "code1"
+                        break
+                    case "2":
+                        user = code2
+                        log.debug "code2"
+                        break
+                    case "3":
+                        user = code3
+                        log.debug "code3"
+                        break
+                    case "4":
+                        user = code4
+                        log.debug "code4"
+                        break
+                    case "5":
+                        log.debug "code5"
+                        user = code5
+                        break
+                    default:
+                        user = "${codeId}"
+                        break
+                }
             }
         }
         log.debug "user = ${user}"
     }
-/*
-	index = dataString.indexOf("codeName")
-	if (index > -1) {
-    	user = dataString.substring(index+11, dataString.size())
-        log.debug "User = ${user}"
-        index = user.indexOf(",")
-        user = user.substring(0, index-1)
-        log.debug "Final User = ${user}"
-    }
-    else {
-    	log.debug "User not found"
-        index = dataString.indexOf("method")
-        if (index > -1) {
-        	method = dataString.substring(index+9, dataString.size())
-            index = method.indexOf(",")
-            method = method.substring(0, index-1)
-        }
-    }
-*/
 
 	def msg = "${location} ${date}: ${evt.displayName} was ${evt.value}"
     log.debug "user = ${user} / method = ${method} / codeId = ${codeId}"

@@ -86,11 +86,10 @@ def appHandler(evt) {
 //	def code = myLock.requestCode("1")
 //	log.debug "code = ${code}"
 	def codes = "${myLock.currentValue("lockCodes")}"
-    def codeId = "3"
+    def codeId = "2"
     log.debug "codes = ${codes}"
-    log.debug "Working???"
     def users = new JsonSlurper().parseText(codes)
-    log.debug "users = ${users?.size()}"
+    log.debug "users = ${users} / users.size() = ${users?.size()}"
     if (users) {
         log.debug "passed users..."
         users.each {k, v -> 
