@@ -65,6 +65,7 @@ preferences {
     }
     section("Erase Last Entry Switch") {
     	input "eraseSwitch", "capability.switch", required: false, title: "Which Switch will erase the last tracking entry?"
+        input "eraseEntry", "bool", title: "This will erase the last location entry, including the arrival and departure."
     }
     section("Add Entry Manually") {
     	input "addEntry", "enum", options: ["None", "Arrival", "Departure"], title: "Do you want to add an entry manually?"
@@ -124,6 +125,13 @@ def initialize() {
             state.lastEvent = "off"
             setDeparture(addLocation, addTime)
         }
+        setTrackingDisplay()
+    }
+    if (eraseEntry) {
+    	log.debug "Erasing last entry..."
+        state.trackingList.remove(state.trackingList.size()-1)
+        state.trackingArrTime.remove(state.trackingArrTime.size()-1)
+        state.trackingDptTime.remove(state.trackingDptTime.size()-1)
         setTrackingDisplay()
     }
 
@@ -190,35 +198,25 @@ def eraseHandler(evt) {
     def result = true
     
     state.erase = true
-/*    
-    if (state.trackingList[state.trackingList.size()-1].contains("Arr:") || state.trackingList[state.trackingList.size()-1].contains("Dpt:")) {
-        if (state.trackingList[state.trackingList.size()-2].contains("Arr:")) {
-            setArrival("${state.trackingList[state.trackingList.size()-2]}", "${state.trackingTime[state.trackingTime.size()-2]}")
-            if (state.trackingList[state.trackingList.size()-3].contains("Dpt:") || state.trackingList[state.trackingList.size()-3].contains("Arr:")) {
-                setLastLocation("${state.trackingList[state.trackingList.size()-3]}", "${state.trackingTime[state.trackingTime.size()-3]}")
-            }
-        }
-        else if (state.trackingList[state.trackingList.size()-2].contains("Dpt:")) {
-            setDeparture("${state.trackingList[state.trackingList.size()-2]}", "${state.trackingTime[state.trackingTime.size()-2]}")
-            if (state.trackingList[state.trackingList.size()-3].contains("Arr:") || state.trackingList[state.trackingList.size()-3].contains("Dpt:")) {
-    //        	setLastLocation("${state.trackingList[state.trackingList.size()-3]}", "${state.trackingTime[state.trackingTime.size()-3]}")
-            }
-        }
-    }
-*/    
-	def arrDate = (state.trackingArrTime[state.trackingList.size()-2] != "00:00") ? Date.parse("hh:mm", state.trackingArrTime[state.trackingList.size()-2]) : Date.parse("hh:mm", "12:01")
-    def dptDate = (state.trackingDptTime[state.trackingList.size()-2] != "00:00") ? Date.parse("hh:mm", state.trackingDptTime[state.trackingList.size()-2]) : Date.parse("hh:mm", "12:01")
+    
+	def arrDate = (state.trackingArrTime[state.trackingList.size()-1] != "00:00") ? Date.parse("hh:mm", state.trackingArrTime[state.trackingList.size()-1]) : Date.parse("hh:mm", "12:01")
+    def dptDate = (state.trackingDptTime[state.trackingList.size()-1] != "00:00") ? Date.parse("hh:mm", state.trackingDptTime[state.trackingList.size()-1]) : Date.parse("hh:mm", "12:01")
     log.debug "arrDate = ${arrDate} / dptDate = ${dptDate} : arrDate < dptDate = ${arrDate < dptDate} : dptDate < arrDate = ${dptDate < arrDate}"
+    log.debug "arrDate = dptDate == ${arrDate == dptDate}"
 
     if (!state.trackingList[state.trackingList.size()-1].contains("~")) { //Make sure we're not deleting anything before today.
         if (arrDate > dptDate) { //This is an arrival event being restored.
-            setArrival("${state.trackingList[state.trackingList.size()-2]}", "${state.trackingTime[state.trackingArrTime.size()-2]}")
+            setArrival("${state.trackingList[state.trackingList.size()-2]}", "${state.trackingArrTime[state.trackingArrTime.size()-2]}")
             state.trackingDptTime[state.trackingList.size()-2] = "00:00"
             if (!state.trackingList[state.trackingList.size()-3].contains("~")) {
                 setLastLocation("${state.trackingList[state.trackingList.size()-3]}", "${state.trackingDptTime[state.trackingDptTime.size()-3]}")
             }
         }
         else if (arrDate < dptDate) { //this is a departure event being restored.
+        	if (state.trackingArrTime[state.trackingArrTime.size()-1] != "00:00") {
+            	state.trackingDptTime[state.trackingArrTime.size()-1] = "00:00"
+                result = false
+            }
             setDeparture("${state.trackingList[state.trackingList.size()-2]}", "${state.trackingDptTime[state.trackingDptTime.size()-2]}")
         }
     }
@@ -227,12 +225,13 @@ def eraseHandler(evt) {
         log.debug "Unable to erase last entry"
     }
     if (result) {
+    	log.debug "Removing entry: ${state.trackingList[state.trackingList.size()-1]}"
         state.trackingList.remove(state.trackingList.size()-1)
         state.trackingArrTime.remove(state.trackingArrTime.size()-1)
         state.trackingDptTime.remove(state.trackingDptTime.size()-1)
-        setTrackingDisplay()
     }
 
+    setTrackingDisplay()
     state.erase = false
 }
 
