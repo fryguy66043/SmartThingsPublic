@@ -50,6 +50,8 @@ preferences {
     }
 }
 
+import groovy.json.JsonSlurper
+
 def installed() {
 	log.debug "Installed with settings: ${settings}"
 
@@ -77,15 +79,29 @@ def initialize() {
 }
 
 def appHandler(evt) {
-	log.debug "appHandler: ${evt.value}"
-	def testVal = (evt.value) ?: "Nope!"
+	log.debug "appHandler: ${evt.value} / evt.data = ${evt?.data}"
+	def testVal = (evt.value) ? "XXXXX" : "Nope!"
 	log.debug "testVal = ${testVal}"
 	
-	def code = myLock.requestCode("1")
-	log.debug "code = ${code}"
-	def codes = myLock.currentValue("lockCodes")
+//	def code = myLock.requestCode("1")
+//	log.debug "code = ${code}"
+	def codes = "${myLock.currentValue("lockCodes")}"
+    def codeId = "3"
     log.debug "codes = ${codes}"
-    myLock.poll()
+    log.debug "Working???"
+    def users = new JsonSlurper().parseText(codes)
+    log.debug "users = ${users?.size()}"
+    if (users) {
+        log.debug "passed users..."
+        users.each {k, v -> 
+            log.debug "k = ${k} / v = ${v}"
+            if (k == "${codeId}") {
+                log.debug "Found user: ${v}"
+            }
+        }
+    }
+
+//    myLock.poll()
     
 /*
 	def lockCommands = myLock.supportedCommands
