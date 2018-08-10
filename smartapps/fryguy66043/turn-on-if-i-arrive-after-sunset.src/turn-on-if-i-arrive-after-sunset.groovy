@@ -143,13 +143,19 @@ def arrivalHandler(evt)
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
 	def sunTime = getSunriseAndSunset()
     def dark = (now >= sunTime.sunset)
-    def message = "${location} ${date} <${getAppName()}>: Welcome home at night! Turning on light(s): ${switch1}"
+    def message = "${location} ${date} <${getAppName()}>: "
     
 	if (firstOneHome() && dark) {
     	if (state.hue || state.saturation) {
         	switch1?.setColor([hue: state.hue, saturation: state.saturation])
         }
-		switch1.on()
+        if (alreadyOnCheck()) {
+        	message = message + "Welcome home at night!  Lights are already on: ${switch1}"
+        }
+        else {
+        	message = message + "Welcome home at night! Turning on light(s): ${switch1}"
+			switch1.on()
+        }
 		log.debug message
         if (sendPush) {
             sendPush(message)
@@ -169,6 +175,21 @@ private firstOneHome() {
         }
     }
     if (cnt == 1) {
+    	result = true
+    }
+    return result
+}
+
+private alreadyOnCheck() {
+	log.debug "alreadyOnCheck"
+    def result = false
+    def cnt = 0
+	for (light in switch1) {
+    	if (light.currentSwitch == "on") {
+            cnt = cnt + 1
+        }
+    }
+    if (cnt == switch1.size()) {
     	result = true
     }
     return result
