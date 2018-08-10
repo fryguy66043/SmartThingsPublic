@@ -46,6 +46,10 @@ preferences() {
     	input "sendStartStop", "bool", required: false,
         	title: "Send Realtime Updates?"
     }
+    section("Provide Filter Change Reminders?") {
+    	input "reminderType", "enum", options: ["Never", "Days", "Run Time"], title: "When do you want to be reminded?"
+        input "reminderInterval", "number", required: false, default: 0, title: "If by Days, enter the number of days.  If by Run Time, enter the number of hours."
+    }
 	section("Send Push Notification?") {
         input "sendPush", "bool", required: false,
               title: "Send Push Notification?"
@@ -143,11 +147,22 @@ def updated()
 
 def subscribeToEvents()
 {
+	state.filterInterval = 0
+    state.reminderSent = false
+    state.filterChangedDate = ""
+
+	hvacSensor.setFilterChangeSchedule(reminderType)
+    if (reminderInterval) {
+	    hvacSensor.setFilterChangeInterval(reminderInterval)
+        hvacSensor.setFilterChangeCurrentValue(state.filterInterval)
+    }
+
 	log.debug "subscribeToEvents()"
 	subscribe(thermostat, "temperature", temperatureHandler)
     subscribe(thermostat, "thermostatMode", thermostatModeHandler)
     subscribe(thermostat, "thermostatOperatingState", thermostatOperatingStateHandler)
     subscribe(outsideTemp, "temperature", temperatureHandler)
+    subscribe(hvacSensor, "filterChanged", filterChangedHandler)
     subscribe(app, appHandler)	
     schedule(resetTime, resetHandler)
     if (updateInterval != "Never") {
@@ -167,6 +182,9 @@ def appHandler(evt) {
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
 
 	thermostat.refresh()
+    
+    hvacSensor.changeFilterRequired(true)
+    
 //	log.debug "${date}: thermostat.currentThermostat = ${thermostat.currentThermostat} / thermostat.currentValue("thermostatOperatingState") = ${thermostat.currentValue("thermostatOperatingState")}"
     
 //	hvacSensor.resetDailyCycles()
@@ -183,6 +201,16 @@ def appHandler(evt) {
     sendYearlyUpdate(evt)
 }
 
+def filterChangedHandler(evt) {
+	log.debug "filterChangedHandler(${evt.value})"
+    def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+    
+    state.filterChangedDate = date
+    state.filterInterval = 0
+    state.reminderSent = false
+    hvacSensor.setFilterChangeCurrentValue(state.filterInterval)
+}
+
 def refreshHandler(evt) {
 	def curThermo = thermostat.currentThermostat
     def curOS = thermostat.currentValue("thermostatOperatingState")
@@ -194,11 +222,25 @@ def refreshHandler(evt) {
     }
 }
 
+private sendFilterReminder() {
+	log.debug "sendFilterReminder"
+    hvacSensor.changeFilterRequired(true)
+    state.reminderSent = true    
+}
+
 def resetHandler() {
 	Calendar localCalendar = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
 	int day = localCalendar.get(Calendar.DAY_OF_WEEK)
     int dayOfMonth = localCalendar.get(Calendar.DAY_OF_MONTH)
-	
+
+	if (reminderType == "Days") {
+    	state.filterInterval = state.filterInterval + 1
+        hvacSensor.setFilterChangeCurrentValue(state.reminderInterval)
+        if (state.reminderInterval >= reminderInterval && !state.reminderSent) {
+        	sendFilterRemider()
+        }
+    }
+    
     state.windowReminder = false
     state.windowReminderDateTime = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     if (dayOfMonth == 1) {
@@ -616,7 +658,7 @@ def osCheckHandler()
     
 //    sendSms(phone, "currOS = ${state.currOS}")
     if (os != state.currOS) {
-        sendSms (phone, "${location}: ${os} != ${state.currOS}")
+//        sendSms (phone, "${location}: ${os} != ${state.currOS}")
         evaluate()
     }
 }
@@ -789,7 +831,7 @@ private sendYearlyUpdate(evt) {
 
 private evaluate(evt)
 {
-	log.debug "evaluate(): evt.value = ${evt.value}"
+	log.debug "evaluate(): evt.value = ${evt?.value}"
     def ot = outsideTemp.currentTemperature
     def tm = thermostat.currentThermostatMode
     def os = thermostat.currentValue("thermostatOperatingState")
@@ -881,6 +923,13 @@ private evaluate(evt)
             }
             state.currMode = tm
             state.currOS = os
+            if (reminderType == "Run Time") {
+            	state.filterInterval = state.filterInterval + runMin
+                hvacSensor.setFilterChangeCurrentValue(state.filterInterval/60)
+                if (state.filterInterval / 60 >= reminderInterval) {
+                	sendFilterReminder()
+                }
+            }
         }
     }
 
