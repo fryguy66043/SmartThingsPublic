@@ -26,6 +26,9 @@ definition(
 
 
 preferences {
+	section("Disable if present") {
+    	input "p1", "capability.presenceSensor", required: false
+    }
 	section("HVAC Sensor") {
     	input "hvac", "device.myHVACSensor", required: false
     }
@@ -76,13 +79,17 @@ def initialize() {
     subscribe(myLock, "lock", lockHandler)
     subscribe(myLock, "codeReport", lockCodeHandler)
     subscribe(myLock, "reportAllCodes", reportAllCodesHandler)
+    subscribe(p1, "presence", p1Handler)
 }
 
 def appHandler(evt) {
 	log.debug "appHandler: ${evt.value} / evt.data = ${evt?.data}"
 	def testVal = (evt.value) ? "XXXXX" : "Nope!"
 	log.debug "testVal = ${testVal}"
-	
+
+	Double val = 99.673222
+	log.debug "Value = ${val.round(1)}"
+
 //	def code = myLock.requestCode("1")
 //	log.debug "code = ${code}"
 	def codes = "${myLock.currentValue("lockCodes")}"
@@ -112,17 +119,26 @@ def appHandler(evt) {
 */
 }
 
+def p1Handler(evt) {
+	log.debug "p1handler(${evt.value})"
+    if (p1?.currentValue("presence") != "present") {
+    	switch1?.off()
+    }
+}
+
 def hvacHandler(evt) {
 	log.debug "hvacHandler(${evt.value})"
-    switch(hvac.currentValue("operatingState")) {
-    	case "cooling":
-        	switch1?.on()
-        	break
-        case "idle":
-        	switch1?.off()
-        	break
-        default:
-        	break
+    if (p1?.currentValue("presence") != "present") {
+        switch(hvac.currentValue("operatingState")) {
+            case "cooling":
+                switch1?.on()
+                break
+            case "idle":
+                switch1?.off()
+                break
+            default:
+                break
+        }
     }
 }
 

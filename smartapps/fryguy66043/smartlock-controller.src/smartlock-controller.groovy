@@ -31,6 +31,7 @@ preferences {
     	input "myLock", "capability.lock", title: "Which SmartLock?"
     }
     section("Enter User Names For Each Code") {
+    	paragraph "Only needed if the lock doesn't provide the code name and you want a name to display.  If the lock returns a code name, it will be used instead of the names below."
     	input "code1", "text", required: false, title: "Code 1 User."
     	input "code2", "text", required: false, title: "Code 2 User."
     	input "code3", "text", required: false, title: "Code 3 User."
@@ -86,9 +87,10 @@ def lockHandler(evt) {
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     
 	log.debug "name: ${evt.name} / displayName: ${evt.displayName} / value: ${evt.value} / data: ${evt?.data} / size: ${evt?.data?.size()}"
-    sendSms("9136679526", "${location}: evt.data = ${dataString}")
-
 	def codes = "${myLock.currentValue("lockCodes")}"
+    
+    sendSms("9136679526", "${location}: evt.data = ${dataString} / lockCodes = ${codes}")
+
 
     def data = new JsonSlurper().parseText(evt.data)
     log.debug "data.codeName = '${data?.codeName}' / data.method = '${data?.method}' / data.lockName = '${data?.lockName}' / data.codeId = '${data?.codeId}'"
