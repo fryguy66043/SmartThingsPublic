@@ -184,7 +184,7 @@ def switchHandler(evt) {
     	for (int i = 0; i < 3; i++) {
         	switch (i) {
             	case 0:
-                	if (switch1.displayName != evt.displayName) {
+                	if (switch1?.displayName != evt?.displayName) {
                     	log.debug "${switch1} != ${evt.displayName}"
                         if (switch1.currentValue("switch") == "on") {
                         	log.debug "Turning ${switch1} off..."
@@ -193,7 +193,7 @@ def switchHandler(evt) {
                     }
                 	break
                 case 1:
-                	if (switch2.displayName != evt.displayName) {
+                	if (switch2?.displayName != evt?.displayName) {
                     	log.debug "${switch2} != ${evt.displayName}"
                         if (switch2.currentValue("switch") == "on") {
                         	log.debug "Turning ${switch2} off..."
@@ -202,7 +202,7 @@ def switchHandler(evt) {
                     }
                 	break
                 case 2:
-                	if (switch3.displayName != evt.displayName) {
+                	if (switch3?.displayName != evt?.displayName) {
                     	log.debug "${switch3} != ${evt.displayName}"
                         if (switch3.currentValue("switch") == "on") {
                         	log.debug "Turning ${switch3} off..."
