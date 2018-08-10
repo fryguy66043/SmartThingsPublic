@@ -55,14 +55,18 @@ def updated()
     state.saturation = 0
 }
 
+private getAppName() { return "Arrive After Sunset" }
+
 def appHandler(evt) {
 	def now = new Date()
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
 	def sunTime = getSunriseAndSunset();
     def dark = (now >= sunTime.sunset)
-    def msg = "${location} ${date} <Arrive After Suset>:\n"
+    def msg = "${location} ${date} <${getAppName()}>: "
 	def presenceValue = presence1.find{it.currentPresence == "present"}
-    
+
+	log.debug "${app.name}"
+
 	if (presenceValue) {
     	if (dark) {
         	msg = msg + "Home after dark."
@@ -139,14 +143,14 @@ def arrivalHandler(evt)
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
 	def sunTime = getSunriseAndSunset()
     def dark = (now >= sunTime.sunset)
-    def message = "${location} ${date} <Arrive After Suset>:\nWelcome home at night! Turning on light(s): ${switch1}"
+    def message = "${location} ${date} <${getAppName()}>: Welcome home at night! Turning on light(s): ${switch1}"
     
 	if (firstOneHome() && dark) {
     	if (state.hue || state.saturation) {
         	switch1?.setColor([hue: state.hue, saturation: state.saturation])
         }
 		switch1.on()
-		log.debug "Welcome home at night! Turning light(s) on."
+		log.debug message
         if (sendPush) {
             sendPush(message)
         }
