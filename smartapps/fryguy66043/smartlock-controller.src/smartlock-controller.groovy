@@ -89,8 +89,7 @@ def lockHandler(evt) {
 	log.debug "name: ${evt.name} / displayName: ${evt.displayName} / value: ${evt.value} / data: ${evt?.data} / size: ${evt?.data?.size()}"
 	def codes = "${myLock.currentValue("lockCodes")}"
     
-    sendSms("9136679526", "${location}: evt.data = ${dataString} / lockCodes = ${codes}")
-
+    log.debug "lockCodes = ${codes}"
 
     def data = new JsonSlurper().parseText(evt.data)
     log.debug "data.codeName = '${data?.codeName}' / data.method = '${data?.method}' / data.lockName = '${data?.lockName}' / data.codeId = '${data?.codeId}'"
