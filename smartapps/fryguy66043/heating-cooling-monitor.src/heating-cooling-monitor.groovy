@@ -145,6 +145,8 @@ def updated()
 	subscribeToEvents()
 }
 
+private getAppName() { return "Heating/Cooling Monitor" }
+
 def subscribeToEvents()
 {
 	state.filterInterval = 0
@@ -690,7 +692,7 @@ private sendWeeklyUpdate(evt) {
     }
 
 
-	msg = "Heating/Cooling Monitor\n\n${getDateTime()}\nUpdate Type: ${updateType}\n${location} Thermostat\nMonitoring Since: ${state.runningSince}\n\n" +
+	msg = "${getAppName()}\n\n${getDateTime()}\nWeekly View - Update Type: ${updateType}\n${location} Thermostat\nMonitoring Since: ${state.runningSince}\n\n" +
         "Mon In H/L = ${state.weekMaxIn[1]} / ${state.weekMinIn[1]}\n" +
         "Mon Out H/L = ${state.weekMaxOut[1]} / ${state.weekMinOut[1]}\n" +
 		"Mon C = ${state.weekCoolCnt[1]} / ${getDispTime(state.weekCoolMin[1])}\n" +
@@ -742,7 +744,7 @@ private sendYearlyUpdate(evt) {
     	updateType = evt.value
     }
 
-	msg = "Heating/Cooling Monitor\n\n${getDateTime()}\nUpdate Type: ${updateType}\n${location} Thermostat\n\n" +
+	msg = "${getAppName()}\n\n${getDateTime()}\nYearly View - Update Type: ${updateType}\n${location} Thermostat\n\n" +
     	"Curr Year (${state.currYearDisp}):\n" +
         "C = ${state.currYearCoolCnt} / ${getDispTime(state.currYearCoolMin)}\n" +
 		"H = ${state.currYearHeatCnt} / ${getDispTime(state.currYearHeatMin)}\n" +
@@ -933,7 +935,7 @@ private evaluate(evt)
         }
     }
 
-	def msg = "Heating/Cooling Monitor\n\n${getDateTime()}\n${location} Thermostat\nMode: ${tm} \nOp State: ${os}\nFan Mode: ${fm}\n" +
+	def msg = "${getAppName()}\n\n${getDateTime()}\n${location} Thermostat\nMode: ${tm} \nOp State: ${os}\nFan Mode: ${fm}\n" +
     	"Cool Temp: ${csp}\nHeat Temp: ${hsp}\nInside Temp: ${ct}\nOutside Temp: ${ot}\n\n" + 
         "${getDay()} Total:\n" +
         "C = ${getDayCoolTotalCnt()} / ${getDispTime(getDayCoolTotalMin())}\n" +
