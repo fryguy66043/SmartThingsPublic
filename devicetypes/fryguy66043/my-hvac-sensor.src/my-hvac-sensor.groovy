@@ -20,14 +20,17 @@
 metadata {
 	definition (name: "My HVAC Sensor", namespace: "FryGuy66043", author: "Jeffrey Fry") {
 		capability "Actuator"
-//		capability "Switch"
-//      capability "Thermostat"
 		capability "Refresh"
 		capability "Sensor"
 		capability "Health Check"
 
 		attribute "runningSince", "string"
 		attribute "update", "string"
+        attribute "filterChanged", "string"
+        attribute "filterChangeRequired", "enum", ["true", "false"]
+        attribute "filterChangeSchedule", "enum", ["Never", "Days", "Run Time"]
+        attribute "filterChangeInterval", "number"
+        attribute "filterChangeCurrentValue", "string"
         attribute "myThermostatName", "string"
         attribute "mode", "enum", ["off", "auto", "cool", "heat", "emergencyHeat"]
         attribute "operatingState", "enum", ["idle", "cooling", "fanOnly", "heating"]
@@ -52,6 +55,11 @@ metadata {
         command "setPointTemp"
         command "resetDailyCycles"
         command "resetMonthlyCycles"
+        command "changeFilterRequired"
+        command "filterChanged"
+        command "setFilterChangeSchedule"
+        command "setFilterChangeInterval"
+        command "setFilterChangeCurrentValue"
         command "reset"
 	}
 
@@ -62,12 +70,19 @@ metadata {
 	tiles(scale: 2) {
 		standardTile("hvac", "device.hvac", width: 2, height: 2) {
 			state("off", label:'', icon:"thermostat.heating-cooling-off", backgroundColor:"#CCCCCC")
+            state("offFilter", label: '', icon:"thermostat.heating-cooling-off", backgroundColor:"#f1d801")
             state("heatIdle", label:'Idle', icon:"st.Home.home29", backgroundColor:"#d04e00")
+            state("heatIdleFilter", label:'Idle', icon:"st.Home.home29", backgroundColor:"#f1d801")
             state("heatHeating", label:'Heating', icon:"st.Home.home29", backgroundColor:"#bc2323")
+            state("heatHeatingFilter", label:'Heating', icon:"st.Home.home29", backgroundColor:"#f1d801")
             state("emergHeatIdle", label:'Idle', icon:"st.Home.home29", backgroundColor:"#d04e00")
+            state("emergHeatIdleFilter", label:'Idle', icon:"st.Home.home29", backgroundColor:"#f1d801")
             state("emergHeatHeating", label:'Heating', icon:"st.Home.home29", backgroundColor:"#bc2323")
+            state("emergHeatHeatingFilter", label:'Heating', icon:"st.Home.home29", backgroundColor:"#f1d801")
             state("coolIdle", label:'Idle', icon:"st.Weather.weather7", backgroundColor:"#1e9cbb")
+            state("coolIdleFilter", label:'Idle', icon:"st.Weather.weather7", backgroundColor:"#f1d801")
             state("coolCooling", label:'Cooling', icon:"st.Weather.weather7", backgroundColor:"#153591")
+            state("coolCoolingFilter", label:'Cooling', icon:"st.Weather.weather7", backgroundColor:"#f1d801")
 //			state("heatIdle", label:'', icon:"st.thermostat.heat", backgroundColor:"#d04e00")
 //			state("heatHeating", label:'', icon:"st.thermostat.heating", backgroundColor:"#bc2323")
 //			state("emergHeatIdle", label:'', icon:"st.thermostat.emergency-heat", backgroundColor:"#d04e00")
@@ -103,10 +118,15 @@ metadata {
         valueTile("since", "device.since", width: 6, height: 2) {
         	state("default", label: '${currentValue}')
         }
-
+        valueTile("filter", "device.filter", width: 6, height: 2) {
+        	state("default", label: '${currentValue}')
+        }
+        valueTile("filterChange", "device.filterChange", width: 6, height: 2) {
+        	state("default", label: '<PRESS WHEN REPLACED>\n${currentValue}', action: "filterChanged")
+        }
         
 		main "hvac"
-		details(["hvac", "setPoint", "inside", "outside", "hvacMode", "hvacOS", "cool", "heat", "lastUpdated", "since"])
+		details(["hvac", "setPoint", "inside", "outside", "hvacMode", "hvacOS", "cool", "heat", "lastUpdated", "since", "filter", "filterChange"])
 	}
 }
 
@@ -164,6 +184,107 @@ def resetMonthlyCycles() {
     resetDailyCycles()
 }
 
+def setFilterChangeSchedule(sched) {
+	log.debug "setFilterChangeSchedule(${sched})"
+    if (sched != "Never") {
+    	sendEvent(name: "filterChangeSchedule", value: sched)
+    }
+    else {
+    	sendEvent(name: "filterChangeSchedule", value: interval)
+        sendEvent(name: "filter", value: "Filter Change Schedule Not Set")
+    }
+}
+
+def setFilterChangeInterval(interval) {
+	log.debug "setFilterChangeInterval(${interval})"
+    if (interval) {
+    	sendEvent(name: "filterChangeInterval", value: interval)
+    }
+}
+
+def setFilterChangeCurrentValue(val) {
+	log.debug "setFilterChangeCurrentValue(${val})"
+    if (val >= 0 && device.currentValue("filterChangeSchedule") != "Never") {
+    	def due = device.currentValue("filterChangeInterval")
+        def interval = (device.currentValue("filterChangeSchedule") == "Days") ? "Days" : "Hours"
+        Double remainder = due - val
+    	sendEvent(name: "filterChangeCurrentValue", value: val)
+        sendEvent(name: "filter", value: "Filter Change Every ${due} ${interval}\nDue in ${remainder.round(1)} ${interval}")
+    }
+}
+
+def changeFilterRequired(val) {
+	log.debug "changeFilterRequired(${val})"
+    def curHvac = device.currentValue("hvac")
+    
+    if (val) {
+    	sendEvent(name: "filterChangeRequired", value: "true")
+        switch (curHvac) {
+            case "off":
+                sendEvent(name: "hvac", value: "offFilter")
+                break
+            case "heatIdle":
+                sendEvent(name: "hvac", value: "heatIdleFilter")
+                break
+            case "heatHeating":
+                sendEvent(name: "hvac", value: "heatHeatingFilter")
+                break
+            case "emergHeatIdle":
+                sendEvent(name: "hvac", value: "emergHeatIdleFilter")
+                break
+            case "emergHeatHeating":
+                sendEvent(name: "hvac", value: "emergHeatHeatingFilter")
+                break
+            case "coolIdle":
+                sendEvent(name: "hvac", value: "coolIdleFilter")
+                break
+            case "coolCooling":
+                sendEvent(name: "hvac", value: "coolCoolingFilter")
+                break
+            default:
+                break
+        }
+    }
+    else {
+    	sendEvent(name: "filterChangeRequired", value: "false")
+    }
+}
+
+def filterChanged() {
+	log.debug "filterChanged"
+    def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+    def curHvac = device.currentValue("hvac")
+    
+    sendEvent(name: "filterChanged", value: date)
+    sendEvent(name: "filterChange", value: "Filter Changed: ${date}")
+    changeFilterRequired(false)
+    switch (curHvac) {
+    	case "offFilter":
+        	sendEvent(name: "hvac", value: "off")
+        	break
+        case "heatIdleFilter":
+        	sendEvent(name: "hvac", value: "heatIdle")
+        	break
+        case "heatHeatingFilter":
+        	sendEvent(name: "hvac", value: "heatHeating")
+        	break
+        case "emergHeatIdleFilter":
+        	sendEvent(name: "hvac", value: "emergHeatIdle")
+        	break
+        case "emergHeatHeatingFilter":
+        	sendEvent(name: "hvac", value: "emergHeatHeating")
+        	break
+        case "coolIdleFilter":
+        	sendEvent(name: "hvac", value: "coolIdle")
+        	break
+        case "coolCoolingFilter":
+        	sendEvent(name: "hvac", value: "coolCooling")
+        	break
+        default:
+        	break
+    }
+}
+
 def setMyThermostatName(tName) {
 	log.debug "setMyThermostatName(${tName})"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
@@ -183,11 +304,17 @@ def setMode(val) {
 	def os = device.currentValue("operatingState")
 	log.debug "setMode(${val}): Current operatingState = ${os} / mode = ${device.currentValue("mode")}"
 	def valid = true
+    def filter = device.currentValue("filterChangeRequired") ?: "false"
     if (val != device.currentValue("hvacMode")) {
         switch (val) {
             case "off":
                 log.debug "Setting tile to off"
-                sendEvent(name: "hvac", value: "off")
+                if (filter) {
+	                sendEvent(name: "hvac", value: "offFilter")
+                }
+                else {
+	                sendEvent(name: "hvac", value: "off")
+                }
                 break
             case "auto":
                 break
@@ -195,15 +322,25 @@ def setMode(val) {
                 switch (os) {
                     case "idle":
                         log.debug "Setting tile to coolIdle"
-                        sendEvent(name: "hvac", value: "coolIdle")
+                        if (filter) {
+	                        sendEvent(name: "hvac", value: "coolIdleFilter")
+                        }
+                        else {
+	                        sendEvent(name: "hvac", value: "coolIdle")
+                        }
                         break
                     case "cooling":
                         log.debug "Setting tile to coolCooling"
-                        sendEvent(name: "hvac", value: "coolCooling")
+                        if (filter) {
+	                        sendEvent(name: "hvac", value: "coolCoolingFilter")
+                        }
+                        else {
+	                        sendEvent(name: "hvac", value: "coolCooling")
+                        }
                         break
                     default:
                         log.debug "Setting tile to err"
-                        sendEvent(name: "hvac", value: "err")
+                    	sendEvent(name: "hvac", value: "err")
                         break
                 }
                 break
@@ -211,11 +348,21 @@ def setMode(val) {
                 switch (os) {
                     case "idle":
                         log.debug "Setting tile to heatIdle"
-                        sendEvent(name: "hvac", value: "heatIdle")
+                        if (filter) {
+                        	sendEvent(name: "hvac", value: "heatIdleFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "heatIdle")
+                        }
                         break
                     case "heating":
                         log.debug "Setting tile to heatHeating"
-                        sendEvent(name: "hvac", value: "heatHeating")
+                        if (filter) {
+	                        sendEvent(name: "hvac", value: "heatHeatingFilter")
+                        }
+                        else {
+	                        sendEvent(name: "hvac", value: "heatHeating")
+                        }
                         break
                     default:
                         log.debug "Setting tile to err"
@@ -227,11 +374,21 @@ def setMode(val) {
                 switch (os) {
                     case "idle":
                         log.debug "Setting tile to emergHeatIdle"
-                        sendEvent(name: "hvac", value: "emergHeatIdle")
+                        if (filter) {
+                        	sendEvent(name: "hvac", value: "emergHeatIdleFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "emergHeatIdle")
+                        }
                         break
                     case "heating":
                         log.debug "Setting tile to emergHeatHeating"
-                        sendEvent(name: "hvac", value: "emergHeatHeating")
+                        if (filter) {
+                        	sendEvent(name: "hvac", value: "emergHeatHeatingFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "emergHeatHeating")
+                        }
                         break
                     default:
                         log.debug "Setting tile to err"
@@ -294,7 +451,12 @@ def setOperatingState(val) {
             case "idle":
                 switch (mode) {
                     case "cool":
-                        sendEvent(name: "hvac", value: "coolIdle")
+                    	if (filter) {
+                        	sendEvent(name: "hvac", value: "coolIdleFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "coolIdle")
+                        }
                         if (!device.currentValue("coolCycleStop")) {
                             sendEvent(name: "coolCycleStop", value: date)
                             cycleStart = device.currentValue("coolCycleStart")
@@ -302,7 +464,12 @@ def setOperatingState(val) {
                         }
                         break
                     case "heat":
-                        sendEvent(name: "hvac", value: "heatIdle")
+                    	if (filter) {
+                        	sendEvent(name: "hvac", value: "heatIdleFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "heatIdle")
+                        }
                         if (!device.currentValue("heatCycleStop")) {
                             sendEvent(name: "heatCycleStop", value: date)
                             cycleStart = device.currentValue("heatCycleStart")
@@ -310,7 +477,12 @@ def setOperatingState(val) {
                         }
                         break
                     case "emergencyHeat":
-                        sendEvent(name: "hvac", value: "heatIdle")
+                    	if (filter) {
+                        	sendEvent(name: "hvac", value: "heatIdleFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "heatIdle")
+                        }
                         if (!device.currentValue("heatCycleStop")) {
                             sendEvent(name: "heatCycleStop", value: date)
                             cycleStart = device.currentValue("heatCycleStart")
@@ -318,7 +490,12 @@ def setOperatingState(val) {
                         }
                         break
                     case "off":
-                        sendEvent(name: "hvac", value: "off")
+                    	if (filter) {
+                        	sendEvent(name: "hvac", value: "offFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "off")
+                        }
                         break
                     default:
                         sendEvent(name: "hvac", value: "err")
@@ -331,7 +508,12 @@ def setOperatingState(val) {
     					log.debug "setOperatingState Pre-Change: coolCycleCnt = ${coolCycleCnt} / coolCycleTodayCnt = ${coolCycleTodayCnt}"
                     	coolCycleCnt = coolCycleCnt + 1
                         coolCycleTodayCnt = coolCycleTodayCnt + 1
-                        sendEvent(name: "hvac", value: "coolCooling")
+                        if (filter) {
+                        	sendEvent(name: "hvac", value: "coolCoolingFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "coolCooling")
+                        }
                         sendEvent(name: "coolCycles", value: coolCycleCnt)
                         sendEvent(name: "coolCyclesToday", value: coolCycleTodayCnt)
                         sendEvent(name: "coolCycleStart", value: date)
@@ -340,7 +522,13 @@ def setOperatingState(val) {
     					log.debug "setOperatingState Post-Change: coolCycleCnt = ${coolCycleCnt} / coolCycleTodayCnt = ${coolCycleTodayCnt}"
                         break
                     case "off":
-                        sendEvent(name: "hvac", value: "off")
+                    	if (filter) {
+                        	sendEvent(name: "hvac", value: "offFilter")
+                        }
+                        else
+                        {
+                        	sendEvent(name: "hvac", value: "off")
+                        }
                         break
                     default:
                         sendEvent(name: "hvac", value: "err")
@@ -350,7 +538,12 @@ def setOperatingState(val) {
             case "heating":
                 switch (mode) {
                     case "heat":
-                        sendEvent(name: "hvac", value: "heatHeating")
+                    	if (filter) {
+                        	sendEvent(name: "hvac", value: "heatHeatingFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "heatHeating")
+                        }
                         heatCycleCnt = heatCycleCnt + 1
                         heatCycleTodayCnt = heatCycleTodayCnt + 1
                         sendEvent(name: "heatCycles", value: heatCycleCnt)
@@ -358,7 +551,12 @@ def setOperatingState(val) {
                         sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
                     case "emergencyHeat":
-                        sendEvent(name: "hvac", value: "heatHeating")
+                    	if (filter) {
+                        	sendEvent(name: "hvac", value: "heatHeatingFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "heatHeating")
+                        }
                         heatCycleCnt = heatCycleCnt + 1
                         heatCycleTodayCnt = heatCycleTodayCnt + 1
                         sendEvent(name: "heatCycles", value: heatCycleCnt)
@@ -366,7 +564,12 @@ def setOperatingState(val) {
                         sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
                     case "off":
-                        sendEvent(name: "hvac", value: "off")
+                    	if (filter) {
+                        	sendEvent(name: "hvac", value: "offFilter")
+                        }
+                        else {
+                        	sendEvent(name: "hvac", value: "off")
+                        }
                         break
                     default:
                         sendEvent(name: "hvac", value: "err")
