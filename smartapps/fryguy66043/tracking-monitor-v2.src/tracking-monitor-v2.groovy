@@ -288,6 +288,7 @@ private getList(date) {
     def found = false
     
     for (int x = 0; x < state.trackingList.size(); x++) {
+    	
         if (found) {
         	if (!state.trackingList[x].contains("~")) {
             	arrDisp = (state.trackingArrTime[x] != "00:00") ? "Arr: ${state.trackingArrTime[x]} " : ""
@@ -300,7 +301,11 @@ private getList(date) {
             }
         }
         else if (state.trackingList[x].contains(date)) {
-        	found = true
+        	if (x+1 < state.trackingList.size()) { 
+            	if (!state.trackingList[x+1].contains(date)) { // To address issues with ST schedules firing more than once on occassion.
+	        		found = true
+                }
+            }
         }
     }
     return list
