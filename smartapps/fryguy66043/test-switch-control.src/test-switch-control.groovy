@@ -84,28 +84,32 @@ def initialize() {
 
 def appHandler(evt) {
 	log.debug "appHandler: ${evt.value} / evt.data = ${evt?.data}"
-	def testVal = (evt.value) ? "XXXXX" : "Nope!"
+	def testVal = (evt.value) ?: "Nope!"
 	log.debug "testVal = ${testVal}"
 
-	Double val = 99.673222
-	log.debug "Value = ${val.round(1)}"
+	def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def endDate = new Date().parse("MM/dd/yy hh:mm:ss a", date)
+    def startDate = new Date().parse("MM/dd/yy hh:mm:ss a", "08/10/18 3:30:15 PM")
+    Double timeDiff = ((endDate.getTime() - startDate.getTime()) / 1000 / 60)
+    log.debug "startDate = ${startDate} / date = ${endDate} / timeDiff = ${timeDiff.round(2)}"
+
 
 //	def code = myLock.requestCode("1")
 //	log.debug "code = ${code}"
-	def codes = "${myLock.currentValue("lockCodes")}"
-    def codeId = "2"
-    log.debug "codes = ${codes}"
-    def users = new JsonSlurper().parseText(codes)
-    log.debug "users = ${users} / users.size() = ${users?.size()}"
-    if (users) {
-        log.debug "passed users..."
-        users.each {k, v -> 
-            log.debug "k = ${k} / v = ${v}"
-            if (k == "${codeId}") {
-                log.debug "Found user: ${v}"
-            }
-        }
-    }
+//	def codes = "${myLock.currentValue("lockCodes")}"
+//    def codeId = "2"
+//    log.debug "codes = ${codes}"
+//    def users = new JsonSlurper().parseText(codes)
+//    log.debug "users = ${users} / users.size() = ${users?.size()}"
+//    if (users) {
+//        log.debug "passed users..."
+//        users.each {k, v -> 
+//            log.debug "k = ${k} / v = ${v}"
+//            if (k == "${codeId}") {
+//                log.debug "Found user: ${v}"
+//            }
+//        }
+//    }
 
 //    myLock.poll()
     
