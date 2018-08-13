@@ -59,6 +59,9 @@ preferences() {
     }
     section("Open Window reminder?") {
     	input "windowReminder", "bool", title: "Do you want a reminder to open the window if the outside temps are favorable?"
+    	input "forecast", "device.mySmartweatherTile", required: false, title: "Optional forecast provider.  Will be used to assist with Open Window Reminder if supplied."
+        input "forecastHigh", "number", required: false, title: "Optional.  When cooling, what is the max forecast high temp to still provide a reminder?"
+        input "forecastLow", "number", required: false, title: "Optional.  When heating, what is the max forecast low temp to still provide a reminder?"
     }
     section("Send reminder Push Notifications?") {
     	input "sendPushReminder", "bool", title: "Send Push Notifications for reminders (i.e., Open Windows)?"
@@ -492,7 +495,7 @@ private tempTest() {
                 	state.windowReminder = true                    
                     state.windowReminderDateTime = date
                     if (phoneReminder) {
-                    	sendSms(phone, windowMsg)
+                    	sendSms(phoneReminder, windowMsg)
                     }
                     if (sendPushReminder) {
                     	sendPush(windowMsg)
@@ -510,7 +513,7 @@ private tempTest() {
                     state.windowReminderDateTime = date
                     if (phoneReminder) {
                     	log.debug "send phone reminder..."
-                    	sendSms(phone, windowMsg)
+                    	sendSms(phoneReminder, windowMsg)
                     }
                     if (sendPushReminder) {
                     	log.debug "send push reminder..."
@@ -537,7 +540,11 @@ def temperatureHandler(evt)
     def rain = Float.parseFloat(rainDisp)
     def tm = thermostat.currentValue("thermostatMode")
     def weather = (ot < 66) ? "chilly" : "beautiful"
-    def windowMsg = "${location} ${date}: It's a ${weather} ${ot}F outside!  Do you want to open the windows?"
+    def fCastHigh = forecast?.currentValue("forecastHighTodayF") ?: ""
+    def fCastLow = forecast?.currentValue("forecastLowTodayF") ?: ""
+    def windowCoolMsg = fCastHigh ? "${location} ${date}: It's a ${weather} ${ot}F outside with a forecasted high of ${fCastHigh}F!  Do you want to open the windows?" : "${location} ${date}: It's a ${weather} ${ot}F outside!  Do you want to open the windows?"
+    def windowHeatMsg = fCastLow ? "${location} ${date}: It's a ${weather} ${ot}F outside with a forecasted low of ${fCastLow}F!  Do you want to open the windows?" : "${location} ${date}: It's a ${weather} ${ot}F outside!  Do you want to open the windows?"
+    def sendReminder = true
 
 	log.debug "temperatureHandler: windowReminder = ${windowReminder} / rain = ${rain} / state.windowReminder = ${state.windowReminder} / state.windowReminderDateTime = ${state.windowReminderDateTime}"
 
@@ -564,32 +571,58 @@ def temperatureHandler(evt)
             if (ot > hsp && !state.windowReminder) {
             	log.debug "Heat: passed temp test and no reminder has been issued today..."
                 if (timeOfDayIsBetween(daylight.sunrise, daylight.sunset, new Date(), location.timeZone)) {
-                	log.debug "Daytime:  send reminder message..."
-                	state.windowReminder = true 
-                    state.windowReminderDateTime = date
-                    if (phoneReminder) {
-                    	sendSms(phone, windowMsg)
+                    if (forecast && forecastLow) {
+                        if (fCastLow < forecastLow) {
+                            sendReminder = false
+                            log.debug "Not sending window reminder.  Forecast too low: ${forecast.currentValue("forecastLowTodayF")}"
+                            if (phoneReminder) {
+                            	sendSms(phoneReminder, "Not sending window reminder.  Forecast too low: ${forecast.currentValue("forecastLowTodayF")}")
+                            }
+                        }
                     }
-                    if (sendPushReminder) {
-                    	sendPush(windowMsg)
+                    if (sendReminder) {
+                        log.debug "Daytime:  send reminder message..."
+                        state.windowReminder = true 
+                        state.windowReminderDateTime = date
+                        if (phoneReminder) {
+                            sendSms(phoneReminder, windowHeatMsg)
+                        }
+                        if (sendPushReminder) {
+                            sendPush(windowHeatMsg)
+                        }
                     }
                 }
             }
         }
         else if (tm == "cool") {
+        	log.debug "Checking window reminder conditions..."
         	if (ot > 64 && ot < csp && !state.windowReminder) {
             	log.debug "Cool: passed temp test and no reminder has been issued today..."
             	if (timeOfDayIsBetween(daylight.sunrise, daylight.sunset, new Date(), location.timeZone)) {
-                	log.debug "Daytime:  send reminder message..."
-                	state.windowReminder = true
-                    state.windowReminderDateTime = date
-                    if (phoneReminder) {
-                    	sendSms(phone, windowMsg)
+                    if (forecast && forecastHigh) {
+                        if (fCastHigh > forecastHigh) {
+                            sendReminder = false
+                            log.debug "Not sending window reminder.  Forecast too high: ${forecast.currentValue("forecastHighTodayF")}"
+                            if (phoneReminder) {
+                            	sendSms(phoneReminder, "Not sending window reminder.  Forecast too high: ${forecast.currentValue("forecastHighTodayF")}")
+                            }
+                        }
                     }
-                    if (sendPushReminder) {
-                    	sendPush(windowMsg)
+                    if (sendReminder) {
+                        log.debug "Daytime:  send reminder message..."
+                        state.windowReminder = true
+                        state.windowReminderDateTime = date
+                        if (phoneReminder) {
+                            sendSms(phoneReminder, windowCoolMsg)
+                        }
+                        if (sendPushReminder) {
+                            sendPush(windowCoolMsg)
+                        }
                     }
                 }
+            }
+            else {
+            	log.debug "Window reminder conditions not met."
             }
         }
     }
