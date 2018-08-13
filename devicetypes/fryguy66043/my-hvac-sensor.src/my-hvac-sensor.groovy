@@ -37,6 +37,12 @@ metadata {
         attribute "setTemp", "string"
         attribute "insideTemp", "string"
         attribute "outsideTemp", "string"
+        attribute "emergHeatCyclesTotal", "number"
+        attribute "heatCyclesTotal", "number"
+        attribute "coolCyclesTotal", "number"
+        attribute "coolMinutesTotal", "number"
+        attribute "emergHeatMinutesTotal", "number"
+        attribute "heatMinutesTotal", "number"
         attribute "heatCycles", "number"
         attribute "coolCycles", "number"
         attribute "heatCyclesToday", "number"
@@ -122,16 +128,23 @@ metadata {
         	state("default", label: '${currentValue}')
         }
         valueTile("filterChange", "device.filterChange", width: 6, height: 2) {
-        	state("default", label: '<PRESS WHEN REPLACED>\n${currentValue}', action: "filterChanged")
+        	state("default", label: '${currentValue}', action: "filterChanged")
+        }
+        valueTile("totals", "device.totals", width: 6, height: 2) {
+        	state("default", label: 'Lifetime Totals:\n${currentValue}')
         }
         
 		main "hvac"
-		details(["hvac", "setPoint", "inside", "outside", "hvacMode", "hvacOS", "cool", "heat", "lastUpdated", "since", "filter", "filterChange"])
+		details(["hvac", "setPoint", "inside", "outside", "hvacMode", "hvacOS", "cool", "heat", "lastUpdated", "since", "filter", "filterChange", "totals"])
 	}
 }
 
 def installed() {
 	log.trace "Executing 'installed'"
+    sendEvent(name: "heatCyclesTotal", value: 0)
+    sendEvent(name: "coolCyclesTotal", value: 0)
+    sendEvent(name: "heatMinutesTotal", value: 0)
+    sendEvent(name: "coolMinutesTotal", value: 0)
     sendEvent(name: "heatCycles", value: 0)
     sendEvent(name: "coolCycles", value: 0)
     sendEvent(name: "coolCyclesToday", value: 0)
@@ -250,39 +263,74 @@ def changeFilterRequired(val) {
     }
 }
 
+
+/*
+	log.debug "activateAlarm"
+    if (device.currentValue("alertState") != "userAlarm") {
+        state.userAlertCnt = (state.userAlertCnt) ? state.userAlertCnt : 0
+        state.userAlertCnt = state.userAlertCnt + 1
+        log.debug "activateAlarm: state.userAlertCnt = ${state.userAlertCnt}"
+        if (state.userAlertCnt > 2) {
+            log.debug "activateAlarm: state.userAlertCnt > 2.  Calling setAlert()"
+            sendEvent(name: "alertState", value: "userAlarm")
+            setAlert()
+        }
+        runIn(3, resetUserAlertCnt)
+    }
+    else {
+    	log.debug "User Alarm already activated..."
+    }
+*/
+
 def filterChanged() {
 	log.debug "filterChanged"
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
     def curHvac = device.currentValue("hvac")
-    
-    sendEvent(name: "filterChanged", value: date)
-    sendEvent(name: "filterChange", value: "Filter Changed: ${date}")
-    changeFilterRequired(false)
-    switch (curHvac) {
-    	case "offFilter":
-        	sendEvent(name: "hvac", value: "off")
-        	break
-        case "heatIdleFilter":
-        	sendEvent(name: "hvac", value: "heatIdle")
-        	break
-        case "heatHeatingFilter":
-        	sendEvent(name: "hvac", value: "heatHeating")
-        	break
-        case "emergHeatIdleFilter":
-        	sendEvent(name: "hvac", value: "emergHeatIdle")
-        	break
-        case "emergHeatHeatingFilter":
-        	sendEvent(name: "hvac", value: "emergHeatHeating")
-        	break
-        case "coolIdleFilter":
-        	sendEvent(name: "hvac", value: "coolIdle")
-        	break
-        case "coolCoolingFilter":
-        	sendEvent(name: "hvac", value: "coolCooling")
-        	break
-        default:
-        	break
+   	def filterChangedDate = device.currentValue("filterChanged")
+ 
+    state.resetFilterCnt = state.resetFilterCnt ? state.resetFilterCnt + 1 : 1
+
+	if (state.resetFilterCnt >= 3) {
+        sendEvent(name: "filterChanged", value: date)
+        sendEvent(name: "filterChange", value: "Filter Changed: ${date}")
+        changeFilterRequired(false)
+        switch (curHvac) {
+            case "offFilter":
+                sendEvent(name: "hvac", value: "off")
+                break
+            case "heatIdleFilter":
+                sendEvent(name: "hvac", value: "heatIdle")
+                break
+            case "heatHeatingFilter":
+                sendEvent(name: "hvac", value: "heatHeating")
+                break
+            case "emergHeatIdleFilter":
+                sendEvent(name: "hvac", value: "emergHeatIdle")
+                break
+            case "emergHeatHeatingFilter":
+                sendEvent(name: "hvac", value: "emergHeatHeating")
+                break
+            case "coolIdleFilter":
+                sendEvent(name: "hvac", value: "coolIdle")
+                break
+            case "coolCoolingFilter":
+                sendEvent(name: "hvac", value: "coolCooling")
+                break
+            default:
+                break
+        }
     }
+    else {
+        sendEvent(name: "filterChange", value: "<PRESS ${3-state.resetFilterCnt}x WHEN REPLACED>\nFilter Changed: ${filterChangedDate}")
+    }
+    runIn(5, resetFilterCount)
+}
+
+def resetFilterCount() {
+	log.debug "resetFilterCount"
+   	def filterChangedDate = device.currentValue("filterChanged")
+    state.resetFilterCnt = 0
+    sendEvent(name: "filterChange", value: "<PRESS ${3-state.resetFilterCnt}x WHEN REPLACED>\nFilter Changed: ${filterChangedDate}")
 }
 
 def setMyThermostatName(tName) {
@@ -461,6 +509,31 @@ def setOperatingState(val) {
                             sendEvent(name: "coolCycleStop", value: date)
                             cycleStart = device.currentValue("coolCycleStart")
                             sendEvent(name: "cool", value: "Today: ${coolCycleTodayCnt} / Month: ${coolCycleCnt}\nLast Cycle Start: ${cycleStart}\nLast Cycle Stop: ${date}")
+                            
+                            def startCoolDate = new Date().parse("MM/dd/yy hh:mm:ss a", cycleStart)
+                            def endCoolDate = new Date().parse("MM/dd/yy hh:mm:ss a", date)
+                            Double coolCycleMinutes = (endCoolDate.getTime() - startCoolDate.getTime()) / 1000 / 60
+                            Double totalCoolCycleMinutes = device.currentValue("coolMinutesTotal") ? device.currentValue("coolMinutesTotal") + coolCycleMinutes : coolCycleMinutes
+                            Double totalCoolCycleHours = totalCoolCycleMinutes > 0 ? totalCoolCycleMinutes / 60 : 0
+                            Double totalCoolCycleDays = totalCoolCycleHours > 23 ? totalCoolCycleHours / 24 : 0
+                            def totalCoolCycleCnt = device.currentValue("coolCyclesTotal") ? device.currentValue("coolCyclesTotal") + 1 : 1
+                            sendEvent(name: "coolMinutesTotal", value: totalCoolCycleMinutes)
+                            sendEvent(name: "coolCyclesTotal", value: totalCoolCycleCnt)
+                            
+                            Double totalHeatCycleMinutes = device.currentValue("heatMinutesTotal") ?: 0
+                            Double totalHeatCycleHours = totalHeatCycleMinutes > 0 ? totalHeatCycleMinutes / 60 : 0
+                            Double totalHeatCycleDays = totalHeatCycleHours > 23 ? totalHeatCycleHours / 24 : 0
+                            def totalHeatCycleCnt = device.currentValue("heatCyclesTotal") ?: 0
+                            
+                            Double totalEmergHeatCycleMinutes = device.currentValue("emergHeatMinutesTotal") ?: 0
+                            Double totalEmergHeatCycleHours = totalEmergHeatCycleMinutes > 0 ? totalEmergHeatCycleMinutes / 60 : 0
+                            Double totalEmergHeatCycleDays = totalEmergHeatCycleHours > 23 ? totalEmergHeatCycleHours / 24 : 0
+                            def totalEmergHeatCycleCnt = device.currentValue("emergHeatCyclesTotal") ?: 0
+                            
+                            def totalsDisp = "Cool: ${totalCoolCycleCnt} cycles / ${totalCoolCycleHours.round(2)} Hours\n" +
+                            				 "Heat: ${totalHeatCycleCnt} cycles / ${totalHeatCycleHours.round(2)} Hours\n" +
+                                             "Emerg Heat: ${totalEmergHeatCycleCnt} cycles / ${totalEmergHeatCycleHours.round(2)} Hours"
+                            sendEvent(name: "totals", value: totalsDisp)
                         }
                         break
                     case "heat":
@@ -474,6 +547,31 @@ def setOperatingState(val) {
                             sendEvent(name: "heatCycleStop", value: date)
                             cycleStart = device.currentValue("heatCycleStart")
                             sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${cycleStart}\nLast Cycle Stop: ${date}")
+                            
+                            def startHeatDate = new Date().parse("MM/dd/yy hh:mm:ss a", cycleStart)
+                            def endHeatDate = new Date().parse("MM/dd/yy hh:mm:ss a", date)
+                            Double heatCycleMinutes = (endHeatDate.getTime() - startHeatDate.getTime()) / 1000 / 60
+                            Double totalHeatCycleMinutes = device.currentValue("heatMinutesTotal") ? device.currentValue("heatMinutesTotal") + heatCycleMinutes : heatCycleMinutes
+                            Double totalHeatCycleHours = totalHeatCycleMinutes > 0 ? totalHeatCycleMinutes / 60 : 0
+                            Double totalHeatCycleDays = totalHeatCycleHours > 0 ? totalHeatCycleHours / 24 : 0
+                            def totalHeatCycleCnt = device.currentValue("heatCyclesTotal") ? device.currentValue("heatCyclesTotal") + 1 : 1
+                            sendEvent(name: "heatMinutesTotal", value: totalHeatCycleMinutes)
+                            sendEvent(name: "heatCyclesTotal", value: totalHeatCycleCnt)
+                            
+                            Double totalCoolCycleMinutes = device.currentValue("coolMinutesTotal") ?: 0
+                            Double totalCoolCycleHours = totalCoolCycleMinutes > 0 ? totalCoolCycleMinutes / 60 : 0
+                            Double totalCoolCycleDays = totalCoolCycleHours > 23 ? totalCoolCycleHours / 24 : 0
+                            def totalCoolCycleCnt = device.currentValue("coolCyclesTotal") ?: 0
+                            
+                            Double totalEmergHeatCycleMinutes = device.currentValue("emergHeatMinutesTotal") ?: 0
+                            Double totalEmergHeatCycleHours = totalEmergHeatCycleMinutes > 0 ? totalEmergHeatCycleMinutes / 60 : 0
+                            Double totalEmergHeatCycleDays = totalEmergHeatCycleHours > 23 ? totalEmergHeatCycleHours / 24 : 0
+                            def totalEmergHeatCycleCnt = device.currentValue("emergHeatCyclesTotal") ?: 0
+                            
+                            def totalsDisp = "Cool: ${totalCoolCycleCnt} cycles / ${totalCoolCycleHours.round(2)} Hours\n" +
+                            				 "Heat: ${totalHeatCycleCnt} cycles / ${totalHeatCycleHours.round(2)} Hours\n" +
+                                             "Emerg Heat: ${totalEmergHeatCycleCnt} cycles / ${totalEmergHeatCycleHours.round(2)} Hours"
+                            sendEvent(name: "totals", value: totalsDisp)
                         }
                         break
                     case "emergencyHeat":
@@ -487,6 +585,31 @@ def setOperatingState(val) {
                             sendEvent(name: "heatCycleStop", value: date)
                             cycleStart = device.currentValue("heatCycleStart")
                             sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${cycleStart}\nLast Cycle Stop: ${date}")
+                            
+                            def startHeatDate = new Date().parse("MM/dd/yy hh:mm:ss a", cycleStart)
+                            def endHeatDate = new Date().parse("MM/dd/yy hh:mm:ss a", date)
+                            Double emergHeatCycleMinutes = (endHeatDate.getTime() - startHeatDate.getTime()) / 1000 / 60
+                            Double totalEmergHeatCycleMinutes = device.currentValue("emergHeatMinutesTotal") ? device.currentValue("emergHeatMinutesTotal") + emergHeatCycleMinutes : emergHeatCycleMinutes
+                            Double totalEmergHeatCycleHours = totalEmergHeatCycleMinutes > 0 ? totalEmergHeatCycleMinutes / 60 : 0
+                            Double totalEmergHeatCycleDays = totalEmergHeatCycleHours > 0 ? totalEmergHeatCycleHours / 24 : 0
+                            def totalEmergHeatCycleCnt = device.currentValue("emergHeatCyclesTotal") ? device.currentValue("emergHeatCyclesTotal") + 1 : 1
+                            sendEvent(name: "emergHeatMinutesTotal", value: totalEmergHeatCycleMinutes)
+                            sendEvent(name: "emergHeatCyclesTotal", value: totalEmergHeatCycleCnt)
+                            
+                            Double totalHeatCycleMinutes = device.currentValue("heatMinutesTotal") ?: 0
+                            Double totalHeatCycleHours = totalHeatCycleMinutes > 0 ? totalHeatCycleMinutes / 60 : 0
+                            Double totalHeatCycleDays = totalHeatCycleHours > 23 ? totalHeatCycleHours / 24 : 0
+                            def totalHeatCycleCnt = device.currentValue("heatCyclesTotal") ?: 0
+                            
+                            Double totalCoolCycleMinutes = device.currentValue("coolMinutesTotal") ?: 0
+                            Double totalCoolCycleHours = totalCoolCycleMinutes > 0 ? totalCoolCycleMinutes / 60 : 0
+                            Double totalCoolCycleDays = totalCoolCycleHours > 23 ? totalCoolCycleHours / 24 : 0
+                            def totalCoolCycleCnt = device.currentValue("coolCyclesTotal") ?: 0
+                            
+                            def totalsDisp = "Cool: ${totalCoolCycleCnt} cycles / ${totalCoolCycleHours.round(2)} Hours\n" +
+                            				 "Heat: ${totalHeatCycleCnt} cycles / ${totalHeatCycleHours.round(2)} Hours\n" +
+                                             "Emerg Heat: ${totalEmergHeatCycleCnt} cycles / ${totalEmergHeatCycleHours.round(2)} Hours"
+                            sendEvent(name: "totals", value: totalsDisp)
                         }
                         break
                     case "off":
