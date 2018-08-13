@@ -29,6 +29,7 @@ preferences {
     }
 	section("How Many Watts Does It Draw When Off? (Default = 10)") {
     	input "offWatts", "number", required: true, title: "Off Watts", defaultValue: 10
+        input "powerLossNotify", "bool", title: "Do you want to be notified if this device stops reporting? (i.e. power loss)"
     }
 	section("How Many Watts Does It Draw When On? (Default =30)") {
     	input "watts", "number", required: true, title: "On Watts", defaultValue: 30
@@ -51,15 +52,23 @@ preferences {
 def installed()
 {
 	state.running = false
+    state.powerCheckTime = now()
+    state.powerCheckAlert = false
 	subscribe(appliance, "power", powerHandler)
     subscribe(app, appHandler)
+    if (powerLossNotify) {
+    	runEvery10Minutes(powerCheckHandler)
+    }
 }
 
 def updated()
 {
+	unschedule()
 	unsubscribe()
     installed()
 }
+
+private getAppName() { return "When One Thing Comes On..." }
 
 def appHandler(evt) {
 	def msg = "Running = ${state.running}  Watts = ${appliance.currentPower}"
@@ -69,7 +78,65 @@ def appHandler(evt) {
     state.running=false
 }
 
+def powerCheckHandler(evt) {
+	log.debug "powerCheckHandler: appliance.currentPower = ${appliance.currentPower} / appliance.currentSwitch = ${appliance.currentSwitch}"
+    def date = new Date().format("MM/yy/dd h:mm:ss a", location.timeZone)
+    def msg = ""
+    
+    if (appliance.currentSwitch == "off") {
+    	appliance.on()
+    }
+    if (appliance.currentPower > 0 || appliance.currentSwitch == "on") {
+        if (state.powerCheckAlert) {
+        	log.debug "Power has been restored!"
+            msg = "${location} ${date}: ${getAppName()}\n${appliance} has started reporting again.  Power has been restored."
+            if (phone) {
+                sendSms(phone, msg)
+            }
+            if (sendPush) {
+            	sendPush(msg)
+            }
+        }
+    	log.debug "We have power.  Everything's good!"
+        state.powerCheckTime = now()
+        state.powerCheckAlert = false    	
+    }
+    else {
+    	log.debug "Looks like power might be out..."
+        state.powerCheckTime = state.powerCheckTime ?: now()
+        if (!state.powerCheckAlert && state.powerCheckTime < now() + (60 * 5)) {
+            if (phone) {
+            	log.debug "Sending possible loss of power message"
+                state.powerCheckAlert = true
+                msg = "${location} ${date}: ${getAppName()}\n${appliance} has stopped reporting.  Possible power outage."
+                if (phone) {
+	                sendSms(phone, msg)
+                }
+                if (sendPush) {
+                	sendPush(msg)
+                }
+            }
+        }
+    }
+}
+
 def powerHandler(evt) {
+	log.debug "powerHandler (${evt.value})"
+	def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
+    def msg = ""
+    
+	if (state.powerCheckAlert) {
+        log.debug "Power has been restored!"
+        msg = "${location} ${date}: ${getAppName()}\n${appliance} has started reporting again.  Power has been restored."
+    	if (phone) {
+	    	sendSms(phone, msg)
+        }
+        if (sendPush) {
+        	sendPush(msg)
+        }
+    }
+	state.powerCheckTime = now()
+    state.powerCheckAlert = false
 	if (!state.running && appliance.currentPower >= watts) {
     	state.running = true
     	runIn(60 * minutes, delayHandler)
