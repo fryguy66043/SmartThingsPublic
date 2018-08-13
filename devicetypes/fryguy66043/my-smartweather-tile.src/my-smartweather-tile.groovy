@@ -49,6 +49,8 @@ metadata {
         attribute "luxValue", "string"
         attribute "shortForecast", "string"
         attribute "forecast", "string"
+        attribute "forecastHighTodayF", "number"
+        attribute "forecastLowTodayF", "number"
         attribute "rainLastHour", "string"
         attribute "rainToday", "string"
         attribute "stationID", "string"
@@ -323,8 +325,13 @@ def poll() {
 		if (f1) {
 			def icon = f1[0].icon_url.split("/")[-1].split("\\.")[0]
 			def value = f1[0].pop as String // as String because of bug in determining state change of 0 numbers
+            def forecastHigh = f1[0].high.fahrenheit
+            def forecastLow = f1[0].low.fahrenheit
+            log.debug "forecastHigh = ${forecastHigh} / forecastLow = ${forecastLow}"
 			send(name: "percentPrecip", value: value, unit: "%")
 			send(name: "forecastIcon", value: icon, displayed: false)
+            send(name: "forecastHighTodayF", value: forecastHigh)
+            send(name: "forecastLowTodayF", value: forecastLow)
 		}
 		else {
         	send(name: "precentPrecip", value: "Unknown")
