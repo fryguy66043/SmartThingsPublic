@@ -86,6 +86,9 @@ def installed()
     state.startTime = now()
 	state.currMode = ""
     state.currOS = ""
+	state.filterInterval = 0
+    state.reminderSent = false
+    state.filterChangedDate = ""
 
 	state.currYearDisp = cal.get(Calendar.YEAR) as Integer
     state.currYearCoolCnt = 0
@@ -141,6 +144,7 @@ def installed()
 def updated()
 {
 	log.debug "enter updated, state: $state"
+    unschedule()
 	unsubscribe()
 	subscribeToEvents()
 }
@@ -149,10 +153,6 @@ private getAppName() { return "Heating/Cooling Monitor" }
 
 def subscribeToEvents()
 {
-	state.filterInterval = 0
-    state.reminderSent = false
-    state.filterChangedDate = ""
-
 	hvacSensor.setFilterChangeSchedule(reminderType)
     if (reminderInterval) {
 	    hvacSensor.setFilterChangeInterval(reminderInterval)
@@ -173,7 +173,7 @@ def subscribeToEvents()
     if (updateYearlyInterval != "Never") {
     	schedule(updateTime, updateYearlySchedule)
     }
-    runEvery1Minute(refreshHandler)
+//    runEvery1Minute(refreshHandler)
 
 	state.windowReminder = false    
     state.windowReminderDateTime = ""
@@ -183,10 +183,6 @@ def appHandler(evt) {
 	log.debug "Checking hvacSensor..."
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
 
-	thermostat.refresh()
-    
-    hvacSensor.changeFilterRequired(true)
-    
 //	log.debug "${date}: thermostat.currentThermostat = ${thermostat.currentThermostat} / thermostat.currentValue("thermostatOperatingState") = ${thermostat.currentValue("thermostatOperatingState")}"
     
 //	hvacSensor.resetDailyCycles()
