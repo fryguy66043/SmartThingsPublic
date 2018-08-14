@@ -32,6 +32,8 @@ metadata {
         attribute "lastArmedHomeDate", "string"
         attribute "lastArmedAwayDate", "string"
         attribute "lastDisarmedDate", "string"
+        attribute "armedAwayMonitoredList", "string"
+        attribute "armedHomeMonitoredList", "string"
         
         command "setArmedAway"
         command "setArmedHome"
@@ -39,6 +41,8 @@ metadata {
         command "setAlert"
         command "dismissAlert"
         command "activateAlarm"
+        command "setArmedHomeMonitoredList"
+        command "setArmedAwayMonitoredList"
         command "updateSummary"
         command "resetUserAlertCnt"
 	}
@@ -74,17 +78,32 @@ metadata {
  	     	state "default", label: 'ACTIVATE ALARM', action: "activateAlarm", icon:"st.alarm.beep.beep"
         }
         valueTile("summary", "device.summary", decoration: "flat", width: 6, height: 6) {
- 	      state "default", label: '${currentValue}'
+ 	      	state "default", label: '${currentValue}'
+        }
+        valueTile("monitored", "device.monitored", decoration: "flat", width: 6, height: 6) {
+        	state "default", label: '${currentValue}'
         }
        
 		main "state"
         
-		details(["state", "armAway", "armHome", "disarm", "dismiss", "alarm", "summary"])
+		details(["state", "armAway", "armHome", "disarm", "dismiss", "alarm", "summary", "monitored"])
 	}
 }
 
 def parse(String description) {
 	log.trace "parse($description)"
+}
+
+def setArmedAwayMonitoredList(list) {
+	log.debug "setArmedAwayMonitoredList(${list})"
+    def monitored = list ?: "None"
+    sendEvent(name: "armedAwayMonitoredList", value: monitored)
+}
+
+def setArmedHomeMonitoredList(list) {
+	log.debug "setArmedHomeMonitoredList(${list})"
+    def monitored = list ?: "None"
+    sendEvent(name: "armedHomeMonitoredList", value: monitored)
 }
 
 def setArmedAway() {
@@ -96,6 +115,8 @@ def setArmedAway() {
         sendEvent(name: "contact", value: "armedAway")
         sendEvent(name: "alarmState", value: "Armed Away")
         sendEvent(name: "lastArmedAwayDate", value: date)
+        def awayList = device.currentValue("armedAwayMonitoredList") ?: "None"
+        sendEvent(name: "monitored", value: "Armed Away Monitoring:\n${awayList}")
         updateSummary()
     }
 }
@@ -108,6 +129,8 @@ def setArmedHome() {
         sendEvent(name: "contact", value: "armedHome")
         sendEvent(name: "alarmState", value: "Armed Home")
         sendEvent(name: "lastArmedHomeDate", value: date)
+        def homeList = device.currentValue("armedHomeMonitoredList") ?: "None"
+        sendEvent(name: "monitored", value: "Armed Home Monitoring:\n${homeList}")
         updateSummary()
     }
 }
@@ -134,6 +157,7 @@ def setDisarmed() {
         }
         if (disarm) {
             sendEvent(name: "lastDisarmedDate", value: date)
+            sendEvent(name: "monitored", value: "Not Actively Monitoring")
             updateSummary()
         }
     }
