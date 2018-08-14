@@ -36,16 +36,16 @@ preferences {
     	input "hvac", "device.myHVACSensor", required: false
     }
 	section("Switch 1") {
-    	input "switch1", "capability.switch", required: false
+    	input "switch1", "capability.switch", multiple: true, required: false
     }
 	section("Switch 2") {
-    	input "switch2", "capability.switch", required: false
+    	input "switch2", "capability.switch", multiple: true, required: false
     }
 	section("Switch 3") {
-    	input "switch3", "capability.switch", required: false
+    	input "switch3", "capability.switch", multiple: true, required: false
     }
     section("Lock") {
-    	input "myLock", "capability.lock", required: false
+    	input "myLock", "capability.lock", multiple: true, required: false
     }
 	section("Send Push Notification?") {
         input "sendPush", "bool", required: false,
@@ -57,6 +57,7 @@ preferences {
 }
 
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 
 def installed() {
 	log.debug "Installed with settings: ${settings}"
@@ -96,6 +97,31 @@ def appHandler(evt) {
     Double timeDiff = ((endDate.getTime() - startDate.getTime()) / 1000 / 60)
     log.debug "startDate = ${startDate} / date = ${endDate} / timeDiff = ${timeDiff.round(2)}"
 
+	
+	def s1List = "["
+    switch1.each { s1List = s1List + "\"${it}\"," }
+    s1List = s1List + "]"
+    
+    def s2List = "["
+    switch2.each { s2List = s2List + "\"${it}\"," }
+    s2List = s2List + "]"
+    
+    def s3List = "["
+    switch3.each { s3List = s3List + "\"${it}\"," }
+    s3List = s3List + "]"
+    
+    def lList = "["
+    myLock.each { lList = lList + "\"${it}\"," }
+    lList = lList + "]"
+    
+	def deviceList = "{\"Switch1\": ${s1List}, \"Switch2\": ${s2List}, \"Switch3\": ${s3List}, \"Lock\": ${lList}}"
+//	def deviceList = '{"Switch1": ["Bedroom TV"], "Switch2": ["Switch A", "Switch B"], "Locks": ["Basement Lock"]}'
+    log.debug deviceList
+    def output = new JsonSlurper().parseText(deviceList)
+    log.debug output
+	output.Switch2.each {
+    	log.debug "${it} == Switch B: ${it == "Switch B"}"
+    }
 
 //	def code = myLock.requestCode("1")
 //	log.debug "code = ${code}"
@@ -202,18 +228,18 @@ def switchHandler(evt) {
                 case 1:
                 	if (switch2?.displayName != evt?.displayName) {
                     	log.debug "${switch2} != ${evt.displayName}"
-                        if (switch2.currentValue("switch") == "on") {
+                        if (switch2?.currentValue("switch") == "on") {
                         	log.debug "Turning ${switch2} off..."
-                        	switch2.off()
+                        	switch2?.off()
                         }
                     }
                 	break
                 case 2:
                 	if (switch3?.displayName != evt?.displayName) {
                     	log.debug "${switch3} != ${evt.displayName}"
-                        if (switch3.currentValue("switch") == "on") {
+                        if (switch3?.currentValue("switch") == "on") {
                         	log.debug "Turning ${switch3} off..."
-                        	switch3.off()
+                        	switch3?.off()
                         }
                     }
                     break
