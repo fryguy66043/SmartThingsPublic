@@ -414,6 +414,7 @@ def installed()
         state.onCnt = 0
         runEvery5Minutes(virtualController)
     }
+	setMonitoredDevices()
 }
 
 def updated()
@@ -421,6 +422,43 @@ def updated()
 	unsubscribe()
     unschedule()
     installed()
+}
+
+private setMonitoredDevices() {
+	log.debug "setMonitoredDevices"
+    def deviceList = ""
+// Armed Home List
+	if (homeMotions) {
+    	deviceList = deviceList + "Motion Sensors: ${homeMotions}\n"
+    }
+    if (homeContacts) {
+    	deviceList = deviceList + "Contact Sensors: ${homeContacts}\n"
+    }
+    if (homeDoors) {
+    	deviceList = deviceList + "Door Controllers: ${homeDoors}\n"
+    }
+    if (homeLocks) {
+    	deviceList = deviceList + "Smart Locks: ${homeLocks}"
+    }
+    log.debug "armedHomeMonitoredList = ${deviceList}"
+    alarmSensor.setArmedHomeMonitoredList(deviceList)
+    
+// Armed Away List  
+	deviceList = ""
+	if (awayMotions) {
+    	deviceList = deviceList + "Motion Sensors: ${awayMotions}\n"
+    }
+    if (awayContacts) {
+    	deviceList = deviceList + "Contact Sensors: ${awayContacts}\n"
+    }
+    if (awayDoors) {
+    	deviceList = deviceList + "Door Controllers: ${awayDoors}\n"
+    }
+    if (awayLocks) {
+    	deviceList = deviceList + "Smart Locks: ${awayLocks}"
+    }
+    log.debug "armedAwayMonitoredList = ${deviceList}"
+    alarmSensor.setArmedAwayMonitoredList(deviceList)
 }
 
 def visitorExpectedSwitchHandler(evt) {	
