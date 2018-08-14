@@ -20,7 +20,6 @@
 metadata {
 	definition (name: "My Contact Sensor", namespace: "FryGuy66043", author: "Jeffrey Fry") {
 		capability "Actuator"
-//		capability "Contact Sensor"
 		capability "Refresh"
 		capability "Sensor"
 		capability "Health Check"
@@ -111,12 +110,64 @@ def setUnsecuredDeviceList(deviceList) {
     }
 }
 
-private anyMatches(list1, list2) {
+private anyMatchesOld(list1, list2) {
 	log.debug "anyMatches(${list1} / ${list2})"
 	def result = false
     def newList1 = "${list1}"
     def newList2 = "${list2}"
     def listSize = 0
+
+	newList1 = "${newList1.replace("\n", "")}"
+    newList1 = "${newList1.replace("Contacts: [", "")}"
+    newList1 = "${newList1.replace("Doors: [", "")}"
+    newList1 = "${newList1.replace("Locks: [", "")}"
+    newList1 = "${newList1.replace("]", ",")}"	
+    newList1 = "${newList1.replace("[", "")}"
+    listSize = newList1.size()
+    log.debug "newList1.size() = ${listSize}"
+    if (newList1.substring(listSize-1, listSize) == ",") {
+    	log.debug "Changing newList1 from '${newList1}' to '${newList1.substring(0, listSize-1)}'"
+    	newList1 = newList1.substring(0, listSize-1)
+    }
+    log.debug "newList1 pre-split: ${newList1}"
+	def list1Array = newList1.split(",")
+    log.debug "list1Array after split: ${list1Array}"
+
+	newList2 = "${newList2.replace("\n", "")}"
+    newList2 = "${newList2.replace("Contacts: [", "")}"
+    newList2 = "${newList2.replace("Doors: [", "")}"
+    newList2 = "${newList2.replace("Locks: [", "")}"
+    newList2 = "${newList2.replace("[", "")}"
+    newList2 = "${newList2.replace("]", ",")}"	
+    listSize = newList2.size()
+    if (newList2.substring(listSize-1, listSize) == ",") {
+    	newList2 = newList2.substring(0, listSize-1)
+    }
+    log.debug "newList2 pre-split: ${newList2}"
+	def list2Array = newList2.split(",")
+    log.debug "list2Array after split: ${list2Array}"
+
+	for (int x=0; x<list1Array.size(); x++) {
+    	for (int i=0; i<list2Array.size(); i++) {
+        	log.debug "comparing '${list1Array[x]}' to '${list2Array[i]}'"
+        	if (list1Array[x] == list2Array[i]) {
+            	log.debug "Found: '${list1Array[x]}' = '${list2Array[i]}'"
+            	result = true
+                break
+            }
+        }
+    }
+    log.debug "Return ${result}"
+    return result
+}
+
+private anyMatches(list1, list2) {
+	log.debug "anyMatches(${list1} / ${list2})"
+	def result = false
+    def newList1 = list1.replace("\n", "")
+    def newList2 = list2.replace("\n", "")
+    def listSize = 0
+    log.debug "newList1 = ${newList1} / newList2 = ${newList2}"
 
 	newList1 = "${newList1.replace("\n", "")}"
     newList1 = "${newList1.replace("Contacts: [", "")}"
