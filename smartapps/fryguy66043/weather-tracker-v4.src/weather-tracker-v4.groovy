@@ -96,6 +96,8 @@ def installed() {
 	Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
 
 	state.raining = false
+    state.rainUpdate = now()
+    state.rainTotal = 0.0
     state.turnedLightsOn = false
     
 	state.currTemp = 0
@@ -166,6 +168,8 @@ def scheduleEvents() {
     if (updateYearlyInterval != "Never") {
     	schedule(updateTime, updateYearlySchedule)
     }
+    state.rainUpdate = now()
+    state.rainTotal = 0.0
 }
 
 def appHandler(evt) {
@@ -213,14 +217,19 @@ def rainTodayHandler(evt) {
 }
 
 def rainLastHourHandler(evt) {
-	log.debug "rainLastHourHandler: ${evt.value}"
+	log.debug "rainLastHourHandler(${evt.value}) / rainLastHour = ${myWxDevice.currentValue("rainLastHour")} / rainToday = ${myWxDevice.currentValue("rainToday")}"
     def rain = Float.parseFloat(evt.value)
+    def rainTotal = Float.parseFloat(myWxDevice.currentValue("rainToday"))
     def msg = "${location}: "
-    if (rain > 0.0) {
+    state.rainUpdate = state.rainUpdate ?: now()
+    state.rainTotal = state.rainTotal ?: 0.0
+    log.debug "${location}: rain > 0.0 = ${rain > 0.0} / now() > state.rainUpdate + (60 * 60) = ${now() > state.rainUpdate + (60 * 60)} / rainTotal >= state.rainTotal + 0.1 = ${rainTotal >= state.rainTotal + 0.1}"
+    if (rain > 0.0 && (now() > state.rainUpdate + (60 * 60) || rain >= state.rainTotal + 0.1))  {
         state.raining = true
+        state.rainUpdate = now()
         msg = msg + "It's Raining!\nTotal Today: ${myWxDevice.currentValue("rainToday")}\nRate per Hour: ${rain}"
 
-        if (sendPush) {
+        if (sendPushMsg) {
             sendPush(msg)
         }
         if (phone) {
@@ -234,10 +243,11 @@ def rainLastHourHandler(evt) {
         }
     }
     else {
-    	if (state.raining) {
-        	state.raining = false
+    	if (rain == 0.0 && state.raining) { 
+        	state.raining = false            
             msg = msg + "Total Rain Today: ${myWxDevice.currentValue("rainToday")}"
-            if (sendPush) {
+/*            
+            if (sendPushMsg) {
                 sendPush(msg)
             }
             if (phone) {
@@ -246,11 +256,13 @@ def rainLastHourHandler(evt) {
             if (phone2) {
                 sendSms(phone2, msg)
             }
+*/            
             if (odPhone) {
                 sendSms(odPhone, msg)
             }
         }
     }
+    state.rainTotal = rainTotal
 }
 
 def tempUpdate() {
@@ -589,7 +601,9 @@ def resetSchedule(evt) {
 	log.debug "resetSchedule"
 	Calendar localCalendar = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
 	int day = localCalendar.get(Calendar.DAY_OF_WEEK)
-	
+
+	state.rainTotal = 0.0
+    
     if (localCalendar.get(Calendar.YEAR) != state.currYearDisp) {
     	log.debug "Resetting current year values..."
 		state.prevYearDisp = state.currYearDisp
