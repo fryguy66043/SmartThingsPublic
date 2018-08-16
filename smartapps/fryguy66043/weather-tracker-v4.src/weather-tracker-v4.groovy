@@ -223,8 +223,8 @@ def rainLastHourHandler(evt) {
     def msg = "${location}: "
     state.rainUpdate = state.rainUpdate ?: now()
     state.rainTotal = state.rainTotal ?: 0.0
-    log.debug "${location}: rain > 0.0 = ${rain > 0.0} / now() > state.rainUpdate + (60 * 60) = ${now() > state.rainUpdate + (60 * 60)} / rainTotal >= state.rainTotal + 0.1 = ${rainTotal >= state.rainTotal + 0.1}"
-    if (rain > 0.0 && (now() > state.rainUpdate + (60 * 60) || rain >= state.rainTotal + 0.1))  {
+    log.debug "${location}: rain > 0.0 = ${rain > 0.0} / now() > state.rainUpdate + (60 * 60) = ${now() > state.rainUpdate + (60 * 1000)} / rainTotal >= state.rainTotal + 0.1 = ${rainTotal >= state.rainTotal + 0.1}"
+    if (rain > 0.0 && (now() > state.rainUpdate + (60 * 1000) || rain >= state.rainTotal + 0.1))  {
         state.raining = true
         state.rainUpdate = now()
         msg = msg + "It's Raining!\nTotal Today: ${myWxDevice.currentValue("rainToday")}\nRate per Hour: ${rain}"
@@ -245,6 +245,7 @@ def rainLastHourHandler(evt) {
     else {
     	if (rain == 0.0 && state.raining) { 
         	state.raining = false            
+	        state.rainUpdate = now()
             msg = msg + "Total Rain Today: ${myWxDevice.currentValue("rainToday")}"
 /*            
             if (sendPushMsg) {
