@@ -34,6 +34,7 @@ metadata {
         attribute "lastDisarmedDate", "string"
         attribute "armedAwayMonitoredList", "string"
         attribute "armedHomeMonitoredList", "string"
+        attribute "unsecureList", "string"
         
         command "setArmedAway"
         command "setArmedHome"
@@ -43,6 +44,7 @@ metadata {
         command "activateAlarm"
         command "setArmedHomeMonitoredList"
         command "setArmedAwayMonitoredList"
+        command "setUnsecureList"
         command "updateSummary"
         command "resetUserAlertCnt"
 	}
@@ -77,6 +79,9 @@ metadata {
         standardTile("alarm", "device.alarm", decoration: "flat", width: 2, height: 2) {
  	     	state "default", label: 'ACTIVATE ALARM', action: "activateAlarm", icon:"st.alarm.beep.beep"
         }
+        valueTile("unsecure", "device.unsecure", decoration: "flat", width: 6, height: 2) {
+        	state "default", label: 'Alarm Triggers:\n${currentValue}'
+        }
         valueTile("summary", "device.summary", decoration: "flat", width: 6, height: 6) {
  	      	state "default", label: '${currentValue}'
         }
@@ -86,7 +91,7 @@ metadata {
        
 		main "state"
         
-		details(["state", "armAway", "armHome", "disarm", "dismiss", "alarm", "summary", "monitored"])
+		details(["state", "armAway", "armHome", "disarm", "dismiss", "alarm", "unsecure", "summary", "monitored"])
 	}
 }
 
@@ -104,6 +109,13 @@ def setArmedHomeMonitoredList(list) {
 	log.debug "setArmedHomeMonitoredList(${list})"
     def monitored = list ?: "None"
     sendEvent(name: "armedHomeMonitoredList", value: monitored)
+}
+
+def setUnsecureList(list) {
+	log.debug "setUnsecureList(${list})"
+    def monitored = list ?: "None"
+    sendEvent(name: "unsecureList", value: monitored)
+    sendEvent(name: "unsecure", value: monitored)
 }
 
 def setArmedAway() {
@@ -167,31 +179,38 @@ def setAlert() {
 	log.debug "setAlert: ${device.currentValue("alarmState")}"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     def alert = false
-    
-	switch (device.currentValue("alarmState")) {
-    	case "Armed Away":
-        	log.debug "set armedAwayAlert"
-        	sendEvent(name: "contact", value: "armedAwayAlert")
-            sendEvent(name: "alertState", value: "alarm")
-            alert = true
-        	break
-        case "Armed Home":
-        	log.debug "set armedHomeAlert"
-        	sendEvent(name: "contact", value: "armedHomeAlert")
-            sendEvent(name: "alertState", value: "alarm")
-            alert = true
-        	break
-        case "Disarmed":
-        	if (device.currentValue("alertState") == "userAlarm") {
-            	log.debug "set userAlert"
-                sendEvent(name: "contact", value: "userAlert")
-                alert = true
-            }
-            break
-        default:
-        	log.debug "unknown alarmState"
-        	break
+
+    if (device.currentValue("alertState") == "userAlarm") {
+        log.debug "set userAlert"
+        sendEvent(name: "contact", value: "userAlert")
+        alert = true
     }
+    else {
+        switch (device.currentValue("alarmState")) {
+            case "Armed Away":
+                log.debug "set armedAwayAlert"
+                sendEvent(name: "contact", value: "armedAwayAlert")
+                sendEvent(name: "alertState", value: "alarm")
+                alert = true
+                break
+            case "Armed Home":
+                log.debug "set armedHomeAlert"
+                sendEvent(name: "contact", value: "armedHomeAlert")
+                sendEvent(name: "alertState", value: "alarm")
+                alert = true
+                break
+            case "Disarmed":
+                if (device.currentValue("alertState") == "userAlarm") {
+                    log.debug "set userAlert"
+                    sendEvent(name: "contact", value: "userAlert")
+                    alert = true
+                }
+                break
+            default:
+                log.debug "unknown alarmState"
+                break
+        }
+	}
     if (alert) {
         sendEvent(name: "lastAlarmDate", value: date)
         updateSummary()
@@ -289,6 +308,7 @@ private initialize() {
 	sendEvent(name: "DeviceWatch-DeviceStatus", value: "online")
 	sendEvent(name: "healthStatus", value: "online")
 	sendEvent(name: "DeviceWatch-Enroll", value: [protocol: "cloud", scheme:"untracked"].encodeAsJson(), displayed: false)
+    sendEvent(name: "unsecure", value: "None")
     setDisarmed()
 }
 
