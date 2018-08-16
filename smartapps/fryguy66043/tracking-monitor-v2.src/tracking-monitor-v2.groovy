@@ -138,6 +138,8 @@ def initialize() {
     subscribe(app, appHandler)
     subscribe(homeSwitch, "switch", switchHandler)
     subscribe(trackingSensor, "reportRequest", reportHandler)
+    subscribe(trackingSensor, "monthReportRequest", reportThisMonthHandler)
+    subscribe(trackingSensor, "lastMonthReportRequest", reportLastMonthHandler)
     subscribe(eraseSwitch, "switch.on", eraseHandler)
     schedule(resetTime, resetHandler)
     if (loc2Switch) {
@@ -188,7 +190,8 @@ def appHandler(evt) {
 
 //	reset()  // Resets all value, including in the tracking tile.
     setTrackingDisplay()    
-	reportHandler("Touch")
+//	reportHandler("Touch")
+	reportThisMonthHandler()
 }
 
 def eraseHandler(evt) {
@@ -280,6 +283,43 @@ def reportHandler(evt) {
     }
 }
 
+def reportThisMonthHandler(evt) {
+	log.debug "reportThisMonthHandler(${evt?.value})"
+    def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+    def report = "${location} ${date}: Tracking This Month (page 1)\n\n"
+	def dispDate = "x"
+    def cnt = 0
+    def pCnt = 1
+
+    for (int x = 0; x < state.trackingList.size(); x++) {
+    	if (state.trackingList[x].contains("~") && !state.trackingList[x].contains(dispDate)) {
+        	dispDate = state.trackingList[x]
+            dispDate = dispDate.replace("~", "")
+	        report = report + "${dispDate}:\n${getList(dispDate)}\n\n"
+	        cnt = cnt + 1
+        }
+        if (cnt == 7) {
+            if (phone) {
+                sendSms(phone, report)
+            }
+            if (sendPush) {
+                sendPush(report)
+            }
+            cnt = 0
+            pCnt = pCnt + 1
+            report = "${location} ${date}: Tracking This Month (page ${pCnt})\n\n"
+        }
+    }
+//	log.debug "report.size() = ${report.size()}"            
+
+	if (phone) {
+    	sendSms(phone, report)
+    }
+    if (sendPush) {
+    	sendPush(report)
+    }
+}
+
 private getList(date) {
 	log.debug "getList(${date})"
 	def list = ""
@@ -303,6 +343,74 @@ private getList(date) {
         else if (state.trackingList[x].contains(date)) {
         	if (x+1 < state.trackingList.size()) { 
             	if (!state.trackingList[x+1].contains(date)) { // To address issues with ST schedules firing more than once on occassion.
+	        		found = true
+                }
+            }
+        }
+    }
+    return list
+}
+
+def reportLastMonthHandler(evt) {
+	log.debug "reportThisMonthHandler(${evt?.value})"
+    def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+    def report = "${location} ${date}: Tracking Last Month (page 1)\n\n"
+	def dispDate = "x"
+    def cnt = 0
+    def pCnt = 1
+
+    for (int x = 0; x < state.trackingListLastMonth.size(); x++) {
+    	if (state.trackingListLastMonth[x].contains("~") && !state.trackingListLastMonth[x].contains(dispDate)) {
+        	dispDate = state.trackingListLastMonth[x]
+            dispDate = dispDate.replace("~", "")
+	        report = report + "${dispDate}:\n${getLastMonthList(dispDate)}\n\n"
+	        cnt = cnt + 1
+        }
+        if (cnt == 7) {
+            if (phone) {
+                sendSms(phone, report)
+            }
+            if (sendPush) {
+                sendPush(report)
+            }
+            cnt = 0
+            pCnt = pCnt + 1
+            report = "${location} ${date}: Tracking This Month (page ${pCnt})\n\n"
+        }
+    }
+//	log.debug "report.size() = ${report.size()}"            
+
+	if (phone) {
+    	sendSms(phone, report)
+    }
+    if (sendPush) {
+    	sendPush(report)
+    }
+}
+
+private getLastMonthList(date) {
+	log.debug "getLastMonthList(${date})"
+	def list = ""
+    def arrDisp = ""
+    def dptDisp = ""
+    def found = false
+    
+    for (int x = 0; x < state.trackingListLastMonth.size(); x++) {
+    	
+        if (found) {
+        	if (!state.trackingListLastMonth[x].contains("~")) {
+            	arrDisp = (state.trackingArrTimeLastMonth[x] != "00:00") ? "Arr: ${state.trackingArrTimeLastMonth[x]} " : ""
+                dptDisp = (state.trackingDptTimeLastMonth[x] != "00:00") ? " Dpt: ${state.trackingDptTimeLastMonth[x]}" : ""
+	        	list = list + "[${arrDisp}\"${state.trackingListLastMonth[x]}\"${dptDisp}]"
+            }
+            else {
+            	found = false
+                break
+            }
+        }
+        else if (state.trackingListLastMonth[x].contains(date)) {
+        	if (x+1 < state.trackingListLastMonth.size()) { 
+            	if (!state.trackingListLastMonth[x+1].contains(date)) { // To address issues with ST schedules firing more than once on occassion.
 	        		found = true
                 }
             }
