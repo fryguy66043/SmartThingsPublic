@@ -574,9 +574,11 @@ def temperatureHandler(evt)
                     if (forecast && forecastLow) {
                         if (fCastLow < forecastLow) {
                             sendReminder = false
-                            log.debug "Not sending window reminder.  Forecast too low: ${forecast.currentValue("forecastLowTodayF")}"
+                            state.windowReminder = true 
+                            state.windowReminderDateTime = date
+                            log.debug "${location}: Not sending window reminder.  Forecast too low: ${forecast.currentValue("forecastLowTodayF")}"
                             if (phoneReminder) {
-                            	sendSms(phoneReminder, "Not sending window reminder.  Forecast too low: ${forecast.currentValue("forecastLowTodayF")}")
+                            	sendSms(phoneReminder, "${location}: Not sending window reminder.  Forecast too low: ${forecast.currentValue("forecastLowTodayF")}")
                             }
                         }
                     }
@@ -602,9 +604,11 @@ def temperatureHandler(evt)
                     if (forecast && forecastHigh) {
                         if (fCastHigh > forecastHigh) {
                             sendReminder = false
-                            log.debug "Not sending window reminder.  Forecast too high: ${forecast.currentValue("forecastHighTodayF")}"
+                            state.windowReminder = true 
+                            state.windowReminderDateTime = date
+                            log.debug "${location}: Not sending window reminder.  Forecast too high: ${forecast.currentValue("forecastHighTodayF")}"
                             if (phoneReminder) {
-                            	sendSms(phoneReminder, "Not sending window reminder.  Forecast too high: ${forecast.currentValue("forecastHighTodayF")}")
+                            	sendSms(phoneReminder, "${location}: Not sending window reminder.  Forecast too high: ${forecast.currentValue("forecastHighTodayF")}")
                             }
                         }
                     }
