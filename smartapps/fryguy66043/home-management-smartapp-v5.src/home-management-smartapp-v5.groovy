@@ -427,6 +427,10 @@ def updated()
 private setMonitoredDevices() {
 	log.debug "setMonitoredDevices"
     def deviceList = ""
+    
+// Unsecure List
+	alarmSensor.setUnsecureList("")
+    
 // Armed Home List
 	if (homeMotions) {
     	deviceList = deviceList + "Motion Sensors: ${homeMotions}\n"
@@ -1084,6 +1088,7 @@ def alarmAlertHandler(evt) {
         state.userAlarm = false
         homeAlarm?.off()
         awayAlarm?.off()
+        alarmSensor.setUnsecureList("")
         if (sendPush || alarmSendPush) {
         	sendPush(msg)
         }
@@ -1100,6 +1105,7 @@ def alarmAlertHandler(evt) {
         state.alert = true
         state.userAlarm = true
         state.alertMessage = msg
+        alarmSensor.setUnsecureList("User Activated!")
         virtualController()
     }
 }
@@ -1243,6 +1249,7 @@ def virtualController(evt) {
     def unsecure = false
     def date = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
     def msg = "${location} ${date}\n ALARM!!! "
+    def unsecureList = ""
     def newResult = ""
     def result = ""
     def motions = ""
@@ -1276,26 +1283,36 @@ def virtualController(evt) {
             unsecure = true
             msg = msg + result
             newResult = newResult + result
+            unsecureList = unsecureList + result
         }
         result = contacts.findAll{it.currentValue("contact") == "open"}
         if (result.size() > 0) {
             unsecure = true
             msg = msg + result
             newResult = newResult + result
+            unsecureList = unsecureList + result
         }
         result = doors.findAll{it.currentValue("door") == "open"}
         if (result.size() > 0) {
             unsecure = true
             msg = msg + result
             newResult = newResult + result
+            unsecureList = unsecureList + result
         }
         result = locks.findAll{it.currentValue("lock") == "unlocked"}
         if (result.size() > 0) {
             unsecure = true
             msg = msg + result
             newResult = newResult + result
+            unsecureList = unsecureList + result
         }
     }
+    
+    if (state.userAlarm) {
+    	unsecureList = "User Activated!"
+    }
+    log.debug "Setting unsecureList = '${unsecureList}'"
+    alarmSensor.setUnsecureList(unsecureList)
 
 	log.debug "unsecure = ${unsecure} / state.alert = ${state.alert}"
 	if (unsecure || state.alert) {        
