@@ -116,7 +116,7 @@ def initialize() {
     if (addEntry != "None" && addTime) {
     	log.debug "Adding entry: ${addEntry} / ${addLocation} / ${addTime}"
     	state.displayName = addLocation
-        state.eventTime = now()
+        state.lastEventTime = now()
         if (addEntry == "Arrival") {
             state.lastEvent = "on"
             setArrival(addLocation, addTime)
@@ -341,7 +341,7 @@ def switchHandler(evt) {
     def delay = false
     def skip = false
 
-	if (state.lastEventTime < now() + (60 * 1000)) { // If something has occured in the last minute, check to make sure it's not a duplicate
+	if (state.lastEventTime < now() + (60 * 5000)) { // If something has occured in the last 5 minutes, check to make sure it's not a duplicate
     	log.debug "It's been less than a minute..."
         if (evt.displayName == state.displayName && evt.value == state.lastEvent) {
         	log.debug "This is a duplicate: skipping..."
