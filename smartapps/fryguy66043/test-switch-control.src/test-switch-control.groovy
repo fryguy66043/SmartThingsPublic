@@ -68,6 +68,7 @@ def installed() {
 def updated() {
 	log.debug "Updated with settings: ${settings}"
 
+	unschedule()
 	unsubscribe()
 	initialize()
 }
@@ -75,6 +76,7 @@ def updated() {
 def initialize() {
 	state.onCnt = 0
     state.onTime = 0
+    state.testTime = now()
     subscribe(app, appHandler)
     subscribe(hvac, "operatingState", hvacHandler)
     subscribe(switch1, "switch", switchHandler)
@@ -84,6 +86,7 @@ def initialize() {
     subscribe(myLock, "codeReport", lockCodeHandler)
     subscribe(myLock, "reportAllCodes", reportAllCodesHandler)
     subscribe(p1, "presence", p1Handler)
+//    runEvery1Minute(timeHandler)
 }
 
 def appHandler(evt) {
@@ -150,6 +153,17 @@ def appHandler(evt) {
     	log.debug "Command Name: ${comm.name}"
     }
 */
+}
+
+def timeHandler(evt) {
+	log.debug "timeHandler"
+    state.testTime = state.testTime ?: now()
+    def nowTime = now()
+    log.debug "nowTime = ${nowTime} / state.testTime = ${state.testTime} / nowTime - state.testTime = ${nowTime - state.testTime}"
+    log.debug "nowTime > state.testTime + (60 * 1000) = ${nowTime > state.testTime + (60 * 1000)}"
+    if (nowTime > state.testTime + (60 * 1000)) {
+    	state.testTime = nowTime
+    }
 }
 
 def p1Handler(evt) {
