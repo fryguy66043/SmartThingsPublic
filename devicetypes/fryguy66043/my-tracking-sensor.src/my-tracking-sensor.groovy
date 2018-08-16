@@ -26,6 +26,8 @@ metadata {
 		
         attribute "update", "string"
         attribute "reportRequest", "string"
+        attribute "monthReportRequest", "string"
+        attribute "lastMonthReportRequest", "string"
         attribute "trackingSince", "string"
         attribute "name", "string"
         attribute "trackingList", "string"
@@ -42,6 +44,8 @@ metadata {
         command "setTrackingList"
         command "setLastLocation"
         command "reset"
+        command "month"
+        command "lastMonth"
 	}
 
 	simulator {
@@ -72,13 +76,18 @@ metadata {
         valueTile("tracking", "device.tracking", width: 6, height: 6) {
         	state("default", label: '${currentValue}')
         }
-
 		standardTile("refresh", "device.refresh", decoration: "flat", width: 2, height: 2) {
-			state "default", label: '', action: "refresh", icon:"st.secondary.refresh"
+			state "default", label: 'Week', action: "refresh", icon:"st.Office.office19"
 		}
+        standardTile("month", "device.month", decoration: "flat", width: 2, height: 2) {
+        	state "default", label: 'Month', action: "month", icon:"st.Office.office19"
+        }
+        standardTile("lastMonth", "device.lastMonth", decoration: "flat", width: 2, height: 2) {
+        	state "default", label: 'Last Month', action: "lastMonth", icon:"st.Office.office19"
+        }
         
 		main "trackingTile"
-		details(["trackingTile", "location", "since", "tracking", "refresh"])
+		details(["trackingTile", "location", "since", "tracking", "refresh", "month", "lastMonth"])
 	}
 }
 
@@ -175,10 +184,22 @@ private initialize() {
 }
 
 def refresh() {
-	log.debug "Request refresh()"
+	log.debug "Request report()"
 	def timestamp = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
     sendEvent(name: "update", value: timestamp)
     sendEvent(name: "reportRequest", value: timestamp)
+}
+
+private month() {
+	log.debug "Request month report()"
+	def timestamp = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
+    sendEvent(name: "monthReportRequest", value: timestamp)
+}
+
+private lastMonth() {
+	log.debug "Request last month report()"
+	def timestamp = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
+    sendEvent(name: "lastMonthReportRequest", value: timestamp)
 }
 
 def reset() {
