@@ -189,7 +189,7 @@ metadata {
 		}
         
 		valueTile("lastUpdate", "device.lastUpdate", width: 6, height: 2, decoration: "flat") {
-			state "default", label:'Last update:\n${currentValue}'
+			state "default", label:'${currentValue}'
 		}
 
 		main(["temperature", "weatherIcon","feelsLike"])
@@ -253,8 +253,9 @@ def poll() {
     def tempCheck = obs?.temp_f
 	if (obs && tempCheck > -50 && tempCheck < 150) {
         // Last update time stamp
-        def timeStamp = "(${obs.station_id})\n"
-        timeStamp = timeStamp + new Date().format("yyyy MMM dd EEE h:mm:ss a", location.timeZone)
+        def obsTime = obs.observation_time
+        def timeStamp = "${new Date().format("MM/yy/dd h:mm a", location.timeZone)}\n(${obs.station_id})\n${obsTime}"
+//        timeStamp = timeStamp + new Date().format("yyyy MMM dd EEE h:mm:ss a", location.timeZone)
         sendEvent(name: "lastUpdate", value: timeStamp)
         sendEvent(name: "stationID", value: obs.station_id)
 
@@ -264,8 +265,27 @@ def poll() {
 			send(name: "temperature", value: Math.round(obs.temp_c), unit: "C")
 			send(name: "feelsLike", value: Math.round(obs.feelslike_c as Double), unit: "C")
 		} else {
-			send(name: "temperature", value: Math.round(obs.temp_f), unit: "F")
+        	def tempF = Math.round(obs.temp_f)
+			send(name: "temperature", value: tempF, unit: "F")
 			send(name: "feelsLike", value: Math.round(obs.feelslike_f as Double), unit: "F")
+            def nowTime = new Date().format("HH:mm:ss", location.timeZone)
+            log.debug "nowTime = ${nowTime}"
+            def actLow = 99
+            def actHigh = -99
+            if (nowTime >= "00:00:00" && nowTime <= "00:10:59") {
+            	setActualLow(99)
+                setActualHigh(-99)
+            }
+            else {
+                actLow = device.currentValue("actualLow") ?: 99
+                actHigh = device.currentValue("actualHigh") ?: -99
+            }
+            if (tempF < actLow) {
+            	setActualLow(tempF)
+            }
+            if (tempF > actHigh) {
+            	setActualHigh(tempF)
+            }
 		}
 		
 		send(name: "humidity", value: obs.relative_humidity[0..-2] as Integer, unit: "%")
@@ -388,6 +408,8 @@ def poll() {
 }
 
 def refresh() {
+//	setActualLow(99)
+//    setActualHigh(-99)
 	poll()
 }
 
