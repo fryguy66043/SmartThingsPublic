@@ -449,8 +449,8 @@ def switchHandler(evt) {
     def delay = false
     def skip = false
 
-	if (state.lastEventTime < now() + (60 * 5000)) { // If something has occured in the last 5 minutes, check to make sure it's not a duplicate
-    	log.debug "It's been less than a minute..."
+	if (state.lastEventTime + (60 * 15000) > now()) { // If something has occured in the last 15 minutes, check to make sure it's not a duplicate
+    	log.debug "It's been less than 15 minutes..."
         if (evt.displayName == state.displayName && evt.value == state.lastEvent) {
         	log.debug "This is a duplicate: skipping..."
         	skip = true
