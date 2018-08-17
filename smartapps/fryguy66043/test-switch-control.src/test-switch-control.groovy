@@ -30,7 +30,7 @@ preferences {
     	input "p", "capability.presenceSensor", required: true
     }
 	section("Disable if present") {
-    	input "p1", "capability.presenceSensor", required: false
+    	input "p1", "capability.presenceSensor", required: false, multiple: true
     }
 	section("HVAC Sensor") {
     	input "hvac", "device.myHVACSensor", required: false
@@ -174,7 +174,8 @@ def p1Handler(evt) {
 }
 
 def hvacHandler(evt) {
-	log.debug "hvacHandler(${evt.value})"
+	log.debug "hvacHandler(${evt.value}) / p = present: ${p?.currentValue("presence") == "present"} / p1 = present: ${p1?.currentValue("presence") == "present"}"
+    
     if (p?.currentValue("presence") == "present" && p1?.currentValue("presence") != "present") {
         switch(hvac.currentValue("operatingState")) {
             case "cooling":
