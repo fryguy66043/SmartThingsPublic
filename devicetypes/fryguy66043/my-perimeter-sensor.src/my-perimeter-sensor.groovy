@@ -89,7 +89,7 @@ private getJsonDisplay(jsonString, showAll) {
     def cnt = 0
 	if (jsonString) {    
 	    def jObj = new JsonSlurper().parseText(jsonString)
-        if (jObj?.Contacts.size()) {
+        if (jObj?.Contacts?.size()) {
         	disp = "Contacts: ["
             cnt = 0
         	jObj.Contacts.each { 
