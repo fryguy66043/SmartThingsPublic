@@ -50,6 +50,9 @@ preferences {
     section("Choose Outside Illumination Sensor...") {
     	input "luxSensor", "capability.illuminanceMeasurement", required: true, title: "Use Jeff's Custome Weather Device."
     }
+    section("Send updates when it's raining?") {
+    	input "rainUpdates", "bool", title: "Do you want to receive updates when the weather sensor detects rain?"
+    }
     section("Daily Precip Update Time (before midnight e.g.- 11:59 pm)") {
     	input "dailyPrecipUpdateTime", "time", required: true, title: "This is the time I will accumulate precipitation totals for the day."
     }
@@ -228,15 +231,16 @@ def rainLastHourHandler(evt) {
         state.raining = true
         state.rainUpdate = now()
         msg = msg + "It's Raining!\nTotal Today: ${myWxDevice.currentValue("rainToday")}\nRate per Hour: ${rain}"
-
-        if (sendPushMsg) {
-            sendPush(msg)
-        }
-        if (phone) {
-            sendSms(phone, msg)
-        }
-        if (phone2) {
-            sendSms(phone2, msg)
+		if (rainUpdates) {
+            if (sendPushMsg) {
+                sendPush(msg)
+            }
+            if (phone) {
+                sendSms(phone, msg)
+            }
+            if (phone2) {
+                sendSms(phone2, msg)
+            }
         }
         if (odPhone) {
             sendSms(odPhone, msg)
@@ -247,17 +251,19 @@ def rainLastHourHandler(evt) {
         	state.raining = false            
 	        state.rainUpdate = now()
             msg = msg + "Total Rain Today: ${myWxDevice.currentValue("rainToday")}"
-/*            
-            if (sendPushMsg) {
-                sendPush(msg)
+            
+            if (rainUpdates) {
+                if (sendPushMsg) {
+                    sendPush(msg)
+                }
+                if (phone) {
+                    sendSms(phone, msg)
+                }
+                if (phone2) {
+                    sendSms(phone2, msg)
+                }
             }
-            if (phone) {
-                sendSms(phone, msg)
-            }
-            if (phone2) {
-                sendSms(phone2, msg)
-            }
-*/            
+            
             if (odPhone) {
                 sendSms(odPhone, msg)
             }
