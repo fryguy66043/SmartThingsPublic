@@ -221,6 +221,7 @@ def setFilterChangeCurrentValue(val) {
     	def due = device.currentValue("filterChangeInterval")
         def interval = (device.currentValue("filterChangeSchedule") == "Days") ? "Days" : "Hours"
         Double remainder = due - val
+        log.debug "Filter Change: due = ${due} / value = ${val} / interval = ${interval} / remainder = ${remainder}"
     	sendEvent(name: "filterChangeCurrentValue", value: val)
         sendEvent(name: "filter", value: "Filter Change Every ${due} ${interval}\nDue in ${remainder.round(1)} ${interval}")
     }
