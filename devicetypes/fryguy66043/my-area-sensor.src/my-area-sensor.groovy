@@ -110,8 +110,8 @@ private getJsonDisplay(jsonString, showAll) {
 	log.debug "getJsonDisplay(${jsonString})"
     def disp = ""
     def cnt = 0
-	if (jsonString) {    
-	    def jObj = new JsonSlurper().parseText(jsonString)
+	if (jsonString?.size() > 0) {    
+	    def jObj = new JsonSlurper()?.parseText(jsonString)
         if (jObj?.Switches?.size()) {
         	disp = disp ? disp + "\nSwitches: [" : "Switches: ["
             cnt = 0
