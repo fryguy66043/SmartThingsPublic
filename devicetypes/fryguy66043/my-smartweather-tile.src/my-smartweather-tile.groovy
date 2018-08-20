@@ -53,6 +53,7 @@ metadata {
         attribute "forecastLowTodayF", "number"
         attribute "rainLastHour", "string"
         attribute "rainToday", "string"
+        attribute "observationTime", "string"
         attribute "stationID", "string"
         attribute "rainDisplay", "string"
 
@@ -250,10 +251,21 @@ def poll() {
 
 	// Current conditions
 	def obs = get("conditions")?.current_observation
+//    log.debug "obs = ${obs}"
+    def obsTime = obs?.observation_time
+    def lastObsTime = device.currentValue("observationTime")
+    log.debug "obsTime = ${obsTime} / lastObsTime = ${lastObsTime}"
+    if (obsTime < device.currentValue("observationTime")) {
+    	obsTime = ""
+        log.debug "Observation Time failure..."
+    }
+    else {
+    	log.debug "Observation Time passed..."
+        sendEvent(name: "observationTime", value: obsTime)
+    }
     def tempCheck = obs?.temp_f
-	if (obs && tempCheck > -50 && tempCheck < 150) {
+	if (obs && tempCheck > -50 && tempCheck < 150 && obsTime) {
         // Last update time stamp
-        def obsTime = obs.observation_time
         def timeStamp = "${new Date().format("MM/yy/dd h:mm a", location.timeZone)}\n(${obs.station_id})\n${obsTime}"
 //        timeStamp = timeStamp + new Date().format("yyyy MMM dd EEE h:mm:ss a", location.timeZone)
         sendEvent(name: "lastUpdate", value: timeStamp)
