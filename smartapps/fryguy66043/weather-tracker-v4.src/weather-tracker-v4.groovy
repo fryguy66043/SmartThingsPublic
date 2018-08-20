@@ -210,24 +210,25 @@ def forecastHandler(evt) {
 
 def rainTodayHandler(evt) {
 	log.debug "rainTodayHandler: ${evt.value}"
-    if (Float.parseFloat(evt.value) > 0.0) {
-        def msg = "${location}: Total Precip Today: ${evt.value}"
-
-//        if (odPhone) {
-//            sendSms(odPhone, msg)
-//        }
+    def rainToday = Float.parseFloat(evt.value)
+    if (rainToday > 0.0) {
+        def msg = "${location}: Total Precip Today: ${rainToday}"
+		if (state.rainTotal < rainToday) {
+//        	state.rainTotal = rainToday
+            rainLastHourHandler(evt)
+        }
     }
 }
 
 def rainLastHourHandler(evt) {
 	log.debug "rainLastHourHandler(${evt.value}) / rainLastHour = ${myWxDevice.currentValue("rainLastHour")} / rainToday = ${myWxDevice.currentValue("rainToday")}"
-    def rain = Float.parseFloat(myWxDevice.currentValue("rainLastHour"))
+    def rain = Float.parseFloat(myWxDevice.currentValue("rainLastHour")) ?: Float.parseFloat(evt.value)
     def rainTotal = Float.parseFloat(myWxDevice.currentValue("rainToday"))
     def msg = "${location}: "
     state.rainUpdate = state.rainUpdate ?: now()
     state.rainTotal = state.rainTotal ?: 0.0
-    log.debug "${location}: rain > 0.0 = ${rain > 0.0} / now() > state.rainUpdate + (60 * 60) = ${now() > state.rainUpdate + (60 * 1000)} / rainTotal >= state.rainTotal + 0.1 = ${rainTotal >= state.rainTotal + 0.1}"
-    if (rain > 0.0 && rainTotal > 0.0 && (now() > state.rainUpdate + (60 * 1000) || rain >= state.rainTotal + 0.1))  {
+    log.debug "${location}: rain > 0.0 = ${rain > 0.0} / rainTotal > state.rainTotal = ${rainTotal > state.rainTotal} / now() > state.rainUpdate + (60 * 60 * 1000) = ${now() > state.rainUpdate + (60 * 60 * 1000)} / rainTotal >= state.rainTotal + 0.1 = ${rainTotal >= state.rainTotal + 0.1}"
+    if (rain > 0.0 && rainTotal > state.rainTotal && (now() > state.rainUpdate + (60 * 60 * 1000) || rain >= state.rainTotal + 0.1))  {
         state.raining = true
         state.rainUpdate = now()
         msg = msg + "It's Raining!\nTotal Today: ${myWxDevice.currentValue("rainToday")}\nRate per Hour: ${rain}"
