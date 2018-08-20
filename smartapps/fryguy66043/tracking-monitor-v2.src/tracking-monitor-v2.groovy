@@ -140,6 +140,9 @@ def initialize() {
     subscribe(trackingSensor, "reportRequest", reportHandler)
     subscribe(trackingSensor, "monthReportRequest", reportThisMonthHandler)
     subscribe(trackingSensor, "lastMonthReportRequest", reportLastMonthHandler)
+    subscribe(trackingSensor, "reportRequestFull", reportFullHandler)
+    subscribe(trackingSensor, "monthReportRequestFull", reportThisMonthFullHandler)
+    subscribe(trackingSensor, "lastMonthReportRequestFull", reportLastMonthFullHandler)
     subscribe(eraseSwitch, "switch.on", eraseHandler)
     schedule(resetTime, resetHandler)
     if (loc2Switch) {
@@ -267,6 +270,51 @@ def reportHandler(evt) {
         }
     }
     def msg = "Tracking Data for: ${personName}\n${date}\n\n" +
+    	"SUN (${dates[0]}):\n${getSimpleList(dates[0])}\n" +
+        "MON (${dates[1]}):\n${getSimpleList(dates[1])}\n" +
+        "TUE (${dates[2]}):\n${getSimpleList(dates[2])}\n" +
+        "WED (${dates[3]}):\n${getSimpleList(dates[3])}\n" +
+        "THU (${dates[4]}):\n${getSimpleList(dates[4])}\n" +
+        "FRI (${dates[5]}):\n${getSimpleList(dates[5])}\n" +
+        "SAT (${dates[6]}):\n${getSimpleList(dates[6])}"
+        
+    if (phone) {
+    	sendSms(phone, msg)
+    }
+    if (sendPush) {
+    	sendPush(msg)
+    }
+}
+
+def reportFullHandler(evt) {
+	log.debug "reportHandler(${evt.value})"
+    Calendar localCalendar = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
+	int day = localCalendar.get(Calendar.DAY_OF_WEEK)
+    int dayOfMonth = localCalendar.get(Calendar.DAY_OF_MONTH)
+    def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+    def calDate = new Date()
+    def newDate = new Date()
+    log.debug "calDate = ${calDate.format("MM/dd", location.timeZone)}"
+    def dates = ["","","","","","",""]
+    use(groovy.time.TimeCategory) {
+    	log.debug "day = ${day}"
+    	for (int x = 0; x < 7; x++) {
+        	if (x+1 == day) {
+            	log.debug "today == ${x}"
+            	dates[x] = "${calDate.format("MM/dd", location.timeZone)}"
+            }
+            else if (x+1 < day) {
+            	newDate = calDate - (day-(x+1))
+            	dates[x] = newDate.format("MM/dd", location.timeZone)
+            }
+            else if (x+1 > day) {
+            	newDate = calDate - (day + (6 - x))
+            	dates[x] = newDate.format("MM/dd", location.timeZone)
+            }
+            log.debug "dates[${x}] == ${dates[x]}"
+        }
+    }
+    def msg = "Tracking Data for: ${personName}\n${date}\n\n" +
     	"SUN (${dates[0]}):\n${getList(dates[0])}\n\n" +
         "MON (${dates[1]}):\n${getList(dates[1])}\n\n" +
         "TUE (${dates[2]}):\n${getList(dates[2])}\n\n" +
@@ -295,7 +343,46 @@ def reportThisMonthHandler(evt) {
     	if (state.trackingList[x].contains("~") && !state.trackingList[x].contains(dispDate)) {
         	dispDate = state.trackingList[x]
             dispDate = dispDate.replace("~", "")
-	        report = report + "${dispDate}:\n${getList(dispDate)}\n\n"
+            getDate(dispDate)
+	        report = report + "${getDate(dispDate)}:\n${getSimpleList(dispDate)}\n"
+	        cnt = cnt + 1
+        }
+        if (cnt == 7) {
+        	log.debug "pCnt = ${pCnt}"
+            if (phone) {
+                sendSms(phone, report)
+            }
+            if (sendPush) {
+                sendPush(report)
+            }
+            cnt = 0
+            pCnt = pCnt + 1
+            report = "${location} ${date}: Tracking This Month (page ${pCnt})\n\n"
+        }
+    }
+
+	if (phone) {
+    	sendSms(phone, report)
+    }
+    if (sendPush) {
+    	sendPush(report)
+    }
+}
+
+def reportThisMonthFullHandler(evt) {
+	log.debug "reportThisMonthHandler(${evt?.value})"
+    def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+    def report = "${location} ${date}: Tracking This Month (page 1)\n\n"
+	def dispDate = "x"
+    def cnt = 0
+    def pCnt = 1
+
+    for (int x = 0; x < state.trackingList.size(); x++) {
+    	if (state.trackingList[x].contains("~") && !state.trackingList[x].contains(dispDate)) {
+        	dispDate = state.trackingList[x]
+            dispDate = dispDate.replace("~", "")
+            getDate(dispDate)
+	        report = report + "${getDate(dispDate)}:\n${getList(dispDate)}\n\n"
 	        cnt = cnt + 1
         }
         if (cnt == 7) {
@@ -310,7 +397,6 @@ def reportThisMonthHandler(evt) {
             report = "${location} ${date}: Tracking This Month (page ${pCnt})\n\n"
         }
     }
-//	log.debug "report.size() = ${report.size()}"            
 
 	if (phone) {
     	sendSms(phone, report)
@@ -318,6 +404,20 @@ def reportThisMonthHandler(evt) {
     if (sendPush) {
     	sendPush(report)
     }
+}
+
+private getDate(dispDate) {
+	log.debug "getDate(${dispDate})"
+    def year = new Date().format("yy", location.timeZone)
+    def dispDay = ""
+    
+	if (dispDate) {
+    	def fullDispDate = "${dispDate}/${year}"
+        def date = "${new Date().parse("MM/dd/yy", fullDispDate)}"
+        def day = date.take(3)
+        dispDay = "${day} (${dispDate})"
+    }
+    return dispDay
 }
 
 private getList(date) {
@@ -351,7 +451,70 @@ private getList(date) {
     return list
 }
 
+private getSimpleList(date) {
+	log.debug "getList(${date})"
+	def list = ""
+    def found = false
+    
+    for (int x = 0; x < state.trackingList.size(); x++) {
+    	
+        if (found) {
+        	if (!state.trackingList[x].contains("~")) {
+	        	list = list + "${state.trackingList[x]}\n"
+            }
+            else {
+            	found = false
+                break
+            }
+        }
+        else if (state.trackingList[x].contains(date)) {
+        	if (x+1 < state.trackingList.size()) { 
+            	if (!state.trackingList[x+1].contains(date)) { // To address issues with ST schedules firing more than once on occassion.
+	        		found = true
+                }
+            }
+        }
+    }
+    return list
+}
+
 def reportLastMonthHandler(evt) {
+	log.debug "reportThisMonthHandler(${evt?.value})"
+    def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+    def report = "${location} ${date}: Tracking Last Month (page 1)\n\n"
+	def dispDate = "x"
+    def cnt = 0
+    def pCnt = 1
+
+    for (int x = 0; x < state.trackingListLastMonth.size(); x++) {
+    	if (state.trackingListLastMonth[x].contains("~") && !state.trackingListLastMonth[x].contains(dispDate)) {
+        	dispDate = state.trackingListLastMonth[x]
+            dispDate = dispDate.replace("~", "")
+	        report = report + "${dispDate}:\n${getLastMonthSimpleList(dispDate)}\n"
+	        cnt = cnt + 1
+        }
+        if (cnt == 7) {
+            if (phone) {
+                sendSms(phone, report)
+            }
+            if (sendPush) {
+                sendPush(report)
+            }
+            cnt = 0
+            pCnt = pCnt + 1
+            report = "${location} ${date}: Tracking This Month (page ${pCnt})\n\n"
+        }
+    }
+
+	if (phone) {
+    	sendSms(phone, report)
+    }
+    if (sendPush) {
+    	sendPush(report)
+    }
+}
+
+def reportLastMonthFullHandler(evt) {
 	log.debug "reportThisMonthHandler(${evt?.value})"
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
     def report = "${location} ${date}: Tracking Last Month (page 1)\n\n"
@@ -378,7 +541,6 @@ def reportLastMonthHandler(evt) {
             report = "${location} ${date}: Tracking This Month (page ${pCnt})\n\n"
         }
     }
-//	log.debug "report.size() = ${report.size()}"            
 
 	if (phone) {
     	sendSms(phone, report)
@@ -402,6 +564,33 @@ private getLastMonthList(date) {
             	arrDisp = (state.trackingArrTimeLastMonth[x] != "00:00") ? "Arr: ${state.trackingArrTimeLastMonth[x]} " : ""
                 dptDisp = (state.trackingDptTimeLastMonth[x] != "00:00") ? " Dpt: ${state.trackingDptTimeLastMonth[x]}" : ""
 	        	list = list + "[${arrDisp}\"${state.trackingListLastMonth[x]}\"${dptDisp}]"
+            }
+            else {
+            	found = false
+                break
+            }
+        }
+        else if (state.trackingListLastMonth[x].contains(date)) {
+        	if (x+1 < state.trackingListLastMonth.size()) { 
+            	if (!state.trackingListLastMonth[x+1].contains(date)) { // To address issues with ST schedules firing more than once on occassion.
+	        		found = true
+                }
+            }
+        }
+    }
+    return list
+}
+
+private getLastMonthSimpleList(date) {
+	log.debug "getLastMonthList(${date})"
+	def list = ""
+    def found = false
+    
+    for (int x = 0; x < state.trackingListLastMonth.size(); x++) {
+    	
+        if (found) {
+        	if (!state.trackingListLastMonth[x].contains("~")) {
+	        	list = list + "${state.trackingListLastMonth[x]}\n"
             }
             else {
             	found = false
