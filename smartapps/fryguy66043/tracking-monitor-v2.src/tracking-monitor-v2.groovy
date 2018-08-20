@@ -315,13 +315,13 @@ def reportFullHandler(evt) {
         }
     }
     def msg = "Tracking Data for: ${personName}\n${date}\n\n" +
-    	"SUN (${dates[0]}):\n${getList(dates[0])}\n\n" +
-        "MON (${dates[1]}):\n${getList(dates[1])}\n\n" +
-        "TUE (${dates[2]}):\n${getList(dates[2])}\n\n" +
-        "WED (${dates[3]}):\n${getList(dates[3])}\n\n" +
-        "THU (${dates[4]}):\n${getList(dates[4])}\n\n" +
-        "FRI (${dates[5]}):\n${getList(dates[5])}\n\n" +
-        "SAT (${dates[6]}):\n${getList(dates[6])}"
+    	"Sun (${dates[0]}):\n${getList(dates[0])}\n\n" +
+        "Mon (${dates[1]}):\n${getList(dates[1])}\n\n" +
+        "Tue (${dates[2]}):\n${getList(dates[2])}\n\n" +
+        "Wed (${dates[3]}):\n${getList(dates[3])}\n\n" +
+        "Thu (${dates[4]}):\n${getList(dates[4])}\n\n" +
+        "Fri (${dates[5]}):\n${getList(dates[5])}\n\n" +
+        "Sat (${dates[6]}):\n${getList(dates[6])}"
         
     if (phone) {
     	sendSms(phone, msg)
@@ -370,7 +370,7 @@ def reportThisMonthHandler(evt) {
 }
 
 def reportThisMonthFullHandler(evt) {
-	log.debug "reportThisMonthHandler(${evt?.value})"
+	log.debug "reportThisMonthFullHandler(${evt?.value})"
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
     def report = "${location} ${date}: Tracking This Month (page 1)\n\n"
 	def dispDate = "x"
@@ -408,15 +408,25 @@ def reportThisMonthFullHandler(evt) {
 
 private getDate(dispDate) {
 	log.debug "getDate(${dispDate})"
-    def year = new Date().format("yy", location.timeZone)
-    def dispDay = ""
+    def txtYear = new Date().format("yy", location.timeZone)
+    def year = Integer.parseInt(txtYear)
+    def month = new Date().format("MM", location.timeZone)
+	def dispMonth = dispDate.take(2)
+    def dispYear = year
+    if (month < dispMonth) {
+	    dispYear = year - 1
+    }
+    log.debug "dispMonth = ${dispMonth} / month = ${month} / year = ${dispYear}"
+    
+	def dispDay = ""
     
 	if (dispDate) {
-    	def fullDispDate = "${dispDate}/${year}"
-        def date = "${new Date().parse("MM/dd/yy", fullDispDate)}"
-        def day = date.take(3)
+    	def fullDispDate = "${dispDate}/${dispYear}"
+        def date = new Date().parse("MM/dd/yy", fullDispDate)
+		def day = date.format("EEE")
         dispDay = "${day} (${dispDate})"
     }
+    log.debug "dispDay = ${dispDay}"
     return dispDay
 }
 
@@ -452,7 +462,7 @@ private getList(date) {
 }
 
 private getSimpleList(date) {
-	log.debug "getList(${date})"
+	log.debug "getSimpleList(${date})"
 	def list = ""
     def found = false
     
@@ -479,7 +489,7 @@ private getSimpleList(date) {
 }
 
 def reportLastMonthHandler(evt) {
-	log.debug "reportThisMonthHandler(${evt?.value})"
+	log.debug "reportLastMonthHandler(${evt?.value})"
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
     def report = "${location} ${date}: Tracking Last Month (page 1)\n\n"
 	def dispDate = "x"
@@ -490,7 +500,7 @@ def reportLastMonthHandler(evt) {
     	if (state.trackingListLastMonth[x].contains("~") && !state.trackingListLastMonth[x].contains(dispDate)) {
         	dispDate = state.trackingListLastMonth[x]
             dispDate = dispDate.replace("~", "")
-	        report = report + "${dispDate}:\n${getLastMonthSimpleList(dispDate)}\n"
+	        report = report + "${getDate(dispDate)}:\n${getLastMonthSimpleList(dispDate)}\n"
 	        cnt = cnt + 1
         }
         if (cnt == 7) {
@@ -515,7 +525,7 @@ def reportLastMonthHandler(evt) {
 }
 
 def reportLastMonthFullHandler(evt) {
-	log.debug "reportThisMonthHandler(${evt?.value})"
+	log.debug "reportLastMonthFullHandler(${evt?.value})"
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
     def report = "${location} ${date}: Tracking Last Month (page 1)\n\n"
 	def dispDate = "x"
@@ -526,7 +536,7 @@ def reportLastMonthFullHandler(evt) {
     	if (state.trackingListLastMonth[x].contains("~") && !state.trackingListLastMonth[x].contains(dispDate)) {
         	dispDate = state.trackingListLastMonth[x]
             dispDate = dispDate.replace("~", "")
-	        report = report + "${dispDate}:\n${getLastMonthList(dispDate)}\n\n"
+	        report = report + "${getDate(dispDate)}:\n${getLastMonthList(dispDate)}\n\n"
 	        cnt = cnt + 1
         }
         if (cnt == 7) {
@@ -582,7 +592,7 @@ private getLastMonthList(date) {
 }
 
 private getLastMonthSimpleList(date) {
-	log.debug "getLastMonthList(${date})"
+	log.debug "getLastMonthSimpleList(${date})"
 	def list = ""
     def found = false
     
