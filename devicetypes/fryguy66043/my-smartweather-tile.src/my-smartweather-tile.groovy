@@ -254,8 +254,13 @@ def poll() {
 //    log.debug "obs = ${obs}"
     def obsTime = obs?.observation_time
     def lastObsTime = device.currentValue("observationTime")
-    log.debug "obsTime = ${obsTime} / lastObsTime = ${lastObsTime}"
-    if (obsTime < device.currentValue("observationTime")) {
+	def obsDateTime = obsTime.replace("Last Updated on ", "")
+    def obsDate = Date.parse("MMM dd, h:mm a z", obsDateTime)
+    def lastObsDateTime = lastObsTime.contains("Last Updated") ? lastObsTime.replace("Last Updated on ", "") : lastObsTime
+    def lastObsDate = Date.parse("MMM dd, h:mm a z", lastObsDateTime)
+	log.debug "obsTime = ${obsTime} / lastObsTime = ${lastObsTime} / obsDate = ${obsDate.format("MM/dd/yy h:mm a", location.timeZone)}"
+//    if (obsTime < device.currentValue("observationTime")) {
+    if (obsDate < lastObsDate) {
     	obsTime = ""
         log.debug "Observation Time failure..."
     }
