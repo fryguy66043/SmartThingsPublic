@@ -59,6 +59,7 @@ preferences() {
     }
     section("Open Window reminder?") {
     	input "windowReminder", "bool", title: "Do you want a reminder to open the window if the outside temps are favorable?"
+        input "reminderPresence", "capability.presenceSensor", multiple: true, required: false, title: "Optional.  Check to make sure one of these people are home before giving reminder?"
     	input "forecast", "device.mySmartweatherTile", required: false, title: "Optional forecast provider.  Will be used to assist with Open Window Reminder if supplied."
         input "precipChance", "number", required: false, title: "Optional.  What is the max chance of precip to still provide a reminder?"
         input "forecastHigh", "number", required: false, title: "Optional.  When cooling, what is the max forecast high temp to still provide a reminder?"
@@ -558,8 +559,9 @@ def temperatureHandler(evt)
     def fCastHigh = forecast?.currentValue("forecastHighTodayF") ?: 199
     def fCastLow = forecast?.currentValue("forecastHighTodayF") ?: -199
     def pop = forecast?.currentValue("percentPrecip") ? Integer.parseInt(forecast?.currentValue("percentPrecip")) : 0
-    def windowCoolMsg = fCastHigh < 199  ? "${location} ${date}: It's a ${weather} ${ot}F outside with a forecasted high of ${fCastHigh}F!  Do you want to open the windows?" : "${location} ${date}: It's a ${weather} ${ot}F outside!  Do you want to open the windows?"
-    def windowHeatMsg = fCastLow > -199 ? "${location} ${date}: It's a ${weather} ${ot}F outside with a forecasted high of ${fCastLow}F!  Do you want to open the windows?" : "${location} ${date}: It's a ${weather} ${ot}F outside!  Do you want to open the windows?"
+    def windowCoolMsg = fCastHigh < 199  ? "${location} ${date}: It's a ${weather} ${ot}F outside with a forecasted high of ${fCastHigh}° and ${pop}% chance of precipitation!  Do you want to open the windows?" : "${location} ${date}: It's a ${weather} ${ot}F outside!  Do you want to open the windows?"
+    def windowHeatMsg = fCastLow > -199 ? "${location} ${date}: It's a ${weather} ${ot}F outside with a forecasted high of ${fCastLow}° and ${pop}% chance of precipitation!  Do you want to open the windows?" : "${location} ${date}: It's a ${weather} ${ot}F outside!  Do you want to open the windows?"
+    def notSendingMsg = "${location} ${date}: "
     def sendReminder = true
 
 	log.debug "temperatureHandler: thermostat mode = ${tm} / windowReminder = ${windowReminder} / rain = ${rain} / pop = ${pop} / fCastLow = ${fCastLow} / fCastHigh = ${fCastHigh}"
@@ -589,12 +591,18 @@ def temperatureHandler(evt)
                 if (timeOfDayIsBetween(daylight.sunrise, daylight.sunset, new Date(), location.timeZone)) {
                     if (forecast && forecastLow) {
                         if (fCastLow < forecastLow || pop > precipChance) {
+                        	if (!anyoneHome()) {
+                            	notSendingMsg = notSendingMsg + "Not sending window reminder.  No one is home!"
+                            }
+                            else {
+                            	notSendingMsg = notSendingMsg + "Not sending window reminder.  Forecast too low and/or precip chance too high: ${fCastLow}° F / ${pop}% precip"
+                            }
                             sendReminder = false
                             state.windowReminder = true 
                             state.windowReminderDateTime = date
-                            log.debug "${location}: Not sending window reminder.  Forecast too low and/or precip chance too high: ${fCastLow}° F / ${pop}% precip"
+                            log.debug notSendingMsg
                             if (phoneReminder) {
-                            	sendSms(phoneReminder, "${location}: Not sending window reminder.  Forecast too low and/or precip chance too high: ${fCastLow}° F / ${pop}% precip")
+                            	sendSms(phoneReminder, notSendingMsg)
                             }
                         }
                     }
@@ -619,12 +627,18 @@ def temperatureHandler(evt)
             	if (timeOfDayIsBetween(daylight.sunrise, daylight.sunset, new Date(), location.timeZone)) {
                     if (forecast && forecastHigh) {
                         if (fCastHigh > forecastHigh || pop > precipChance) {
+                        	if (!anyoneHome()) {
+                            	notSendingMsg = notSendingMsg + "Not sending window reminder.  No one is home!"
+                            }
+                            else {
+                            	notSendingMsg = notSendingMsg + "Not sending window reminder.  Forecast too high and/or precip chance too high: ${fCastHigh}° F / ${pop}% precip"
+                            }
                             sendReminder = false
                             state.windowReminder = true 
                             state.windowReminderDateTime = date
-                            log.debug "${location}: Not sending window reminder.  Forecast too high and/or precip chance too high: ${fCastHigh}° F / ${pop}% precip"
+                            log.debug notSendingMsg 
                             if (phoneReminder) {
-                            	sendSms(phoneReminder, "${location}: Not sending window reminder.  Forecast too high and/or precip chance too high: ${fCastHigh}° F / ${pop}% precip")
+                            	sendSms(phoneReminder, notSendingMsg)
                             }
                         }
                     }
@@ -1137,3 +1151,17 @@ private getDayHeatTotalMin() {
 	return state.weekHeatMin[day - 1]
 }
 
+private anyoneHome() {
+	log.debug "anyoneHome"
+    def result = true
+    if (reminderPresence) {
+    	result = false
+        for (person in reminderPresence) {
+            if (person.currentPresence == "present") {
+            	result = true
+            }
+        }
+    }
+    log.debug "result = ${result}"
+    return result
+}
