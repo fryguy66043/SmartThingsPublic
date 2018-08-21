@@ -208,30 +208,65 @@ def forecastHandler(evt) {
 //    }
 }
 
+def rainCheckHandler() {
+	log.debug "rainCheckHandler"
+    def rainTotal = Float.parseFloat(myWxDevice.currentValue("rainToday"))
+    def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+    def msg = "${location} ${date}: Total Rain Today: ${rainTotal.round(2)}"
+    if (state.rainUpdate + (59 * 60 * 1000) < now()) {
+    	log.debug "It's been an hour since rain was reported..."
+    	state.raining = false
+        state.rainUpdate = now()
+        if (rainTotal > 0.0) {
+        	log.debug "Reporting today's rain total"
+	        state.rainTotal = rainTotal
+            if (rainUpdates) {
+                if (sendPushMsg) {
+                    sendPush(msg)
+                }
+                if (phone) {
+                    sendSms(phone, msg)
+                }
+                if (phone2) {
+                    sendSms(phone2, msg)
+                }
+            }
+            if (odPhone) {
+                sendSms(odPhone, msg)
+            }
+        }
+    }
+    else {
+    	log.debug "Additional rain has been reported..."
+    }
+}
+
 def rainTodayHandler(evt) {
 	log.debug "rainTodayHandler: ${evt.value}"
-    def rainToday = Float.parseFloat(evt.value)
-    if (rainToday > 0.0) {
-        def msg = "${location}: Total Precip Today: ${rainToday}"
+    def rainToday = Float.parseFloat(myWxDevice.currentValue("rainToday"))
+    def rainLastHour = Float.parseFloat(myWxDevice.currentValue("rainLastHour"))
+    if (rainToday > 0.0 && rainLastHour == 0.0) {
 		if (state.rainTotal < rainToday) {
-//        	state.rainTotal = rainToday
             rainLastHourHandler(evt)
         }
     }
 }
 
 def rainLastHourHandler(evt) {
-	log.debug "rainLastHourHandler(${evt.value}) / rainLastHour = ${myWxDevice.currentValue("rainLastHour")} / rainToday = ${myWxDevice.currentValue("rainToday")}"
+	log.debug "rainLastHourHandler(${evt.value}) / rainLastHour = ${myWxDevice.currentValue("rainLastHour")} / rainToday = ${myWxDevice.currentValue("rainToday")} / state.rainTotal = ${state.rainTotal}"
     def rain = Float.parseFloat(myWxDevice.currentValue("rainLastHour")) ?: Float.parseFloat(evt.value)
     def rainTotal = Float.parseFloat(myWxDevice.currentValue("rainToday"))
-    def msg = "${location}: "
+    def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+    def msg = "${location} ${date}: "
     state.rainUpdate = state.rainUpdate ?: now()
     state.rainTotal = state.rainTotal ?: 0.0
     log.debug "${location}: rain > 0.0 = ${rain > 0.0} / rainTotal > state.rainTotal = ${rainTotal > state.rainTotal} / now() > state.rainUpdate + (60 * 60 * 1000) = ${now() > state.rainUpdate + (60 * 60 * 1000)} / rainTotal >= state.rainTotal + 0.1 = ${rainTotal >= state.rainTotal + 0.1}"
     if (rain > 0.0 && rainTotal > state.rainTotal && (now() > state.rainUpdate + (60 * 60 * 1000) || rain >= state.rainTotal + 0.1))  {
         state.raining = true
         state.rainUpdate = now()
-        msg = msg + "It's Raining!\nTotal Today: ${myWxDevice.currentValue("rainToday")}\nRate per Hour: ${rain}"
+        state.rainTotal = rainTotal
+//        msg = msg + "It's Raining!\nTotal Today: ${rainTotal.round(2)}\nRate per Hour: ${rain.round(2)}"
+        msg = msg + "It's Raining! Total Today: ${rainTotal.round(2)}"
 		if (rainUpdates) {
             if (sendPushMsg) {
                 sendPush(msg)
@@ -248,10 +283,11 @@ def rainLastHourHandler(evt) {
         }
     }
     else {
-    	if (rain == 0.0 && state.raining) { 
+/*    
+    	if (rain == 0.0 && state.raining && state.rainTotal == rainTotal) { 
         	state.raining = false            
 	        state.rainUpdate = now()
-            msg = msg + "Total Rain Today: ${myWxDevice.currentValue("rainToday")}"
+            msg = msg + "Total Rain Today: ${rainTotal.round(2)}"
             
             if (rainUpdates) {
                 if (sendPushMsg) {
@@ -269,8 +305,12 @@ def rainLastHourHandler(evt) {
                 sendSms(odPhone, msg)
             }
         }
+*/        
     }
-    state.rainTotal = rainTotal
+//    state.rainTotal = rainTotal
+    log.debug "Setting timer to check for rain in 1 hour..."
+    runIn(60 * 60, rainCheckHandler)
+
 }
 
 def tempUpdate() {
@@ -545,7 +585,7 @@ def precipUpdate() {
 
 // Accumulate rain totals
 // Set Day Total
-		log.debug "Day: Changing ${precipUpdateDat} from ${state.weekPrecipInches[dayVal-1]} to ${rain}"
+		log.debug "Day: Changing ${precipUpdateDay} from ${state.weekPrecipInches[dayVal-1]} to ${rain}"
         state.weekPrecipInches[dayVal - 1] = rain
 
 // Set Week Total
