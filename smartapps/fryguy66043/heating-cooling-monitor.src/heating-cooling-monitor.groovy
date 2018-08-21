@@ -155,12 +155,26 @@ def updated()
 
 private getAppName() { return "Heating/Cooling Monitor" }
 
-def subscribeToEvents()
-{
+def subscribeToEvents() {
+// Is this firing unexpectedly??? *****************************************************************
+	def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
+	sendSms("9136679526", "${location} ${date}: Heating/Cooling Monitor: subscribeToEvents()")
+//*************************************************************************************************
+    
 	hvacSensor.setFilterChangeSchedule(reminderType)
     if (reminderInterval) {
 	    hvacSensor.setFilterChangeInterval(reminderInterval)
-        hvacSensor.setFilterChangeCurrentValue(state.filterInterval)
+        if (reminderType == "Run Time") {
+        	if (state.filterInterval > 0) {
+		        hvacSensor.setFilterChangeCurrentValue(state.filterInterval / 60)
+            }
+            else {
+		        hvacSensor.setFilterChangeCurrentValue(0)
+            }
+        }
+        else {
+	        hvacSensor.setFilterChangeCurrentValue(state.filterInterval)
+        }
     }
 
 	log.debug "subscribeToEvents()"
@@ -237,8 +251,8 @@ def resetHandler() {
 
 	if (reminderType == "Days") {
     	state.filterInterval = state.filterInterval + 1
-        hvacSensor.setFilterChangeCurrentValue(state.reminderInterval)
-        if (state.reminderInterval >= reminderInterval && !state.reminderSent) {
+        hvacSensor.setFilterChangeCurrentValue(state.filterInterval)
+        if (state.filterInterval >= reminderInterval && !state.reminderSent) {
         	sendFilterRemider()
         }
     }
