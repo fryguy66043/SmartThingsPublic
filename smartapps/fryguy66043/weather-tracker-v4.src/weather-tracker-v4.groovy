@@ -254,6 +254,8 @@ def rainTodayHandler(evt) {
 
 def rainLastHourHandler(evt) {
 	log.debug "rainLastHourHandler(${evt.value}) / rainLastHour = ${myWxDevice.currentValue("rainLastHour")} / rainToday = ${myWxDevice.currentValue("rainToday")} / state.rainTotal = ${state.rainTotal}"
+	Calendar localCalendar = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
+	int day = localCalendar.get(Calendar.DAY_OF_WEEK)
     def rain = Float.parseFloat(myWxDevice.currentValue("rainLastHour")) ?: Float.parseFloat(evt.value)
     def rainTotal = Float.parseFloat(myWxDevice.currentValue("rainToday"))
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
@@ -261,6 +263,11 @@ def rainLastHourHandler(evt) {
     state.rainUpdate = state.rainUpdate ?: now()
     state.rainTotal = state.rainTotal ?: 0.0
     log.debug "${location}: rain > 0.0 = ${rain > 0.0} / rainTotal > state.rainTotal = ${rainTotal > state.rainTotal} / now() > state.rainUpdate + (60 * 60 * 1000) = ${now() > state.rainUpdate + (60 * 60 * 1000)} / rainTotal >= state.rainTotal + 0.1 = ${rainTotal >= state.rainTotal + 0.1}"
+    
+    if (rainTotal > 0.0) {
+        state.weekPrecipInches[day - 1] = rainTotal
+    }
+    
     if (rain > 0.0 && rainTotal > state.rainTotal && (now() > state.rainUpdate + (60 * 60 * 1000) || rain >= state.rainTotal + 0.1))  {
         state.raining = true
         state.rainUpdate = now()
