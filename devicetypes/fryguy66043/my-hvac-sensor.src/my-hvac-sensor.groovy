@@ -75,8 +75,8 @@ metadata {
 
 	tiles(scale: 2) {
 		standardTile("hvac", "device.hvac", width: 2, height: 2) {
-			state("off", label:'', icon:"thermostat.heating-cooling-off", backgroundColor:"#CCCCCC")
-            state("offFilter", label: '', icon:"thermostat.heating-cooling-off", backgroundColor:"#f1d801")
+			state("off", label:'Off', icon:"thermostat.heating-cooling-off", backgroundColor:"#CCCCCC")
+            state("offFilter", label: 'Off', icon:"thermostat.heating-cooling-off", backgroundColor:"#f1d801")
             state("heatIdle", label:'Idle', icon:"st.Home.home29", backgroundColor:"#d04e00")
             state("heatIdleFilter", label:'Idle', icon:"st.Home.home29", backgroundColor:"#f1d801")
             state("heatHeating", label:'Heating', icon:"st.Home.home29", backgroundColor:"#bc2323")
@@ -231,7 +231,7 @@ def changeFilterRequired(val) {
 	log.debug "changeFilterRequired(${val})"
     def curHvac = device.currentValue("hvac")
     
-    if (val) {
+    if (val == true) {
     	sendEvent(name: "filterChangeRequired", value: "true")
         switch (curHvac) {
             case "off":
@@ -358,7 +358,7 @@ def setMode(val) {
         switch (val) {
             case "off":
                 log.debug "Setting tile to off"
-                if (filter) {
+                if (filter == "true") {
 	                sendEvent(name: "hvac", value: "offFilter")
                 }
                 else {
@@ -371,7 +371,7 @@ def setMode(val) {
                 switch (os) {
                     case "idle":
                         log.debug "Setting tile to coolIdle"
-                        if (filter) {
+                        if (filter == "true") {
 	                        sendEvent(name: "hvac", value: "coolIdleFilter")
                         }
                         else {
@@ -380,7 +380,7 @@ def setMode(val) {
                         break
                     case "cooling":
                         log.debug "Setting tile to coolCooling"
-                        if (filter) {
+                        if (filter == "true") {
 	                        sendEvent(name: "hvac", value: "coolCoolingFilter")
                         }
                         else {
@@ -397,7 +397,7 @@ def setMode(val) {
                 switch (os) {
                     case "idle":
                         log.debug "Setting tile to heatIdle"
-                        if (filter) {
+                        if (filter == "true") {
                         	sendEvent(name: "hvac", value: "heatIdleFilter")
                         }
                         else {
@@ -406,7 +406,7 @@ def setMode(val) {
                         break
                     case "heating":
                         log.debug "Setting tile to heatHeating"
-                        if (filter) {
+                        if (filter == "true") {
 	                        sendEvent(name: "hvac", value: "heatHeatingFilter")
                         }
                         else {
@@ -423,7 +423,7 @@ def setMode(val) {
                 switch (os) {
                     case "idle":
                         log.debug "Setting tile to emergHeatIdle"
-                        if (filter) {
+                        if (filter == "true") {
                         	sendEvent(name: "hvac", value: "emergHeatIdleFilter")
                         }
                         else {
@@ -432,7 +432,7 @@ def setMode(val) {
                         break
                     case "heating":
                         log.debug "Setting tile to emergHeatHeating"
-                        if (filter) {
+                        if (filter == "true") {
                         	sendEvent(name: "hvac", value: "emergHeatHeatingFilter")
                         }
                         else {
@@ -500,7 +500,7 @@ def setOperatingState(val) {
             case "idle":
                 switch (mode) {
                     case "cool":
-                    	if (filter) {
+                    	if (filter == "true") {
                         	sendEvent(name: "hvac", value: "coolIdleFilter")
                         }
                         else {
@@ -538,7 +538,7 @@ def setOperatingState(val) {
                         }
                         break
                     case "heat":
-                    	if (filter) {
+                    	if (filter == "true") {
                         	sendEvent(name: "hvac", value: "heatIdleFilter")
                         }
                         else {
@@ -576,7 +576,7 @@ def setOperatingState(val) {
                         }
                         break
                     case "emergencyHeat":
-                    	if (filter) {
+                    	if (filter == "true") {
                         	sendEvent(name: "hvac", value: "heatIdleFilter")
                         }
                         else {
@@ -614,7 +614,7 @@ def setOperatingState(val) {
                         }
                         break
                     case "off":
-                    	if (filter) {
+                    	if (filter == "true") {
                         	sendEvent(name: "hvac", value: "offFilter")
                         }
                         else {
@@ -632,7 +632,7 @@ def setOperatingState(val) {
     					log.debug "setOperatingState Pre-Change: coolCycleCnt = ${coolCycleCnt} / coolCycleTodayCnt = ${coolCycleTodayCnt}"
                     	coolCycleCnt = coolCycleCnt + 1
                         coolCycleTodayCnt = coolCycleTodayCnt + 1
-                        if (filter) {
+                        if (filter == "true") {
                         	sendEvent(name: "hvac", value: "coolCoolingFilter")
                         }
                         else {
@@ -646,7 +646,7 @@ def setOperatingState(val) {
     					log.debug "setOperatingState Post-Change: coolCycleCnt = ${coolCycleCnt} / coolCycleTodayCnt = ${coolCycleTodayCnt}"
                         break
                     case "off":
-                    	if (filter) {
+                    	if (filter == "true") {
                         	sendEvent(name: "hvac", value: "offFilter")
                         }
                         else
@@ -662,7 +662,7 @@ def setOperatingState(val) {
             case "heating":
                 switch (mode) {
                     case "heat":
-                    	if (filter) {
+                    	if (filter == "true") {
                         	sendEvent(name: "hvac", value: "heatHeatingFilter")
                         }
                         else {
@@ -675,7 +675,7 @@ def setOperatingState(val) {
                         sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
                     case "emergencyHeat":
-                    	if (filter) {
+                    	if (filter == "true") {
                         	sendEvent(name: "hvac", value: "heatHeatingFilter")
                         }
                         else {
@@ -688,7 +688,7 @@ def setOperatingState(val) {
                         sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
                     case "off":
-                    	if (filter) {
+                    	if (filter == "true") {
                         	sendEvent(name: "hvac", value: "offFilter")
                         }
                         else {
