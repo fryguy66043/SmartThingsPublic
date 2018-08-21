@@ -40,6 +40,10 @@ metadata {
 		attribute "alertKeys", "string"
 		attribute "sunriseDate", "string"
 		attribute "sunsetDate", "string"
+        attribute "moonPhase", "string"
+        attribute "moonRise", "string"
+        attribute "moonSet", "string"
+        attribute "moonPercentIlluminated", "string"
 		attribute "lastUpdate", "string"
         attribute "actualLow", "number"
         attribute "actualLowTime", "string"
@@ -54,6 +58,7 @@ metadata {
         attribute "rainLastHour", "string"
         attribute "rainToday", "string"
         attribute "observationTime", "string"
+        attribute "forecastTime", "string"
         attribute "stationID", "string"
         attribute "rainDisplay", "string"
 
@@ -189,12 +194,16 @@ metadata {
 			state "default", label:'${currentValue} lux'
 		}
         
+        valueTile("moon", "device.moon", decoration: "flat", width: 6, height: 2) {
+        	state "default", label: '${currentValue}'
+        }
+        
 		valueTile("lastUpdate", "device.lastUpdate", width: 6, height: 2, decoration: "flat") {
 			state "default", label:'${currentValue}'
 		}
 
 		main(["temperature", "weatherIcon","feelsLike"])
-		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "actual", "city", "percentPrecip", "rainDisplay", "forecast", "alert", "refresh", "rise", "set", "light", "lastUpdate"])}
+		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "actual", "city", "percentPrecip", "rainDisplay", "forecast", "alert", "refresh", "rise", "set", "light", "moon", "lastUpdate"])}
 //		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "city", "percentPrecip", "rainToday", "forecast", "alert", "refresh", "rise", "set", "light", "lastUpdate"])}
 //		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "city", "percentPrecip", "rainToday", "forecast", "refresh", "rise", "set", "lastUpdate"])}
 //		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "city", "percentPrecip", "rainToday", "forecast", "refresh", "rise", "set", "light", "lastUpdate"])}
@@ -246,6 +255,7 @@ def setActualHigh(val) {
     }
 }
 
+
 def poll() {
 	log.debug "WUSTATION: Executing 'poll', location: ${location.name}"
 
@@ -259,10 +269,10 @@ def poll() {
     def lastObsDateTime = lastObsTime.contains("Last Updated") ? lastObsTime.replace("Last Updated on ", "") : lastObsTime
     def lastObsDate = Date.parse("MMM dd, h:mm a z", lastObsDateTime)
 	log.debug "obsTime = ${obsTime} / lastObsTime = ${lastObsTime} / obsDate = ${obsDate.format("MM/dd/yy h:mm a", location.timeZone)}"
-//    if (obsTime < device.currentValue("observationTime")) {
     if (obsDate < lastObsDate) {
     	obsTime = ""
         log.debug "Observation Time failure..."
+        runIn(60, refresh)
     }
     else {
     	log.debug "Observation Time passed..."
@@ -272,7 +282,6 @@ def poll() {
 	if (obs && tempCheck > -50 && tempCheck < 150 && obsTime) {
         // Last update time stamp
         def timeStamp = "${new Date().format("MM/yy/dd h:mm a", location.timeZone)}\n(${obs.station_id})\n${obsTime}"
-//        timeStamp = timeStamp + new Date().format("yyyy MMM dd EEE h:mm:ss a", location.timeZone)
         sendEvent(name: "lastUpdate", value: timeStamp)
         sendEvent(name: "stationID", value: obs.station_id)
 
@@ -344,13 +353,27 @@ def poll() {
 
 		def sunriseDate = ltf.parse("${today} ${a.sunrise.hour}:${a.sunrise.minute}")
 		def sunsetDate = ltf.parse("${today} ${a.sunset.hour}:${a.sunset.minute}")
+        def moonriseDate = ltf.parse("${today} ${a.moonrise.hour}:${a.moonrise.minute}")
+        def moonsetDate = ltf.parse("${today} ${a.moonset.hour}:${a.moonset.minute}")
 
         def tf = new java.text.SimpleDateFormat("h:mm a")
         tf.setTimeZone(TimeZone.getTimeZone("GMT${obs.local_tz_offset}"))
         def localSunrise = "${tf.format(sunriseDate)}"
         def localSunset = "${tf.format(sunsetDate)}"
+        def localMoonrise = "${tf.format(moonriseDate)}"
+        def localMoonset = "${tf.format(moonsetDate)}"
+        
+        def localMoonPhase = a.phaseofMoon
+        def localMoonIllumination = a.percentIlluminated
+        
         send(name: "localSunrise", value: localSunrise, descriptionText: "Sunrise today is at $localSunrise")
-        send(name: "localSunset", value: localSunset, descriptionText: "Sunset today at is $localSunset")
+        send(name: "localSunset", value: localSunset, descriptionText: "Sunset today is at $localSunset")
+        send(name: "moonRise", value: localMoonrise, descriptionText: "Moonrise today is at $localMoonrise")
+        send(name: "moonSet", value: localMoonset, descriptionText: "Moonset today is at $localMoonset")
+        send(name: "moonPercentIlluminated", value: localMoonIllumination, descriptionText: "Percent moon illumination: $localMoonIllumination")
+        send(name: "moonPhase", value: localMoonPhase, descriptionText: "Current moon phase: $localMoonPhase")
+
+		sendEvent(name: "moon", value: "Moon Phase: ${localMoonPhase} ${localMoonIllumination}% Illuminated\nRise: ${localMoonrise} Set: ${localMoonset}")
 
 		def luxVal = estimateLux(sunriseDate, sunsetDate, weatherIcon)
 		send(name: "illuminance", value: luxVal)
@@ -358,8 +381,23 @@ def poll() {
 
 		// Forecast
 		def f = get("forecast")
+        def fTime = f?.forecast?.txt_forecast?.date ?: ""
+        def fDate = "${new Date().format("MM/dd/yy")} ${fTime}"
+        def fDateTime = Date.parse("MM/dd/yy h:mm a z", fDate)
+        def lastfTime = device.currentValue("forecastTime") ?: fTime
+        def lastfDate = "${new Date().format("MM/dd/yy")} ${lastfTime}"
+        def lastfDateTime = Date.parse("MM/dd/yy h:mm a z", lastfDate)
+        log.debug "fDate = ${fDate} / lastfDate = ${lastfDate}"
+        if (fDateTime < lastfDateTime) {
+        	log.debug "Forecast time failure..."
+            fTime = ""
+        }
+        else {
+        	log.debug "Forecast time passed..."
+        }
+        
 		def f1 = f?.forecast?.simpleforecast?.forecastday
-		if (f1) {
+		if (f1 && fTime) {
 			def icon = f1[0].icon_url.split("/")[-1].split("\\.")[0]
 			def value = f1[0].pop as String // as String because of bug in determining state change of 0 numbers
             def forecastHigh = f1[0].high.fahrenheit
@@ -376,7 +414,7 @@ def poll() {
 			log.warn "Forecast not found"
 		}
         def f2 = f?.forecast?.txt_forecast?.forecastday
-        if (f2) {
+        if (f2 && fTime) {
         	def shortForecastDisp = "${f2[0].title}: ${f2[0].fcttext}"
         	def forecastDisp = "${f2[0].title}: ${f2[0].fcttext} ${f2[1].title}: ${f2[1].fcttext} ${f2[2].title}: ${f2[2].fcttext}"
 			send(name: "shortForecast", value: shortForecastDisp)
@@ -420,7 +458,12 @@ def poll() {
 		}
 	}
 	else {
-		log.warn "No response from Weather Underground API"
+    	if (!obs) {
+			log.warn "No response from Weather Underground API"
+        }
+        if (!obsTime) {
+        	log.warn "Old data returned from Weather Underground API"
+        }
 	}
 }
 
@@ -449,16 +492,24 @@ private pad(String s, size = 25) {
 }
 
 private get(feature) {
-	log.debug "feature = ${feature}"
-    log.debug "zipCode = ${zipCode} / pws = ${pws}"
+//	log.debug "feature = ${feature}"
+//    log.debug "zipCode = ${zipCode} / pws = ${pws}"
 	def options = zipCode
 	if (feature == "conditions") { 
     	if (pws) {
-        	options = pws
+        	def pwsString = pws
+        	if (!pws.contains("pws:")) {
+            	log.debug "pws missing 'pws:' prefix - Adding..."
+            	pwsString = "pws:${pws}"
+            }
+            log.debug "pwsString = ${pwsString}"
+        	options = pwsString
         }
     }
-    log.debug "options = ${options}"
-    getWeatherFeature(feature, options)
+//    log.debug "options = ${options}"
+    def results = getWeatherFeature(feature, options)
+//    log.debug "${feature}: ${results}"
+    return results
 }
 
 private localDate(timeZone) {
@@ -468,7 +519,7 @@ private localDate(timeZone) {
 }
 
 private send(map) {
-//	log.debug "WUSTATION: event: $map"
+	log.debug "WUSTATION: event: $map"
 	sendEvent(map)
 }
 
