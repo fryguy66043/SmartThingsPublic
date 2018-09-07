@@ -30,6 +30,9 @@ preferences {
 	}
 	section("Turn on a light..."){
 		input "switch1", "capability.switch", multiple: true
+        input "colorHue", "number", required: false, title: "(Optional) Hue setting for color bulbs. (0 - 360)"
+        input "colorSat", "number", required: false, title: "(Optional) Saturation setting for color bulbs. (0 - 100)"
+        input "dimLevel", "number", required: false, title: "(Optional) Dimmer Level for dimmable bulbs. (0 - 100)"
 	}
 	section("Send Push Notification?") {
         input "sendPush", "bool", required: false,
@@ -43,45 +46,40 @@ def installed()
     subscribe(presence1, "presence.not present", departureHandler)
     subscribe(location, "sunset", sunsetHandler)
     subscribe(app, appHandler)
+    state.hue = 0
+    state.saturation = 0
+    state.switchLevel = 100
+    if (colorHue >= 0) {
+    	state.hue = colorHue
+    }
+    if (colorSat >= 0) {
+    	state.saturation = colorSat
+    }
+    if (dimLevel >= 0) {
+    	state.switchLevel = dimLevel
+    }
 }
 
 def updated()
 {
 	unsubscribe()
+    unschedule()
     installed()
-    state.hue = 0
-    state.saturation = 0
 }
 
 def appHandler(evt) {
+	log.debug "appHandler"
 	def now = new Date()
 	def sunTime = getSunriseAndSunset();
     def dark = (now >= sunTime.sunset)
 
-	sunsetHandler()
-
-// Save hue and saturation if turing on a color bulb
-//	state.hue = (switch1.currentValue("hue")) ? switch1.currentValue("hue") : 0
-//    state.saturation = (switch1.currentValue("saturation")) ? switch1.currentValue("saturation") : 0
-
-/*
-    log.debug "state.hue = ${state.hue} / state.saturation = ${state.saturation}"
-    
-	log.debug "nowTime: $now"
-	log.debug "riseTime: $sunTime.sunrise"
-	log.debug "setTime: $sunTime.sunset"
-	log.debug "presenceHandler $evt.name: $evt.value"
+	turnOn()
 
 	def curState = switch1.currentState("switch")
     def curPresence = presence1.currentValue("presence")
 	def presenceValue = presence1.find{it.currentPresence == "present"}
     def curLocation = location
     def message = "Something went wrong!"
-    log.debug "appHandler called: $evt"
-    log.debug "curLocation == $curLocation"
-    log.debug "curState == $curState.value"
-    log.debug "curPresence == $curPresence"
-    log.debug "presenceValue == $presenceValue"
     
   	if (presenceValue) {
 	  	message = "${curLocation}:  True Presence: ${curPresence}  Sunset = ${dark}"
@@ -97,10 +95,45 @@ def appHandler(evt) {
     }
 
 	log.debug "message == $message"
-//    if (sendPush) {
-//        sendPush(message)
-//    }
-*/
+}
+
+private turnOn() {
+	def capabilities = ""
+
+	log.debug "colorHue: ${colorHue} / colorSat: ${colorSat} / dimLevel: ${dimLevel}"
+	if (colorHue >= 0 && colorSat >= 0) {
+    	log.debug "looking for color bulbs..."
+    	state.hue = colorHue
+        state.saturation = colorSat
+        for (aSwitch in switch1) {
+        	capabilities = aSwitch.capabilities
+            log.debug "Switch = ${aSwitch}: ${capabilities}"
+            for (cap in capabilities) {
+            	log.debug "cap = ${cap.name}"
+            	if (cap.name == "Color Control") {
+                	log.debug "${aSwitch}: Hue = ${aSwitch.currentValue("hue")} / Sat = ${aSwitch.currentValue("saturation")} / Level = ${aSwitch.currentValue("level")}"
+			        aSwitch?.setColor([hue: state.hue, saturation: state.saturation])
+                    log.debug "Color Control Found: ${aSwitch}"
+                }
+            }
+        }
+    }
+    if (dimLevel >= 0) {
+    	log.debug "looking for dimmable lights/switches..."
+    	state.switchLevel = dimLevel
+        for (aSwitch in switch1) {
+        	capabilities = aSwitch.capabilities
+            log.debug "Switch = ${aSwitch}: ${capabilities}"
+            for (cap in capabilities) {
+            	log.debug "cap = ${cap.name}"
+            	if (cap.name == "Switch Level") {
+                    aSwitch?.setLevel(state.switchLevel)
+                    log.debug "Switch Level Found: ${aSwitch}"
+                }
+            }
+        }
+    }
+    switch1?.on()
 }
 
 def arrivalHandler(evt)
@@ -108,14 +141,11 @@ def arrivalHandler(evt)
 	def now = new Date()
 	def sunTime = getSunriseAndSunset()
     def dark = (now >= sunTime.sunset)
-    def message = "Welcome home at night! Turning light(s) on."
+    def message = "Welcome home at night! Turning on ${switch1}."
     
-	if (firstOneHome() && (now >= sunTime.sunset)) {
-    	if (state.hue || state.saturation) {
-        	switch1?.setColor([hue: state.hue, saturation: state.saturation])
-        }
-		switch1.on()
-		log.debug "Welcome home at night! Turning light(s) on."
+	if (firstOneHome() && dark) {
+    	turnOn()
+		log.debug message
         if (sendPush) {
             sendPush(message)
         }
@@ -124,7 +154,7 @@ def arrivalHandler(evt)
 
 def departureHandler(evt)
 {
-    def message = "Everyone has left! Turning light(s) off."
+    def message = "Everyone has left! Turning off ${switch1}."
 
 	if (everyoneIsAway() && somethingOn()) {
     	switch1.off()
@@ -138,6 +168,17 @@ private somethingOn() {
 	def result = false
     for (aSwitch in switch1) {
     	if (aSwitch.currentSwitch == "on") {
+        	result = true
+            break
+        }
+    }
+    return result
+}
+
+private someoneHome() {
+	def result = false
+    for (person in presence1) {
+    	if (person.currentPresence == "present") {
         	result = true
             break
         }
@@ -178,19 +219,16 @@ def sunsetHandler(evt) {
 	log.debug presenceValue
 
 	if (presenceValue) {
-    	if (state.hue || state.saturation) {
-        	switch1?.setColor([hue: state.hue, saturation: state.saturation])
-        }
-		switch1.on()
-		log.debug "Home at night!"
-        def message = "${location}: Home at sunset - Turning light(s) on."
+    	turnOn()
+        def message = "${location}: Home at sunset - Turning on ${switch1}."
+		log.debug message
         if (sendPush) {
             sendPush(message)
         }
 	}
     else {
     	switch1.off()
-        def message = "${location}: Not home at sunset- Not turning light(s) on."
+        def message = "${location}: Not home at sunset- Not turning on ${switch1}."
         if (sendPush) {
             sendPush(message)
         }
