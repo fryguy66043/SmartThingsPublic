@@ -110,8 +110,13 @@ private getJsonDisplay(jsonString, showAll) {
 	log.debug "getJsonDisplay(${jsonString})"
     def disp = ""
     def cnt = 0
+    def newString = jsonString
 	if (jsonString?.size() > 0) {    
-	    def jObj = new JsonSlurper()?.parseText(jsonString)
+    	if (jsonString.contains(",]")) {
+        	log.debug "found ',]'"
+            newString = jsonString.replace(",]", "]")
+        }
+	    def jObj = new JsonSlurper()?.parseText(newString)
         if (jObj?.Switches?.size()) {
         	disp = disp ? disp + "\nSwitches: [" : "Switches: ["
             cnt = 0
