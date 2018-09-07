@@ -81,7 +81,7 @@ def initialize() {
     subscribe(hvac, "operatingState", hvacHandler)
     subscribe(switch1, "switch", switchHandler)
     subscribe(switch2, "switch", switchHandler)
-    subscribe(switch3, "switch", switchHandler)
+    subscribe(switch3, "switch", httpHandler)
     subscribe(myLock, "lock", lockHandler)
     subscribe(myLock, "codeReport", lockCodeHandler)
     subscribe(myLock, "reportAllCodes", reportAllCodesHandler)
@@ -94,6 +94,8 @@ def appHandler(evt) {
 	def testVal = (evt.value) ?: "Nope!"
 	log.debug "testVal = ${testVal}"
 
+	httpHandler()
+/*
 	def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     def endDate = new Date().parse("MM/dd/yy hh:mm:ss a", date)
     def startDate = new Date().parse("MM/dd/yy hh:mm:ss a", "08/10/18 3:30:15 PM")
@@ -125,7 +127,7 @@ def appHandler(evt) {
 	output.Switch2.each {
     	log.debug "${it} == Switch B: ${it == "Switch B"}"
     }
-
+*/
 //	def code = myLock.requestCode("1")
 //	log.debug "code = ${code}"
 //	def codes = "${myLock.currentValue("lockCodes")}"
@@ -153,6 +155,40 @@ def appHandler(evt) {
     	log.debug "Command Name: ${comm.name}"
     }
 */
+}
+
+def httpHandler(evt) {
+	log.debug "httpHandler"
+    
+//    httpGet("http://192.168.1.128:5000/"){
+//		response -> log.debug "response = ${response}"
+//	}
+    
+	def result = sendHubCommand(new physicalgraph.device.HubAction("""GET / HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
+//	def result = sendHubCommand(new physicalgraph.device.HubAction("""GET / HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN))
+//	log.debug "result = ${result}"
+}
+
+def callbackHandler(hubResponse){
+	log.debug "callbackHandler: ${hubResponse}"
+    
+    hubResponse.each { item ->
+    	log.debug "item = ${item}"
+    }
+
+/*
+    def msg = parseLanMessage(hubResponse)
+    log.debug "msg = ${msg}"
+
+    def headersAsString = msg.header // => headers as a string
+    def headerMap = msg.headers      // => headers as a Map
+    def body = msg.body              // => request body as a string
+    def status = msg.status          // => http status code of the response
+    def json = msg.json              // => any JSON included in response body, as a data structure of lists and maps
+    def xml = msg.xml                // => any XML included in response body, as a document tree structure
+    def data = msg.data              // => either JSON or XML in response body (whichever is specified by content-type header in response)
+    log.debug "header = ${headerAsString} / headerMap = ${headerMap} / body = ${body} / status = ${staus} / json = ${json} / xml = ${xml} / data = ${data}"
+*/    
 }
 
 def timeHandler(evt) {
