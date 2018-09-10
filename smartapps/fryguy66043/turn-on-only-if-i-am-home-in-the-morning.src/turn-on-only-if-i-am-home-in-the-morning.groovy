@@ -31,14 +31,13 @@ preferences {
 	section("Turn on a light..."){
 		input "switch1", "capability.switch", multiple: true
         input "turnOnTime", "time", title: "Turn on at what time?"
-        input "turnOnDarkOnly", "bool", title: "Turn on only if it's dark?"
         input "colorHue", "number", required: false, title: "(Optional) Hue setting for color bulbs. (0 - 360)"
         input "colorSat", "number", required: false, title: "(Optional) Saturation setting for color bulbs. (0 - 100)"
         input "dimLevel", "number", required: false, title: "(Optional) Dim Level for dimmable bulbs/switches. (0 - 100)"
 	}
     section("Turn off at sunrise?") {
-    	input "offAtSunrise", "bool", title: "Turn off at sunrise?"
-        input "minutesAfterSunrise", "number", title: "How many minutes after sunrise?"
+    	input "offAtSunrise", "enum", options: ["At Sunrise", "Before Sunrise", "After Sunrise"], title: "Turn off at sunrise?"
+        input "minutesOffset", "number", title: "How many minutes before/after sunrise?"
     }
 	section("Send Push Notification?") {
         input "sendPush", "bool", required: false,
@@ -50,9 +49,9 @@ def installed()
 {
     subscribe(presence1, "presence.present", arrivalHandler)
     subscribe(presence1, "presence.not present", departureHandler)
-    subscribe(location, "sunrise", sunriseHandler)
     subscribe(app, appHandler)
     schedule(turnOnTime, onHandler)
+    subscribe(location, "sunriseTime", sunriseHandler)
     state.hue = 0
     state.saturation = 0
     state.switchLevel = 100
@@ -79,7 +78,8 @@ def appHandler(evt) {
 	def sunTime = getSunriseAndSunset();
     def dark = (now <= sunTime.sunrise || now >= sunTime.sunset)
 	
-    turnOn()
+//    turnOn()
+	onHandler()
 
 	def curState = switch1.currentState("switch")
     def curPresence = presence1.currentValue("presence")
@@ -105,16 +105,33 @@ def appHandler(evt) {
 
 def onHandler(evt) {
 	log.debug "onHandler"
+    def now = new Date()
 	def sunTime = getSunriseAndSunset()
-    def dark = (now < sunTime.sunrise)
+    def dark = false
+    def offset = minutesOffset >= 0 ? minutesOffset * 60 * 1000 : 0
+    if (offAtSunrise == "Before Sunrise") {
+        	dark = (now < sunTime.sunrise - offset)
+    }
+    else {
+	    dark = (now < sunTime.sunrise)
+    }
+    log.debug "Someone Home: ${someoneHome()} / Dark: ${dark}"
     def message = "${location}: Someone is home in the morning! Turning on ${switch1}."
     
 	if (someoneHome() && dark) {
     	turnOn()
+        log.debug message
         if (sendPush) {
             sendPush(message)
         }
 	}
+    else {
+        message = "${location}: Not turning on ${switch1} in the morning.  Someone Home: ${someoneHome()} / Dark: ${dark}" 
+        log.debug message
+    	if (sendPush) {
+        	sendPush(message) 
+        }
+    }
 }
 
 def arrivalHandler(evt)
@@ -230,30 +247,41 @@ def turnOn() {
     switch1?.on()
 }
 
-def sunriseHandler(evt) {
+def sunriseHandler(sunriseString) {
     log.debug "sunriseHandler"
-	def current = presence1.currentValue("presence")
-	log.debug current
-	def presenceValue = presence1.find{it.currentPresence == "present"}
-	log.debug presenceValue
+    
+    def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunriseString)
+	def offTime
 
-	if (offAtSunrise && minutesAfterSunrise == 0 && somethingOn()) {
-    	def message = "${location}: Home at sunrise - Turning off ${switch1}."
-    	switch1.off()
-        if (sendPush) {
-            sendPush(message)
-        }
+    switch (offAtSunrise) {
+    	case "Before Sunrise":
+        	offTime = new Date(sunriseTime.time - (minutesOffset * 60 * 1000))
+        	break
+        case "After Sunrise":
+        	offTime = new Date(sunriseTime.time + (minutesOffset * 60 * 1000))
+        	break
+        default:
+        	offTime = sunriseTime
+        	break
     }
-    else if (minutesAfterSunrise > 0) {
-    	log.debug "Running scheduleHandler in ${minutesAfterSunrise} minutes..."
-    	runIn(60 * minutesAfterSunrise, scheduleHandler)
-    }
+	runOnce(offTime, scheduleHandler)
 }
 
 def scheduleHandler() {
 	log.debug "scheduleHandler"
+    def message = "${location}: "
+    switch (offAtSunrise) {
+    	case "Before Sunrise":
+        	message = message + "Home ${minutesOffset} minutes before sunrise - Turning off ${switch1}."
+        	break
+        case "After Sunrise":
+        	message = message + "Home ${minutesOffset} minutes after sunrise - Turning off ${switch1}."
+        	break
+        default:
+        	message = message + "Home at sunrise - Turning off ${switch1}."
+        	break
+    }
     if (somethingOn()) {
-    	def message = "${location}: Home ${minutesAfterSunrise} after sunrise - Turning off ${switch1}."
     	switch1.off()
         if (sendPush) {
             sendPush(message)
