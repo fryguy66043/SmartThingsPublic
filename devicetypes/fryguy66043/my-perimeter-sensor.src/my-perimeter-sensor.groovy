@@ -87,8 +87,14 @@ private getJsonDisplay(jsonString, showAll) {
 	log.debug "getJsonDisplay(${jsonString})"
     def disp = ""
     def cnt = 0
-	if (jsonString) {    
-	    def jObj = new JsonSlurper().parseText(jsonString)
+    def newString = jsonString
+	if (jsonString?.size() > 0) {    
+    	if (jsonString.contains(",]")) {
+        	log.debug "found ',]'"
+            newString = jsonString.replace(",]", "]")
+            log.debug "newString = ${newString}"
+        }
+	    def jObj = new JsonSlurper().parseText(newString)
         if (jObj?.Contacts?.size()) {
         	disp = "Contacts: ["
             cnt = 0
@@ -183,7 +189,13 @@ def setUnsecuredDeviceList(deviceList) {
 private anyMatches(list1, list2) {
 	log.debug "anyMatches(${list1} / ${list2})"
 	def result = false
-
+	
+    if (list1.contains(",]")) {
+    	list1 = list1.replace(",]", "]")
+    }
+    if (list2.contains(",]")) {
+    	list2 = list2.replace(",]", "]")
+    }
 	if (list1[0] == "{" && list2[0] == "{") {
         def newList1 = new JsonSlurper().parseText(list1)
         def newList2 = new JsonSlurper().parseText(list2)
@@ -219,7 +231,12 @@ private anyMatches(list1, list2) {
         }
     }
     else {
-    	log.debug "Invalid json string"
+    	if ((list1.size() > 0 && list1 != "None") && (list2.size() > 0 && list2 != "None")) {
+	    	log.debug "Invalid json string"
+        }
+        else {
+        	log.debug "Empty comparison list..."
+        }
     }
     
     log.debug "Return ${result}"
