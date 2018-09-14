@@ -89,12 +89,29 @@ def initialize() {
 //    runEvery1Minute(timeHandler)
 }
 
+import groovy.time.TimeCategory
+
 def appHandler(evt) {
 	log.debug "appHandler: ${evt.value} / evt.data = ${evt?.data}"
 	def testVal = (evt.value) ?: "Nope!"
 	log.debug "testVal = ${testVal}"
 
-	httpHandler()
+
+    def now = new Date()
+    def then = new Date()
+	def sunTime = getSunriseAndSunset()
+    def dark = false
+    def offset = 35.7 as Integer
+    use (TimeCategory) {
+    	then = then + offset.minutes
+    }
+    log.debug "offset = ${offset}"
+    log.debug "now = ${now.format("MM/dd/yy hh:mm:ss a", location.timeZone)} / then = ${then.format("MM/dd/yy hh:mm:ss a", location.timeZone)}"	
+
+
+//	httpHandler()
+
+
 /*
 	def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     def endDate = new Date().parse("MM/dd/yy hh:mm:ss a", date)
@@ -164,8 +181,11 @@ def httpHandler(evt) {
 //		response -> log.debug "response = ${response}"
 //	}
     
-	def result = sendHubCommand(new physicalgraph.device.HubAction("""GET / HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
+//	def result = sendHubCommand(new physicalgraph.device.HubAction("""GET / HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
 //	def result = sendHubCommand(new physicalgraph.device.HubAction("""GET / HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN))
+//	def result = sendHubCommand(new physicalgraph.device.HubAction("""GET /cakes \r\nHOST: 192.168.1.128:5000""", physicalgraph.device.Protocol.LAN))
+//	def result = sendHubCommand(new physicalgraph.device.HubAction("""GET /cpu \r\nHOST: 192.168.1.128:5000""", physicalgraph.device.Protocol.LAN))
+	def result = sendHubCommand(new physicalgraph.device.HubAction("""GET /email \r\nHOST: 192.168.1.128:5000""", physicalgraph.device.Protocol.LAN))
 //	log.debug "result = ${result}"
 }
 
