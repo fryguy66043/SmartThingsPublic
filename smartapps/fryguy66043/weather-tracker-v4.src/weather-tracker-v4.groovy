@@ -183,10 +183,11 @@ def appHandler(evt) {
 	def msg = "${location}: ${nowTime} / Day = ${day}"
 
 	log.debug "precipUpdateValue = ${precipUpdateValue} / precipUpdateDay = ${precipUpdateDay}"
-	if (precipUpdateValue > 0 && precipUpdateDay != "None") {
+	if (precipUpdateValue >= 0 && precipUpdateDay != "None") {
     	log.debug "Calling precipUpdate()"
     	precipUpdate()
     }
+	
 
 	log.debug "lowTempUpdate = ${lowTempUpdate} / lowTempValue = ${lowTempValue} / highTempUpdate = ${highTempUpdate} / highTempValue = ${highTempValue} / tempDay = ${tempDay}"
     if ((lowTempUpdate || highTempUpdate) && tempDay != "None") {
