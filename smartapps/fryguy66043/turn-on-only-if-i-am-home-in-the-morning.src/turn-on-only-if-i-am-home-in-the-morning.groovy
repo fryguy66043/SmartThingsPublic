@@ -51,7 +51,7 @@ def installed()
     subscribe(presence1, "presence.not present", departureHandler)
     subscribe(app, appHandler)
     schedule(turnOnTime, onHandler)
-    subscribe(location, "sunriseTime", sunriseHandler)
+//    subscribe(location, "sunriseTime", sunriseHandler)
     state.hue = 0
     state.saturation = 0
     state.switchLevel = 100
@@ -103,14 +103,19 @@ def appHandler(evt) {
 	log.debug "message == $message"
 }
 
+import groovy.time.TimeCategory
+
 def onHandler(evt) {
 	log.debug "onHandler"
+    def msg = "${location}: "
     def now = new Date()
 	def sunTime = getSunriseAndSunset()
     def dark = false
     def offset = minutesOffset >= 0 ? minutesOffset * 60 * 1000 : 0
     if (offAtSunrise == "Before Sunrise") {
-        	dark = (now < sunTime.sunrise - offset)
+        	dark = (now.time < sunTime.sunrise.time - offset)
+            msg = msg + "now: ${now.format("MM/dd/yy hh:mm:ss a", location.timeZone)} / sunrise: ${sunTime.sunrise.format("MM/dd/yy hh:mm:ss a", location.timeZone)}\n"
+            msg = msg + "now.time: ${now.time} / sunrise.time: ${sunTime.sunrise.time} / offset: ${offset}\n"
     }
     else {
 	    dark = (now < sunTime.sunrise)
@@ -124,6 +129,14 @@ def onHandler(evt) {
         if (sendPush) {
             sendPush(message)
         }
+        def offTime = new Date()
+//        offset = offset as Integer
+        use (TimeCategory) {
+        	offTime = sunTime.sunrise - minutesOffset.minutes
+        }
+        msg = msg + "offTime: ${offTime.format("MM/dd/yy hh:mm:ss a", location.timeZone)}"
+        sendSms("9136679526", msg)
+        runOnce(offTime, scheduleHandler)
 	}
     else {
         message = "${location}: Not turning on ${switch1} in the morning.  Someone Home: ${someoneHome()} / Dark: ${dark}" 
