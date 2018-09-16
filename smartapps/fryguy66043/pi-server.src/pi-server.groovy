@@ -32,8 +32,19 @@ preferences {
     }
 	section("Email Pi CPU Temperature") {
     	input "cpuEmailSwitch", "capability.switch", required: false, title: "Email Pi CPU Temperature"
+        input "cpuEmailSchedule", "number", required: false, title: "Automatically run on a schedule? (0 = off)"
         input "imageEmailSwitch", "capability.switch", required: false, title: "Email Pi Picture"
+        input "imageEmailSchedule", "number", required: false, title: "Automatically run on a schedule? (0 = off)"
     }    
+    section("Image Capture Loop") {
+    	input "imageLoop", "bool", title: "Start/Stop Image Capture Service on Pi Server"
+    	input "imageLoopSwitch", "capability.switch", required: false, title: "Control Time-Lapsed Impage Capture"
+        input "imageLoopInterval", "enum", options: ["Off", "1", "5", "15", "30", "60"], title: "Timer Setting in Minutes"
+        input "imageLoopSunriseAutoStart", "bool", title: "Auto-Start at sunrise?"
+        input "imageLoopSunriseMinutesBefore", "number", required: false, title: "Number of minutes before sunrise?"
+        input "imageLoopSunsetAutoStop", "bool", title: "Auto-Stop at sunset?"
+        input "imageLoopSunsetMinutesAfter", "number", required: false, title: "Number of minutes after sunset?"
+    }
 	section("Send Push Notification?") {
         input "sendPush", "bool", title: "Send Push Notification when command executed?"
     }
@@ -62,17 +73,146 @@ def initialize() {
     subscribe(cpuEmailSwitch, "switch.on", cpuEmailHandler)
     subscribe(imageTweetSwitch, "switch.on", imageTweetHandler)
     subscribe(imageEmailSwitch, "switch.on", imageEmailHandler)
+    subscribe(imageLoopSwitch, "switch", imageLoopHandler)
+    if (cpuEmailSchedule || imageEmailSchedule) {
+    	runEvery1Hour(emailScheduleHandler)
+    }
+    if (imageLoopSunriseAutoStart) {
+    	subscribe(location, "sunriseTime", sunsetTimeHandler)
+    }
+    if (imageLoopSunsetAutoStop) {
+    	subscribe(location, "sunsetTime", sunriseTimeHandler)
+        scheduleTurnOff(location.currentValue("sunsetTime"))
+    }
+    if (imageLoop && !state.imageLoopServiceRunning) {
+    	startImageService()
+    }
+    else if (state.imageLoopServiceRunning) {
+    	stopImageService()
+    }
+    state.cpuEmailScheduleHours = state.cpuEmailScheduleHours ?: 0
+    state.imageEmailScheduleHours = state.imageEmailScheduleHours ?: 0
+    state.imageLoopServiceRunning = state.imageLoopServiceRunning ?: false
 }
 
 def appHandler(evt) {
 	log.debug "appHandler"
 }
 
+def sunsetTimeHandler(evt) {
+	log.debug "sunsetTimeHandler"
+    
+}
+
+def sunriseTimeHandler(evt) {
+	log.debug "sunriseTimeHandler"
+}
+
+def scheduleTurnOff(sunsetString) {
+	log.debug "scheduleTurnOff(${sunsetString})"
+    
+    def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunsetString)
+
+    //calculate the offset
+    def timeAfterSunset = new Date(sunsetTime.time + (imageLoopSunsetMinutesAfter * 60 * 1000))
+
+    log.debug "Scheduling for: $timeAfterSunset (sunset is $sunsetTime)"
+
+    //schedule this to run one time
+    runOnce(timeAfterSunset, autoStopHandler)
+}
+
+def scheduleTurnOn(sunriseString) {
+	log.debug "scheduleTurnOn(${sunriseString})"
+
+    def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunriseString)
+
+    //calculate the offset
+    def timeBeforeSunrise = new Date(sunriseTime.time - (imageLoopSunriseMinutesBefore * 60 * 1000))
+
+    log.debug "Scheduling for: $timeBeforeSunrise (sunrise is $sunriseTime)"
+
+    //schedule this to run one time
+    runOnce(timeBeforeSunrise, autoStartHandler)
+}
+
+def autoStartHandler(evt) {
+	log.debug "autoStartHandler(${evt.value})"
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "${location} ${date}: "
+    msg = msg + "Requesting Pi Server Auto-Start Image Capture Service..."
+    imageLoopSwitch?.on()
+    log.debug msg
+}
+
+def autoStopHandler(evt) {
+	log.debug "autoStopHandler(${evt.value})"
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "${location} ${date}: "
+    msg = msg + "Requesting Pi Server Auto-Stop Image Capture Service..."
+    imageLoopSwitch?.off()
+    log.debug msg
+}
+
+def startImageService() {
+	log.debug "startImageService"
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "${location} ${date}: "
+    msg = msg + "Requesting Pi Server Start Image Capture Service..."
+    sendHubCommand(new physicalgraph.device.HubAction("""GET /imagecaptureinitialize HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
+	log.debug msg
+	state.imageLoopServiceRunning = true
+}
+
+def stopImageService() {
+	log.debug "stopImageService"
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "${location} ${date}: "
+    msg = msg + "Requesting Pi Server Terminate Image Capture Service..."
+    sendHubCommand(new physicalgraph.device.HubAction("""GET /imagecaptureterminate HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
+	log.debug msg
+    if (imageLoopSwitch.currentValue("switch") == 'on') {
+    	imageLoopSwitch.off()
+    }
+    state.imageLoopServiceRunning = false
+}
+
+def imageLoopHandler(evt) {
+	log.debug "imageLoopHandler(${evt.value}"
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "${location} ${date}: "
+    if (evt.value == 'on' && imageLoopInterval != "Off") {
+    	msg = msg + "Requesting Pi Server Time-Lapsed Image Capture Start..."
+		sendHubCommand(new physicalgraph.device.HubAction("""GET /imagecapturestart/${imageLoopInterval} HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
+    }
+    else {
+    	msg = msg + "${location} ${date}: Requesting Pi Server Time-Lapsed Image Capture Stop..."
+		sendHubCommand(new physicalgraph.device.HubAction("""GET /imagecapturestop HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
+    }
+	log.debug msg
+}
+
+def emailScheduleHandler(evt) {
+	log.debug "emailScheduleHandler"
+    if (cpuEmailSchedule) {
+    	state.cpuEmailScheduleHours = state.cpuEmailScheduleHours + 1
+        if (state.cpuEmailScheduleHours >= cpuEmailSchedule) {
+        	cpuEmailSwitch?.on()
+            state.cpuEmailScheduleHours = 0
+        }
+    }
+    if (imageEmailSchedule) {
+    	state.imageEmailScheduleHours = state.imageEmailScheduleHours + 1
+        imageEmailSwitch?.on()
+        state.imageEmailScheduleHours = 0
+    }
+}
+
 def cpuTweetHandler(evt) {
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     def msg = "${location} ${date}: Requesting Pi Server CPU Temp Tweet..."
 	log.debug msg
-	sendHubCommand(new physicalgraph.device.HubAction("""GET /cpu HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
+	sendHubCommand(new physicalgraph.device.HubAction("""GET /tweetcpu HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
     cpuTweetSwitch.off()
     if (sendPush) {
     	sendPush(msg)
@@ -100,7 +240,7 @@ def cpuEmailHandler(evt) {
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     def msg = "${location} ${date}: Requesting Pi Server CPU Temp Email..."
 	log.debug msg
-	sendHubCommand(new physicalgraph.device.HubAction("""GET /email HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
+	sendHubCommand(new physicalgraph.device.HubAction("""GET /emailcpu HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callbackHandler]))
     cpuEmailSwitch.off()
     if (sendPush) {
     	sendPush(msg)
