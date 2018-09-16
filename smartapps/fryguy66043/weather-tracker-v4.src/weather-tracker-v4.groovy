@@ -182,6 +182,7 @@ def appHandler(evt) {
     def nowTime = localCalendar.format("h:mm a")
 	def msg = "${location}: ${nowTime} / Day = ${day}"
 
+
 	log.debug "precipUpdateValue = ${precipUpdateValue} / precipUpdateDay = ${precipUpdateDay}"
 	if (precipUpdateValue >= 0 && precipUpdateDay != "None") {
     	log.debug "Calling precipUpdate()"
