@@ -198,8 +198,8 @@ def appHandler(evt) {
 
 //	scheduleCheck()
 //	resetSchedule()
-    sendWeeklyUpdate("On Demand")
-    sendYearlyUpdate("On Demand")
+//    sendWeeklyUpdate("On Demand")
+//    sendYearlyUpdate("On Demand")
 //  updateYearlySchedule()
 }
 
