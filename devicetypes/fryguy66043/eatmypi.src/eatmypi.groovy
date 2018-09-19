@@ -31,7 +31,9 @@ metadata {
         command "imageServiceOn"
         command "callEmailCPU"
         command "callEmailPic"
-        command "loadPic"
+		command "setSafetyControl"
+
+		command "loadPic"
 	}
 
 	simulator {
@@ -96,8 +98,8 @@ metadata {
             state "off", label: 'Img Svc', action: "imageServiceOn", icon: "st.switches.switch.off", backgroundColor:"#ffffff", nextState: "turningOn"
             state "turningOn", label: 'Turning on', icon: "st.switches.switch.on", backgroundColor:"#00A0DC", nextState: "on"
         }
-		controlTile("delayControl", "device.delayControl", "slider", height: 2, width: 2, inactiveLabel: false, range: "(0..60)") {
-        	state "level"
+		controlTile("safetyControl", "device.safetyControl", "slider", height: 2, width: 2, inactiveLabel: false, range: "(0..10)") {
+        	state "level", action: "setSafetyControl"
         }
 
 		standardTile("image", "device.image", width: 1, height: 1, canChangeIcon: false, inactiveLabel: true, canChangeBackground: true) {
@@ -113,8 +115,15 @@ metadata {
         }
 
 		main "state"
-		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "status", "substatus", "refresh", "imageService"])
+		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "status", "substatus", "refresh", "safetyControl", "imageService"])
 	}
+}
+
+def setSafetyControl(val) {
+	log.debug "setSafetyControl"
+    if (val) {
+    	sendEvent(name: "safetyControl", value: val)
+    }
 }
 
 
@@ -463,10 +472,21 @@ def getStatusHandler(hubResponse){
 
 def imageServiceOff() {
 	log.debug "imageServiceOff"
-	state.imageService = false
-    sendEvent(name: "substatus", value: "Turning off Image Service...")
-	sendHubCommand(new physicalgraph.device.HubAction("""GET /imagecaptureterminate HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: imageServiceHandler]))
-    runIn(10, checkImageService)
+    sendEvent(name: "substatus", value: "")
+    def safetyLevel = device.currentValue("safetyControl")
+    log.debug "safetyControl == '10' (${safetyLevel == "10"})"
+    if (device.currentValue("safetyControl") == "10") {
+    	log.debug "safetyControl Level = 10"
+        state.imageService = false
+        sendEvent(name: "substatus", value: "Turning off Image Service...")
+        sendHubCommand(new physicalgraph.device.HubAction("""GET /imagecaptureterminate HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: imageServiceHandler]))
+        runIn(10, checkImageService)
+        sendEvent(name: "safetyControl", value: 0)
+    }
+    else {
+    	sendEvent(name: "substatus", value: "Set Level to 10 to turn off Image Service!")
+        sendEvent(name: "imageService", value: "on")
+    }
 }
 
 def imageServiceOn() {
