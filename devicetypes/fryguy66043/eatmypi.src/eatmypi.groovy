@@ -33,7 +33,7 @@ metadata {
         command "callEmailPic"
 		command "setSafetyControl"
 
-		command "loadPic"
+		command "getPiPage"
 	}
 
 	simulator {
@@ -89,7 +89,7 @@ metadata {
             state "sent", label: 'CPU', action: "callEmailCPU", icon: "st.Office.office19", backgroundColor:"#00A0DC", nextState: "on"
         }
 		standardTile("refresh", "device.refresh", decoration: "flat", width: 2, height: 2) {
-//			state "default", label: '', action: "loadPic", icon:"st.secondary.refresh"
+//			state "default", label: '', action: "getPiPage", icon:"st.secondary.refresh"
 			state "default", label: '', action: "refresh", icon:"st.secondary.refresh"
 		}
         standardTile("imageService", "device.imageService", decoration: "flat", width: 2, height: 2) {
@@ -110,14 +110,71 @@ metadata {
 
         standardTile("take", "device.image", width: 1, height: 1, canChangeIcon: false, inactiveLabel: true, canChangeBackground: false) {
             state "take", label: "Take", action: "Image Capture.take", icon: "st.camera.dropcam", backgroundColor: "#FFFFFF", nextState:"taking"
+//            state "take", label: "Take", action: "getPiPage", icon: "st.camera.dropcam", backgroundColor: "#FFFFFF", nextState:"taking"
             state "taking", label:'Taking', action: "", icon: "st.camera.dropcam", backgroundColor: "#00A0DC"
             state "image", label: "Take", action: "Image Capture.take", icon: "st.camera.dropcam", backgroundColor: "#FFFFFF", nextState:"taking"
         }
+        htmlTile(name: "htmlPage", action: "getHtmlPage", refreshInterval: 10, width: 6, height: 5, whitelist: ["192.168.1.128"])
 
 		main "state"
-		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "status", "substatus", "refresh", "safetyControl", "imageService"])
+		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "status", "substatus", "refresh", "safetyControl", "imageService", "htmlPage"])
+//		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "status", "substatus", "refresh", "safetyControl", "imageService", "cameraDetails", "take", "htmlPage"])
 	}
 }
+
+mappings {
+	path("/getHtmlPage") {
+    	action: [GET: "getHtmlPage"]
+    }
+}
+
+def getHtmlPage(page) {
+	log.debug "getHtmlPage"
+    def date = new Date().format("HH:mm:ss", location.timeZone)
+
+	def html = """
+		<!DOCTYPE html>
+			<html>
+				<head>
+					<meta http-equiv="cache-control" content="max-age=0"/>
+					<meta http-equiv="cache-control" content="no-cache"/>
+					<meta http-equiv="expires" content="0"/>
+					<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT"/>
+					<meta http-equiv="pragma" content="no-cache"/>
+					<meta name="viewport" content="width = device-width">
+					<meta name="viewport" content="initial-scale = 1.0, user-scalable=no">
+				</head>
+				<body>
+					
+                    <img src="http://192.168.1.128:5000/get_pic/${date}" alt="Pi Image" height="300" width="360"> 
+ 
+                    
+				</body>
+			</html>
+		"""
+	if (!page) {
+    	log.debug "loading default page"
+		render contentType: "text/html", data: html, status: 200
+    }
+    else {
+    	log.debug "loading passed in page"
+		render contentType: "text/html", data: page, status: 200
+    }
+}
+
+
+def getPiPage() {
+	log.debug "getPiPage"
+//	sendHubCommand(new physicalgraph.device.HubAction("""GET /picrecent/1 HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: getPiPageHandler]))
+	sendHubCommand(new physicalgraph.device.HubAction("""GET /load_pic HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: getPiPageHandler]))
+}
+
+def getPiPageHandler(hubResponse) {
+	log.debug hubResponse.body
+//    getHtmlPage(hubResponse.body)
+}
+
+
 
 def setSafetyControl(val) {
 	log.debug "setSafetyControl"
@@ -127,19 +184,42 @@ def setSafetyControl(val) {
 }
 
 
-/*
+
 def take() {
-	log.debug "take()"
-//	sendHubCommand(new physicalgraph.device.HubAction("""GET /load_pic HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: loadPicHandler, outputMsgToS3: true]))    
-	sendHubCommand(new physicalgraph.device.HubAction("""GET /load_pic HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: loadPicHandler]))    
-}
+	log.debug "take(2)"
+//	sendHubCommand(new physicalgraph.device.HubAction("""GET /load_pic HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: getPiPageHandler]))
+    
+/*
+    def podParams = [
+        uri: "http://192.168.1.128:5000",
+        //uri: "https://image-charts.com",
+        path: "/load_pic",
+//        query: [cht: "lc", chd: dl, chs: "400x250", chof: "gif", chxt: "x,y", chxl: "0:|-12hr|-8hr|-4hr|now", chco: "00FF00,0000FF", chtt: "Traffic", chts:"AAAAAA,15", chxr:"0,0,192,1|1,0,"+maxx+","+aralik, ],
+        contentType: 'image/jpeg'
+    ]
+    log.debug podParams
 */
 
+	httpGet("http://192.168.1.128:5000/load_pic") { resp ->
+    	log.debug resp.status
+        log.debug resp.headers
+        if (resp.data) {
+        	saveImage(resp.data)
+        }    	
+    }
 
+//    httpGet(podParams) { resp ->
+//        log.debug resp.data
+//        saveImage(resp.data)
+//    }
+}
+
+
+/*
 def take() {
 	log.debug "take(orig)"
 //    def host = getHostAddress()
-    def host = "192.168.1.128:5000"
+    def host = "C0A80180:1388"
     def port = host.split(":")[1]
 
     def path = "/load_pic"
@@ -151,12 +231,45 @@ def take() {
     )
 
     hubAction.options = [outputMsgToS3:true]
-
-//	def hubResponse = hubAction
-//    log.debug "hubResponse = ${hubResponse}"
-//    return hubResponse
 	return hubAction
+    
+	def hubResponse = hubAction
+    log.debug "hubResponse = ${hubResponse}"
+    log.debug "Status = ${hubResponse.status}"
+    log.debug "Headers = ${hubResponse.headers}"
+    log.debug "Body = ${hubResponse.body}"
+    log.debug "Data = ${hubResponse.data}"
+    
+//    return hubResponse
+
+
+    def msg = parseLanMessage(hubResponse)
+
+    def headersAsString = msg.header // => headers as a string
+    def headerMap = msg.headers      // => headers as a Map
+    def body = msg.body              // => request body as a string
+    def status = msg.status          // => http status code of the response
+    def json = msg.json              // => any JSON included in response body, as a data structure of lists and maps
+    def xml = msg.xml                // => any XML included in response body, as a document tree structure
+    def data = msg.data              // => either JSON or XML in response body (whichever is specified by content-type header in response)
+
+    def map = stringToMap(hubResponse)
+    log.debug map
+
+    if (map.tempImageKey) {
+        try {
+            storeTemporaryImage(map.tempImageKey, getPictureName())
+            log.debug "Image Stored"
+        } catch (Exception e) {
+            log.error e
+        }
+    } else if (map.error) {
+        log.error "Error: ${map.error}"
+    }
+
+
 }
+*/
 
 
 /**
@@ -294,6 +407,7 @@ def refresh() {
 	log.debug "switch: request refresh()"
     sendEvent(name: "substatus", value: "")
     getStatus() 
+    getHtmlPage()
 }
 
 def getStatus() {
