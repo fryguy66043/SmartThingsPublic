@@ -31,6 +31,7 @@ metadata {
         command "imageServiceOn"
         command "callEmailCPU"
         command "callEmailPic"
+        command "callTweetPicAndCPU"
 		command "setSafetyControl"
 
 		command "getPiPage"
@@ -88,6 +89,13 @@ metadata {
             state "sending", label: 'Sending', icon: "st.Office.office19", backgroundColor:"#e86d13", nextState: "sent"
             state "sent", label: 'CPU', action: "callEmailCPU", icon: "st.Office.office19", backgroundColor:"#00A0DC", nextState: "on"
         }
+        standardTile("tweetPicAndCPU", "device.tweetPicAndCPU", decoration: "flat", width: 2, height: 2) {
+        	state "error", label: '${name}', icon: "st.Outdoor.outdoor20", backgroundColor:"#bc2323"
+        	state "off", label: '${name}', icon: "st.Outdoor.outdoor20", backgroundColor:"#ffffff"
+            state "on", label: 'PIC', action: "callTweetPicAndCPU", icon: "st.Outdoor.outdoor20", backgroundColor:"#00A0DC", nextState: "sending"
+            state "sending", label: 'Sending', icon: "st.Outdoor.outdoor20", backgroundColor:"#e86d13", nextState: "sent"
+            state "sent", label: 'CPU', action: "callTweetPicAndCPU", icon: "st.Office.office19", backgroundColor:"#00A0DC", nextState: "on"
+        }
 		standardTile("refresh", "device.refresh", decoration: "flat", width: 2, height: 2) {
 //			state "default", label: '', action: "getPiPage", icon:"st.secondary.refresh"
 			state "default", label: '', action: "refresh", icon:"st.secondary.refresh"
@@ -117,7 +125,7 @@ metadata {
         htmlTile(name: "htmlPage", action: "getHtmlPage", refreshInterval: 10, width: 6, height: 5, whitelist: ["192.168.1.128"])
 
 		main "state"
-		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "status", "substatus", "refresh", "safetyControl", "imageService", "htmlPage"])
+		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "tweetPicAndCPU", "status", "substatus", "refresh", "safetyControl", "imageService", "htmlPage"])
 //		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "status", "substatus", "refresh", "safetyControl", "imageService", "cameraDetails", "take", "htmlPage"])
 	}
 }
@@ -315,6 +323,49 @@ def savePic(imgName, img) {
     }
 }
 
+def callTweetPicAndCPU() {
+	log.debug "callTweetPicAndCPU"
+    state.tweetPicAndCPU = false
+	def timestamp = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
+    sendEvent(name: "update", value: timestamp)
+    sendEvent(name: "substatus", value: "${timestamp}\nRequesting Tweet of Real-time Image and CPU Temp...")
+	sendHubCommand(new physicalgraph.device.HubAction("""GET /tweetpiccpu HTTP/1.1\r\nHOST: 192.168.1.128:5000\r\n\r\n""", physicalgraph.device.Protocol.LAN, "" ,[callback: callTweetPicAndCPUHandler]))
+    runIn(10, checkTweetPicAndCPU)
+}
+
+def callTweetPicAndCPUHandler(hubResponse) {
+	log.debug "callTweetPicAndCPUHandler"
+    state.tweetPicAndCPU = true
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "${date}\nTweet Pic/CPU Call (${hubResponse.status}: ${hubResponse.body})"
+    def hStatus = hubResponse.status
+    def hBody = hubResponse.body.replace("<br>", "\n")
+    def hServerMsg = hBody.split('\n')
+    log.debug "hServerMsg = ${hServerMsg}"
+    sendEvent(name: "substatus", value: msg)
+	log.debug msg    
+    if (hBody.contains("Success")) {
+    	sendEvent(name: "tweetPicAndCPU", value: "sent")
+    }
+    else {
+    	sendEvent(name: "tweetPicAndCPU", value: "error")
+    }
+}
+
+def checkTweetPicAndCPU() {
+	log.debug "checkTweetPicAndCPU"
+    if (!state.tweetPicAndCPU) {
+    	def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    	log.debug "tweetPicAndCPU Call Timed Out..."
+ 		sendEvent(name: "substatus", value: "${date}\nTweet Pic/CPU call timed out.")
+        sendEvent(name: "tweetPicAndCPU", value: "off")
+    }
+    else {
+    	sendEvent(name: "tweetPicAndCPU", value: "on")
+        log.debug "tweetPicAndCPU call succeeded!"
+    }
+}
+
 def callEmailPic() {
 	log.debug "callEmailPic"
     state.emailPic = false
@@ -465,22 +516,26 @@ def getStatusHandler(hubResponse){
                     	sVal = "ok"
                         sendEvent(name: "emailCPU", value: "on")
                         sendEvent(name: "emailPic", value: "on")
+                        sendEvent(name: "tweetPicAndCPU", value: "on")
                     }
                     else if (temp == "Not Running") {
                     	sVal = "unavailable"
                         sendEvent(name: "emailCPU", value: "off")
                         sendEvent(name: "emailPic", value: "off")
+                        sendEvent(name: "tweetPicAndCPU", value: "off")
                     }
                     else {
                     	sVal = "error"
                         sendEvent(name: "emailCPU", value: "off")
                         sendEvent(name: "emailPic", value: "off")
+                        sendEvent(name: "tweetPicAndCPU", value: "off")
                     }
                 }
                 else {
                 	sVal = "error"
                     sendEvent(name: "emailCPU", value: "off")
                     sendEvent(name: "emailPic", value: "off")
+                    sendEvent(name: "tweetPicAndCPU", value: "off")
                 }
             	break
             case 1:
