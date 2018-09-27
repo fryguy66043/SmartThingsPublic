@@ -43,6 +43,9 @@ preferences {
         input "sendPush", "bool", required: false,
               title: "Send Push Notification when executed?"
     }
+    section("Send Text Notification?") {
+    	input "phone", "phone", required: false, title: "Send Text Notification when executed?"
+    }
 }
 
 def installed()
@@ -107,15 +110,12 @@ import groovy.time.TimeCategory
 
 def onHandler(evt) {
 	log.debug "onHandler"
-    def msg = "${location}: "
     def now = new Date()
 	def sunTime = getSunriseAndSunset()
     def dark = false
     def offset = minutesOffset >= 0 ? minutesOffset * 60 * 1000 : 0
     if (offAtSunrise == "Before Sunrise") {
         	dark = (now.time < sunTime.sunrise.time - offset)
-            msg = msg + "now: ${now.format("MM/dd/yy hh:mm:ss a", location.timeZone)} / sunrise: ${sunTime.sunrise.format("MM/dd/yy hh:mm:ss a", location.timeZone)}\n"
-            msg = msg + "now.time: ${now.time} / sunrise.time: ${sunTime.sunrise.time} / offset: ${offset}\n"
     }
     else {
 	    dark = (now < sunTime.sunrise)
@@ -129,13 +129,13 @@ def onHandler(evt) {
         if (sendPush) {
             sendPush(message)
         }
+        if (phone) {
+        	sendSms(phone, message)
+        }
         def offTime = new Date()
-//        offset = offset as Integer
         use (TimeCategory) {
         	offTime = sunTime.sunrise - minutesOffset.minutes
         }
-        msg = msg + "offTime: ${offTime.format("MM/dd/yy hh:mm:ss a", location.timeZone)}"
-        sendSms("9136679526", msg)
         runOnce(offTime, scheduleHandler)
 	}
     else {
@@ -143,6 +143,9 @@ def onHandler(evt) {
         log.debug message
     	if (sendPush) {
         	sendPush(message) 
+        }
+        if (phone) {
+        	sendSms(phone, message)
         }
     }
 }
@@ -159,6 +162,9 @@ def arrivalHandler(evt)
         if (sendPush) {
             sendPush(message)
         }
+        if (phone) {
+        	sendSms(phone, message)
+        }
 	}
 }
 
@@ -170,6 +176,9 @@ def departureHandler(evt)
     	switch1.off()
         if (sendPush) {
             sendPush(message)
+        }
+        if (phone) {
+        	sendSms(phone, message)
         }
     }
 }
@@ -298,6 +307,9 @@ def scheduleHandler() {
     	switch1.off()
         if (sendPush) {
             sendPush(message)
+        }
+        if (phone) {
+        	sendSms(phone, message)
         }
     }
 }
