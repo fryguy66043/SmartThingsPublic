@@ -102,7 +102,7 @@ metadata {
         }
 		standardTile("refresh", "device.refresh", decoration: "flat", width: 2, height: 2) {
 //			state "default", label: '', action: "getPiPage", icon:"st.secondary.refresh"
-			state "default", label: '', action: "getStatus", icon:"st.secondary.refresh"
+			state "default", label: '', action: "refresh", icon:"st.secondary.refresh"
 		}
         standardTile("imageService", "device.imageService", decoration: "flat", width: 2, height: 2) {
         	state "on", label: 'Img Svc', action: "imageServiceOff", icon: "st.switches.switch.on", backgroundColor:"#00A0DC", nextState: "turningOff"
