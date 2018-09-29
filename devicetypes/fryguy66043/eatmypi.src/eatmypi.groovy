@@ -191,10 +191,12 @@ def getHtmlPage(page) {
 				</head>
 				<body>
 					Pi Picture<br>
-                    <img src="http://fryguypi.ddns.net:80/get_pic/${date}" alt="Pi Image" height="300" width="360"> 
+                    <img src="${getFullPath()}/get_pic/${date}" alt="Pi Image" height="300" width="360"> 
 				</body>
 			</html>
 		"""
+//                    <img src="http://fryguypi.ddns.net:80/get_pic/${date}" alt="Pi Image" height="300" width="360"> 
+
 	if (!page) {
     	log.debug "loading default page"
 		render contentType: "text/html", data: html, status: 200
@@ -1097,12 +1099,13 @@ def getStatusHandler(hubResponse){
 }
 */
 
-def imageServiceOff() {
+def imageServiceOff(override) {
 	log.debug "imageServiceOff"
+    def byPass = override == true ? true : false
     sendEvent(name: "substatus", value: "")
     def safetyLevel = device.currentValue("safetyControl")
     log.debug "safetyControl == '10' (${safetyLevel == "10"})"
-    if (device.currentValue("safetyControl") == "10") {
+    if (device.currentValue("safetyControl") == "10" || byPass) {
     	log.debug "safetyControl Level = 10"
         state.imageService = false
         sendEvent(name: "substatus", value: "Turning off Image Service...")
