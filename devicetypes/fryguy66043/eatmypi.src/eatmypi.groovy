@@ -25,6 +25,8 @@ metadata {
 		capability "Health Check"
 		
         attribute "update", "string"
+        attribute "isServerRunning", "string"
+        attribute "isImageServiceRunning", "string"
 
         command "refresh"
         command "getStatus"
@@ -738,6 +740,7 @@ def getStatus() {
 
 	def path = "${getFullPath()}/getstatus"
     log.debug "getStatus Path: ${path}"
+    runIn(10, getStatusErr)
     try {
         httpGet(path) { resp ->
         	log.debug "getStatus round-trip..."
@@ -754,6 +757,7 @@ def getStatus() {
                 getStatusErr()
             }
         }
+        log.debug "After httpGet..."
     } catch (err) {
         log.debug "Error making getHttp getStatus request: $err"
     }
@@ -761,16 +765,21 @@ def getStatus() {
 
 def getStatusErr() {
 	log.debug "getStatusErr"
-    sendEvent(name: "status", value: "${date}\nGet Status call timed out.")
-    sendEvent(name: "state", value: "unavailable")
-    sendEvent(name: "substatus", value: "")
-    sendEvent(name: "diskSpace", value: 0)
-    sendEvent(name: "cpuTemp", value: 0)
-    sendEvent(name: "nbrPics", value: 0)
-    sendEvent(name: "emailCPU", value: "off")
-    sendEvent(name: "emailPic", value: "off")
-    sendEvent(name: "tweetPicAndCPU", value: "off")
-    sendEvent(name: "imageService", value: "off")
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    if (!state.getStatus) {
+        sendEvent(name: "status", value: "${date}\nGet Status call timed out.")
+        sendEvent(name: "state", value: "unavailable")
+        sendEvent(name: "substatus", value: "")
+        sendEvent(name: "diskSpace", value: 0)
+        sendEvent(name: "cpuTemp", value: 0)
+        sendEvent(name: "nbrPics", value: 0)
+        sendEvent(name: "emailCPU", value: "off")
+        sendEvent(name: "emailPic", value: "off")
+        sendEvent(name: "tweetPicAndCPU", value: "off")
+        sendEvent(name: "imageService", value: "off")
+        sendEvent(name: "isServerRunning", value: "false")
+        sendEvent(name: "isImageServiceRunning", value: "false")
+    }
 }
 
 /*
@@ -798,6 +807,7 @@ def checkGetStatus() {
 
 def statusHandler(sData) {
 	log.debug "statusHandler(${sData})"
+    state.getStatus = true
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     def msg = "${date}\nPi Server Call (${sData})"
     def hData = sData.replace("<>", "\n")
@@ -822,18 +832,21 @@ def statusHandler(sData) {
                         sendEvent(name: "emailCPU", value: "on")
                         sendEvent(name: "emailPic", value: "on")
                         sendEvent(name: "tweetPicAndCPU", value: "on")
+                        sendEvent(name: "isServerRunning", value: "true")
                     }
                     else if (temp == "Not Running") {
                     	sVal = "unavailable"
                         sendEvent(name: "emailCPU", value: "off")
                         sendEvent(name: "emailPic", value: "off")
                         sendEvent(name: "tweetPicAndCPU", value: "off")
+                        sendEvent(name: "isServerRunning", value: "false")
                     }
                     else {
                     	sVal = "error"
                         sendEvent(name: "emailCPU", value: "off")
                         sendEvent(name: "emailPic", value: "off")
                         sendEvent(name: "tweetPicAndCPU", value: "off")
+                        sendEvent(name: "isServerRunning", value: "false")
                     }
                 }
                 else {
@@ -841,6 +854,7 @@ def statusHandler(sData) {
                     sendEvent(name: "emailCPU", value: "off")
                     sendEvent(name: "emailPic", value: "off")
                     sendEvent(name: "tweetPicAndCPU", value: "off")
+                    sendEvent(name: "isServerRunning", value: "false")
                 }
             	break
             case 1:
@@ -849,22 +863,26 @@ def statusHandler(sData) {
                     if (temp == "Running") {
                     	sVal = "ok"
                         sendEvent(name: "imageService", value: "on")
+                        sendEvent(name: "isImageServiceRunning", value: "true")
                         log.debug "imageService = on"
                     }
                     else if(temp == "Not Running" || temp == "Stopped") {
                     	sVal = "noImageService"
                         sendEvent(name: "imageService", value: "off")
+                        sendEvent(name: "isImageServiceRunning", value: "false")
                         log.debug "imageService = off"
                     }
                     else {
                     	sVal = "error"
                         sendEvent(name: "imageService", value: "off")
+                        sendEvent(name: "isImageServiceRunning", value: "false")
                         log.debug "imageService = off"
                     }
                 }
                 else {
                 	sVal = "error"
                     sendEvent(name: "imageService", value: "off")
+                    sendEvent(name: "isImageServiceRunning", value: "false")
                     log.debug "imageService = off"
                 }
             	break
@@ -1182,7 +1200,8 @@ def imageServiceHandler(sData) {
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     def msg = "${location} ${date}: Pi Server Call (${sData})"
     sendEvent(name: "substatus", value: msg)
-    runIn(5, getStatus)
+//    runIn(5, getStatus)
+    runIn(5, refresh)
 }
 
 /*
