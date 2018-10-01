@@ -59,12 +59,14 @@ def updated() {
 
 def initialize() {
     subscribe(app, appHandler)
+    subscribe(piServer, "isServerRunning", piServerHandler)
+    subscribe(piServer, "isImageServiceRunning", piImageServiceHandler)
     if (imageLoopSunriseAutoStart) {
-    	subscribe(location, "sunriseTime", sunsetTimeHandler)
+    	subscribe(location, "sunriseTime", sunriseTimeHandler)
         scheduleTurnOn(location.currentValue("sunriseTime"))
     }
     if (imageLoopSunsetAutoStop) {
-    	subscribe(location, "sunsetTime", sunriseTimeHandler)
+    	subscribe(location, "sunsetTime", sunsetTimeHandler)
         scheduleTurnOff(location.currentValue("sunsetTime"))
     }
 }
@@ -73,22 +75,70 @@ def appHandler(evt) {
 	log.debug "appHandler"
 }
 
+def piServerHandler(evt) {
+	log.debug "piServerHandler(${evt.value})"
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "${location} ${date}: "
+    if (evt.value == "true") {
+    	msg = msg + "piServer is now running."
+    	if (phone) {
+        	sendSms(phone, msg)
+        }
+        if (sendPush) {
+        	sendPush(msg)
+        }
+    }
+    else {
+    	msg = msg + "piServer is not available."
+    	if (phone) {
+        	sendSms(phone, msg)
+        }
+        if (sendPush) {
+        	sendPush(msg)
+        }
+    }
+}
+
+def piImageServiceHandler(evt) {
+	log.debug "piImageServiceHandler(${evt.value})"
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "${location} ${date}: "
+    if (evt.value == "true") {
+    	msg = msg + "Image Service is now running."
+    	if (phone) {
+        	sendSms(phone, msg)
+        }
+        if (sendPush) {
+        	sendPush(msg)
+        }
+    }
+    else {
+    	msg = msg + "Image Service is not available."
+    	if (phone) {
+        	sendSms(phone, msg)
+        }
+        if (sendPush) {
+        	sendPush(msg)
+        }
+    }
+}
+
 def sunsetTimeHandler(evt) {
 	def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
 	log.debug "sunsetTimeHandler(${evt.value})"
     if (phone) {
-		sendSms(phone, "($date) SunsetTime Handler: ${evt.value}")
+		sendSms(phone, "($date) SunsetTime Handler: evt.value = ${evt.value} / sunsetTime = ${location.currentValue("sunsetTime")}")
     }
-    scheduleTurnOff(evt.value)
+    scheduleTurnOff(location.currentValue("sunsetTime"))
 }
 
 def sunriseTimeHandler(evt) {
 	def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-	log.debug "sunriseTimeHandler"
+	log.debug "sunriseTimeHandler(${evt.value})"
     if (phone) {
-		sendSms(phone, "($date) SunriseTime Handler: ${evt.value}")
+		sendSms(phone, "($date) SunriseTime Handler: evt.value = ${evt.value} / sunriseTime = ${location.currentValue("sunriseTime")}")
     }
-    scheduleTurnOn(evt.value)
+    scheduleTurnOn(location.currentValue("sunriseTime"))
 }
 
 def scheduleTurnOff(sunsetString) {
@@ -120,32 +170,32 @@ def scheduleTurnOn(sunriseString) {
 }
 
 def autoStartHandler(evt) {
-	log.debug "autoStartHandler(${evt.value})"
+	log.debug "autoStartHandler"
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     def msg = "${location} ${date}: "
     msg = msg + "Requesting Pi Server Auto-Start Image Capture Service..."
     log.debug msg
-    piServer.imageServiceOn()
     if (phone) {
     	sendSms(phone, msg)
     }
     if (sendPush) {
     	sendPush(msg)
     }
+    piServer.imageServiceOn()
 }
 
 def autoStopHandler(evt) {
-	log.debug "autoStopHandler(${evt.value})"
+	log.debug "autoStopHandler"
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     def msg = "${location} ${date}: "
     msg = msg + "Requesting Pi Server Auto-Stop Image Capture Service..."
     log.debug msg
-    piServer.imageServiceOff(true)
     if (phone) {
     	sendSms(phone, msg)
     }
     if (sendPush) {
     	sendPush(msg)
     }
+    piServer.imageServiceOff(true)
 }
 
