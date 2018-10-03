@@ -173,11 +173,10 @@ def getHtmlPage(page) {
 				</head>
         <body>
         <h1>Embed Test</h1>
-		<iframe width="300" height="300" src="192.168.1.128:80/picrecent/1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+		<iframe width="300" height="360" src="${getFullPath()}/picrecent/1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 		</body>
         </html>
     """
-//		<iframe width="729" height="410" src="https://www.youtube.com/embed/ae3ju4rEGgQ" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 	def html = """
 		<!DOCTYPE html>
@@ -232,61 +231,12 @@ def getPiPage() {
     }
 }
 
-/*
-def getPiPageHandler(hubResponse) {
-	log.debug hubResponse.body
-//    getHtmlPage(hubResponse.body)
-}
-*/
-
-
 def setSafetyControl(val) {
 	log.debug "setSafetyControl"
     if (val) {
     	sendEvent(name: "safetyControl", value: val)
     }
 }
-
-/**********************************************************************
-def take() {
-	log.debug "take(3)"
-	def host = PI_IP
-    def port = PI_PORT
-    def path = "/load_pic"
-    def method = "GET"
-    def hosthex = convertIPToHex(host)
-    def porthex = Long.toHexString(Long.parseLong((port)))
-    if (porthex.length() < 4) { porthex = "00" + porthex }
-    
-    log.debug "Port in Hex is $porthex"
-    log.debug "Hosthex is : $hosthex"
-    log.debug "Path is $path"
-    
-    device.deviceNetworkId = "$hosthex:$porthex"     
-    log.debug "The device id configured is: $device.deviceNetworkId"
-    
-    
-    def headers = [:] //"HOST:" + getHostAddress() + ""
-    headers.put("HOST", "$host:$port")
-    def options = [outputMsgToS3:true]
-    
-//    try {
-        def hubAction = new physicalgraph.device.HubAction(
-            method: "GET",
-            path: path,
-            headers: headers
-//            options: [outputMsgToS3:true]
-            )  
-        hubAction.options = [outputMsgToS3:true]
-//    }
-//    catch (Exception e) 
-//    {
-//        log.debug "Hit Exception on $hubAction"
-//        log.debug e
-//    }
-    return hubAction
-}
-*/
 
 private getPictureName() {
     return java.util.UUID.randomUUID().toString().replaceAll('-', '')
@@ -402,68 +352,6 @@ def getImageName() {
     return java.util.UUID.randomUUID().toString().replaceAll('-','')
 }
 
-
-
-
-/******************************************************************
-def take() {
-	log.debug "take(orig)"
-//    def host = getHostAddress()
-    def host = "411C60EA:1388"
-    //65.28.96.234
-    def port = host.split(":")[1]
-    device.deviceNetworkId = "$host
-
-    def path = "/load_pic"
-
-    def hubAction = new physicalgraph.device.HubAction(
-        method: "GET",
-        path: path,
-        headers: [HOST:host]
-    )
-
-    hubAction.options = [outputMsgToS3:true]
-	return hubAction
-    
-	def hubResponse = hubAction
-    log.debug "hubResponse = ${hubResponse}"
-    log.debug "Status = ${hubResponse.status}"
-    log.debug "Headers = ${hubResponse.headers}"
-    log.debug "Body = ${hubResponse.body}"
-    log.debug "Data = ${hubResponse.data}"
-    
-//    return hubResponse
-
-
-    def msg = parseLanMessage(hubResponse)
-
-    def headersAsString = msg.header // => headers as a string
-    def headerMap = msg.headers      // => headers as a Map
-    def body = msg.body              // => request body as a string
-    def status = msg.status          // => http status code of the response
-    def json = msg.json              // => any JSON included in response body, as a data structure of lists and maps
-    def xml = msg.xml                // => any XML included in response body, as a document tree structure
-    def data = msg.data              // => either JSON or XML in response body (whichever is specified by content-type header in response)
-
-    def map = stringToMap(hubResponse)
-    log.debug map
-
-    if (map.tempImageKey) {
-        try {
-            storeTemporaryImage(map.tempImageKey, getPictureName())
-            log.debug "Image Stored"
-        } catch (Exception e) {
-            log.error e
-        }
-    } else if (map.error) {
-        log.error "Error: ${map.error}"
-    }
-
-
-}
-*/
-//************************************************************
-
 def callTweetPicAndCPU() {
 	log.debug "callTweetPicAndCPU"
     state.tweetPicAndCPU = false
@@ -512,41 +400,6 @@ def callTweetPicAndCPUHandler(sData) {
     	sendEvent(name: "tweetPicAndCPU", value: "error")
     }
 }
-
-/*
-def callTweetPicAndCPUHandler(hubResponse) {
-	log.debug "callTweetPicAndCPUHandler"
-    state.tweetPicAndCPU = true
-    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-    def msg = "${date}\nTweet Pic/CPU Call (${hubResponse.status}: ${hubResponse.body})"
-    def hStatus = hubResponse.status
-    def hBody = hubResponse.body.replace("<br>", "\n")
-    def hServerMsg = hBody.split('\n')
-    log.debug "hServerMsg = ${hServerMsg}"
-    sendEvent(name: "substatus", value: msg)
-	log.debug msg    
-    if (hBody.contains("Success")) {
-    	sendEvent(name: "tweetPicAndCPU", value: "sent")
-    }
-    else {
-    	sendEvent(name: "tweetPicAndCPU", value: "error")
-    }
-}
-
-def checkTweetPicAndCPU() {
-	log.debug "checkTweetPicAndCPU"
-    if (!state.tweetPicAndCPU) {
-    	def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-    	log.debug "tweetPicAndCPU Call Timed Out..."
- 		sendEvent(name: "substatus", value: "${date}\nTweet Pic/CPU call timed out.")
-        sendEvent(name: "tweetPicAndCPU", value: "off")
-    }
-    else {
-    	sendEvent(name: "tweetPicAndCPU", value: "on")
-        log.debug "tweetPicAndCPU call succeeded!"
-    }
-}
-*/
 
 def callEmailPic() {
 	log.debug "callEmailPic"
@@ -598,42 +451,6 @@ def callEmailPicHandler(sData) {
     }
 }
 
-/*
-def callEmailPicHandler(hubResponse) {
-	log.debug "callEmailPicHandler"
-    state.emailPic = true
-    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-    def msg = "${date}\nEmail Pic Call (${hubResponse.status}: ${hubResponse.body})"
-    def hStatus = hubResponse.status
-    def hBody = hubResponse.body.replace("<br>", "\n")
-    def hServerMsg = hBody.split('\n')
-    log.debug "hServerMsg = ${hServerMsg}"
-  	def hMsg = msg.replace("<br>", "\n")
-    sendEvent(name: "substatus", value: msg)
-	log.debug msg    
-    if (hBody.contains("Success")) {
-    	sendEvent(name: "emailPic", value: "sent")
-    }
-    else {
-    	sendEvent(name: "emailPic", value: "error")
-    }
-}
-
-def checkEmailPic() {
-	log.debug "checkEmailPic"
-    if (!state.emailPic) {
-    	def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-    	log.debug "emailPic Call Timed Out..."
- 		sendEvent(name: "substatus", value: "${date}\nEmail Pic call timed out.")
-        sendEvent(name: "emailPic", value: "off")
-    }
-    else {
-    	sendEvent(name: "emailPic", value: "on")
-        log.debug "emailCPU call succeeded!"
-    }
-}
-*/
-
 def callEmailCPU() {
 	log.debug "callEmailCPU"
     state.emailCPU = false
@@ -680,42 +497,6 @@ def callEmailCPUHandler(sData) {
     	sendEvent(name: "emailCPU", value: "error")
     }
 }
-
-/*
-def callEmailCPUHandler(hubResponse) {
-	log.debug "callEmailCPUHandler"
-    state.emailCPU = true
-    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-    def msg = "${date}\nEmail CPU Call (${hubResponse.status}: ${hubResponse.body})"
-    def hStatus = hubResponse.status
-    def hBody = hubResponse.body
-    def hServerMsg = hBody.split('\n')
-    log.debug "hServerMsg = ${hServerMsg}"
-  	def hMsg = msg.replace("<br>", "\n")
-    sendEvent(name: "substatus", value: msg)
-	log.debug msg    
-    if (hBody.contains("Success")) {
-    	sendEvent(name: "emailCPU", value: "sent")
-    }
-    else {
-    	sendEvent(name: "emailCPU", value: "error")
-    }
-}
-
-def checkEmailCPU() {
-	log.debug "checkEmailCPU"
-    if (!state.emailCPU) {
-    	def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-    	log.debug "emailCPU Call Timed Out..."
- 		sendEvent(name: "substatus", value: "${date}\nEmail CPU call timed out.")
-        sendEvent(name: "emailCPU", value: "off")
-    }
-    else {
-    	sendEvent(name: "emailCPU", value: "on")
-        log.debug "emailCPU call succeeded!"
-    }
-}
-*/
 
 def refresh() {
 	log.debug "switch: request refresh()"
@@ -782,29 +563,6 @@ def getStatusErr() {
     }
 }
 
-/*
-def checkGetStatus() {
-	log.debug "checkGetStatus"
-    if (!state.getStatus) {
-    	def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-    	log.debug "getStatus Call Timed Out..."
- 		sendEvent(name: "status", value: "${date}\nGet Status call timed out.")
-        sendEvent(name: "state", value: "unavailable")
-        sendEvent(name: "substatus", value: "")
-        sendEvent(name: "diskSpace", value: 0)
-        sendEvent(name: "cpuTemp", value: 0)
-        sendEvent(name: "nbrPics", value: 0)
-        sendEvent(name: "emailCPU", value: "off")
-        sendEvent(name: "emailPic", value: "off")
-        sendEvent(name: "tweetPicAndCPU", value: "off")
-        sendEvent(name: "imageService", value: "off")
-    }
-    else {
-    	log.debug "getStatus Call succeeded!"
-    }
-}
-*/
-
 def statusHandler(sData) {
 	log.debug "statusHandler(${sData})"
     state.getStatus = true
@@ -818,14 +576,14 @@ def statusHandler(sData) {
     sendEvent(name: "status", value: msg)
 //	log.debug msg
 
-    def sVal = ""
+    def sVal = "ok"
     def temp = ""
     def tSize = 0.0
     for (int i = 0; i < hServerMsg.size(); i++) {
     	log.debug "hServerMsg[i] = ${hServerMsg[i]}"
     	switch (i) {
         	case 0:
-            	if (hServerMsg[i].contains("Server") && sVal != "error") {
+            	if (hServerMsg[i].contains("Server") && sVal == "ok") {
                 	temp = hServerMsg[i].replace("Server=", "")
                     if (temp == "Running") {
                     	sVal = "ok"
@@ -858,7 +616,7 @@ def statusHandler(sData) {
                 }
             	break
             case 1:
-            	if (hServerMsg[i].contains("Image Service") && sVal != "error") {
+            	if (hServerMsg[i].contains("Image Service") && sVal == "ok") {
                 	temp = hServerMsg[i].replace("Image Service=", "")
                     if (temp == "Running") {
                     	sVal = "ok"
@@ -879,7 +637,7 @@ def statusHandler(sData) {
                         log.debug "imageService = off"
                     }
                 }
-                else {
+                else if (sVal == "ok") {
                 	sVal = "error"
                     sendEvent(name: "imageService", value: "off")
                     sendEvent(name: "isImageServiceRunning", value: "false")
@@ -887,7 +645,7 @@ def statusHandler(sData) {
                 }
             	break
 			case 2:
-            	if (hServerMsg[i].contains("Image Capture Loop") && sVal != "error") {
+            	if (hServerMsg[i].contains("Image Capture Loop") && sVal == "ok") {
                 	temp = hServerMsg[i].replace("Image Capture Loop=", "")
                     log.debug "temp = ${temp}"
                     if (temp == "Not Ready") { 
@@ -902,12 +660,12 @@ def statusHandler(sData) {
                     	sVal = "error"
                     }
                 }
-                else {
+                else if (sVal == "ok") {
                 	sVal = "error"
                 }
             	break
 			case 3:
-            	if (hServerMsg[i].contains("Avail Disk Space") && sVal != "error") {
+            	if (hServerMsg[i].contains("Avail Disk Space") && sVal == "ok") {
                 	temp = hServerMsg[i].replace(" GB Avail Disk Space", "")
                     tSize = Float.parseFloat(temp)
                     log.debug "tSize = ${tSize}"
@@ -919,12 +677,12 @@ def statusHandler(sData) {
                     	sVal = "ok"
                     }
                 }
-                else {
+                else if (sVal == "ok") {
                 	sVal = "error"
                 }
             	break
             case 4:
-            	if (hServerMsg[i].contains("CPU Temp") && sVal != "error") {
+            	if (hServerMsg[i].contains("CPU Temp") && sVal == "ok") {
                 	temp = hServerMsg[i].replace("CPU Temp=", "")
                     if (temp.contains("Fail")) {
                 		sVal = "error"
@@ -941,7 +699,7 @@ def statusHandler(sData) {
                         }
                     }
                 }
-                else {
+                else if (sVal == "ok") {
                 	sVal = "error"
                 }
                 break
@@ -961,161 +719,6 @@ def statusHandler(sData) {
     log.debug "sVal = ${sVal}"
     sendEvent(name: "state", value: sVal)
 }
-
-/*
-def getStatusHandler(hubResponse){
-	log.debug "callbackHandler($hubResponse)"
-    state.getStatus = true
-    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-    def msg = "${date}\nPi Server Call (${hubResponse.status}: ${hubResponse.body})"
-    def hStatus = hubResponse.status
-    def hBody = hubResponse.body.replace("<br>", "\n")
-    def hData = hubResponse.data
-    log.debug "hData = ${hData}"
-    def hHeaders = hubResponse.headers
-    log.debug "hHeaders = ${hHeaders}"
-    def hServerMsg = hBody.split('\n')
-    log.debug "hServerMsg = ${hServerMsg}"
-  	def hMsg = msg.replace("<br>", "\n")
-    sendEvent(name: "status", value: msg)
-	log.debug msg
-    
-    def sVal = ""
-    def temp = ""
-    def tSize = 0.0
-    for (int i = 0; i < hServerMsg.size(); i++) {
-    	log.debug "hServerMsg[i] = ${hServerMsg[i]}"
-    	switch (i) {
-        	case 0:
-            	if (hServerMsg[i].contains("Server") && sVal != "error") {
-                	temp = hServerMsg[i].replace("Server=", "")
-                    if (temp == "Running") {
-                    	sVal = "ok"
-                        sendEvent(name: "emailCPU", value: "on")
-                        sendEvent(name: "emailPic", value: "on")
-                        sendEvent(name: "tweetPicAndCPU", value: "on")
-                    }
-                    else if (temp == "Not Running") {
-                    	sVal = "unavailable"
-                        sendEvent(name: "emailCPU", value: "off")
-                        sendEvent(name: "emailPic", value: "off")
-                        sendEvent(name: "tweetPicAndCPU", value: "off")
-                    }
-                    else {
-                    	sVal = "error"
-                        sendEvent(name: "emailCPU", value: "off")
-                        sendEvent(name: "emailPic", value: "off")
-                        sendEvent(name: "tweetPicAndCPU", value: "off")
-                    }
-                }
-                else {
-                	sVal = "error"
-                    sendEvent(name: "emailCPU", value: "off")
-                    sendEvent(name: "emailPic", value: "off")
-                    sendEvent(name: "tweetPicAndCPU", value: "off")
-                }
-            	break
-            case 1:
-            	if (hServerMsg[i].contains("Image Service") && sVal != "error") {
-                	temp = hServerMsg[i].replace("Image Service=", "")
-                    if (temp == "Running") {
-                    	sVal = "ok"
-                        sendEvent(name: "imageService", value: "on")
-                        log.debug "imageService = on"
-                    }
-                    else if(temp == "Not Running" || temp == "Stopped") {
-                    	sVal = "noImageService"
-                        sendEvent(name: "imageService", value: "off")
-                        log.debug "imageService = off"
-                    }
-                    else {
-                    	sVal = "error"
-                        sendEvent(name: "imageService", value: "off")
-                        log.debug "imageService = off"
-                    }
-                }
-                else {
-                	sVal = "error"
-                    sendEvent(name: "imageService", value: "off")
-                    log.debug "imageService = off"
-                }
-            	break
-			case 2:
-            	if (hServerMsg[i].contains("Image Capture Loop") && sVal != "error") {
-                	temp = hServerMsg[i].replace("Image Capture Loop=", "")
-                    log.debug "temp = ${temp}"
-                    if (temp == "Not Ready") { 
-                    	if (sVal == "ok") { // This is only important if the Image Service is running
-                    		sVal = "noImageLoop"
-                        }
-                    }
-                    else if (temp.contains("Minute")) {
-                    	sVal = "ok"
-                    }
-                    else {
-                    	sVal = "error"
-                    }
-                }
-                else {
-                	sVal = "error"
-                }
-            	break
-			case 3:
-            	if (hServerMsg[i].contains("Avail Disk Space") && sVal != "error") {
-                	temp = hServerMsg[i].replace(" GB Avail Disk Space", "")
-                    tSize = Float.parseFloat(temp)
-                    log.debug "tSize = ${tSize}"
-                    sendEvent(name: "diskSpace", value: tSize)
-                    if (tSize < 0.1) {
-                    	sVal = "lowDiskSpace"
-                    }
-                    else {
-                    	sVal = "ok"
-                    }
-                }
-                else {
-                	sVal = "error"
-                }
-            	break
-            case 4:
-            	if (hServerMsg[i].contains("CPU Temp") && sVal != "error") {
-                	temp = hServerMsg[i].replace("CPU Temp=", "")
-                    if (temp.contains("Fail")) {
-                		sVal = "error"
-                    }
-                    else {
-                    	tSize = Float.parseFloat(temp)
-                        log.debug "CPU Temp = ${tSize}"
-                        sendEvent(name: "cpuTemp", value: tSize)
-                        if (tSize > 200) {
-                        	sVal = "highCPUTemp"
-                        }
-                        else {
-                        	sVal = "ok"
-                        }
-                    }
-                }
-                else {
-                	sVal = "error"
-                }
-                break
-            case 5:
-            	if (hServerMsg[i].contains("Number Pics")) {
-                	temp = hServerMsg[i].replace("Number Pics=", "")
-                    sendEvent(name: "nbrPics", value: temp)
-                }
-                else {
-                	sendEvent(name: "nbrPics", value: 0)
-                }
-            	break
-            default:
-            	break
-        }
-    }
-    log.debug "sVal = ${sVal}"
-    sendEvent(name: "state", value: sVal)
-}
-*/
 
 def imageServiceOff(override) {
 	log.debug "imageServiceOff"
@@ -1203,31 +806,6 @@ def imageServiceHandler(sData) {
 //    runIn(5, getStatus)
     runIn(5, refresh)
 }
-
-/*
-def imageServiceHandler(hubResponse) {
-	log.debug "imageServiceHandler"
-    state.imageService = true
-    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-    def msg = "${location} ${date}: Pi Server Call (${hubResponse.status}: ${hubResponse.body})"
-    sendEvent(name: "substatus", value: msg)
-    runIn(5, getStatus)
-}
-
-def checkImageService() {
-	log.debug "checkImageService"
-    if (!state.imageService) {
-    	log.debug "Image Capture call timed out..."
-        sendEvent(name: "status", value: "Image Capture call timed out...")
-        sendEvent(name: "state", value: "unavailable")
-        sendEvent(name: "imageService", value: "off")
-        log.debug "imageService = off"
-    }
-    else {
-    	log.debug "Image Capture call succeeded!"
-    }
-}
-*/
 
 def installed() {
 	log.trace "Executing 'installed'"
