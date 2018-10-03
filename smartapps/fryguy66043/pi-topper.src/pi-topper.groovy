@@ -129,7 +129,8 @@ def sunsetTimeHandler(evt) {
     if (phone) {
 		sendSms(phone, "($date) SunsetTime Handler: evt.value = ${evt.value} / sunsetTime = ${location.currentValue("sunsetTime")}")
     }
-    scheduleTurnOff(location.currentValue("sunsetTime"))
+//    scheduleTurnOff(location.currentValue("sunsetTime"))
+	runIn(60 * 60 * 2, scheduleTurnOff)
 }
 
 def sunriseTimeHandler(evt) {
@@ -138,32 +139,49 @@ def sunriseTimeHandler(evt) {
     if (phone) {
 		sendSms(phone, "($date) SunriseTime Handler: evt.value = ${evt.value} / sunriseTime = ${location.currentValue("sunriseTime")}")
     }
-    scheduleTurnOn(location.currentValue("sunriseTime"))
+//    scheduleTurnOn(location.currentValue("sunriseTime"))
+	runIn(60 * 60 * 2, scheduleTurnOn)
 }
 
-def scheduleTurnOff(sunsetString) {
-	log.debug "scheduleTurnOff(${sunsetString})"
-    
-    def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunsetString)
+def scheduleTurnOff() {
+	log.debug "scheduleTurnOff"
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "${location} ${date}: "
+    def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", location.currentValue("sunsetTime"))
 
     //calculate the offset
     def timeAfterSunset = new Date(sunsetTime.time + (imageLoopSunsetMinutesAfter * 60 * 1000))
 
-    log.debug "Scheduling for: $timeAfterSunset (sunset is $sunsetTime)"
+	msg = msg + "Scheduling turn off for: $timeAfterSunset (sunset is $sunsetTime)"
+    log.debug msg
+    if (phone) {
+    	sendSms(phone, msg)
+    }
+    if (sendPush) {
+    	sendPush(msg)
+    }
 
     //schedule this to run one time
     runOnce(timeAfterSunset, autoStopHandler)
 }
 
 def scheduleTurnOn(sunriseString) {
-	log.debug "scheduleTurnOn(${sunriseString})"
-
-    def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sunriseString)
+	log.debug "scheduleTurnOn"
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "${location} ${date}: "
+    def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", location.currentValue("sunriseTime"))
 
     //calculate the offset
     def timeBeforeSunrise = new Date(sunriseTime.time - (imageLoopSunriseMinutesBefore * 60 * 1000))
 
-    log.debug "Scheduling for: $timeBeforeSunrise (sunrise is $sunriseTime)"
+    msg = msg + "Scheduling turn on for: $timeBeforeSunrise (sunrise is $sunriseTime)"
+    log.debug msg
+    if (phone) {
+    	sendSms(phone, msg)
+    }
+    if (sendPush) {
+    	sendPush(msg)
+    }
 
     //schedule this to run one time
     runOnce(timeBeforeSunrise, autoStartHandler)
