@@ -182,6 +182,11 @@ def appHandler(evt) {
     def nowTime = localCalendar.format("h:mm a")
 	def msg = "${location}: ${nowTime} / Day = ${day}"
 
+	state.currYearPrecipInches = 21.6
+
+	log.debug "Setting rain totals: Month = ${state.currMonthPrecipInches} / Year = ${state.currYearPrecipInches}"
+	myWxDevice.setRainThisMonth("${state.currMonthPrecipInches}")
+	myWxDevice.setRainThisYear("${state.currYearPrecipInches}")
 
 	log.debug "precipUpdateValue = ${precipUpdateValue} / precipUpdateDay = ${precipUpdateDay}"
 	if (precipUpdateValue >= 0 && precipUpdateDay != "None") {
@@ -268,6 +273,8 @@ def rainLastHourHandler(evt) {
     
     if (rainTotal > 0.0) {
         state.weekPrecipInches[day - 1] = rainTotal
+        myWxDevice.setRainThisMonth("${state.currMonthPrecipInches + rainTotal}")
+        myWxDevice.setRainThisYear("${state.currYearPrecipInches + rainTotal}")
     }
     
     if (rain > 0.0 && rainTotal > state.rainTotal && (now() > state.rainUpdate + (60 * 60 * 1000) || rain >= state.rainTotal + 0.1))  {
@@ -648,9 +655,11 @@ def precipSchedule(evt) {
 
     // Set Month Total
         state.currMonthPrecipInches = (state.currMonthPrecipInches + rain).round(2)
+        myWxDevice?.setRainThisMonth("${state.currMonthPrecipInches}")
 
     // Set Year Total
             state.currYearPrecipInches = (state.currYearPrecipInches + rain).round(2)
+            myWxDevice?.setRainThisYear("${state.currYearPrecipInches}")
     }
 }
 
@@ -697,6 +706,9 @@ def resetSchedule(evt) {
     state.weekLow[day - 1] = 99
     myWxDevice.setActualLow(99)
     myWxDevice.setActualHigh(-99)
+    
+    myWxDevice.setRainThisMonth("${state.currMonthPrecipInches}")
+    myWxDevice.setRainThisYear("${state.currYearPrecipInches}")
 
    state.weekPrecipInches[7] = state.weekPrecipInches[0] + state.weekPrecipInches[1] + state.weekPrecipInches[2] + state.weekPrecipInches[3] +
                                  state.weekPrecipInches[4] + state.weekPrecipInches[5] + state.weekPrecipInches[6]
