@@ -57,6 +57,8 @@ metadata {
         attribute "forecastLowTodayF", "number"
         attribute "rainLastHour", "string"
         attribute "rainToday", "string"
+        attribute "rainThisMonth", "string"
+        attribute "rainThisYear", "string"
         attribute "observationTime", "string"
         attribute "forecastTime", "string"
         attribute "stationID", "string"
@@ -65,6 +67,8 @@ metadata {
 		command "refresh"
         command "setActualLow"
         command "setActualHigh"
+        command "setRainThisMonth"
+        command "setRainThisYear"
         command "resetRefreshCnt"
 	}
 
@@ -227,6 +231,16 @@ def uninstalled() {
 
 // handle commands
 
+def setRainThisMonth(val) {
+	log.debug "setRainThisMonth($val)"
+    sendEvent(name: "rainThisMonth", value: val)
+}
+
+def setRainThisYear(val) {
+	log.debug "setRainThisYear($val)"
+    sendEvent(name: "rainThisYear", value: val)
+}
+
 def setActualLow(val) {
 	log.debug "setActualLow(${val})"
     def time = new Date().format("h:mm a", location.timeZone)
@@ -375,9 +389,12 @@ def poll() {
             if (rLastHr < 0) {
                 rLastHr = 0.0
             }
+            def rainMonth = device.currentValue("rainThisMonth") > "0.0" ? device.currentValue("rainThisMonth") : "0.0"
+            def rainYear = device.currentValue("rainThisYear") > "0.0" ? device.currentValue("rainThisYear") : "0.0"
             send(name: "rainToday", value: rToday)
             send(name: "rainLastHour", value: rLastHr)
-            def rainDisp = "Day: ${rToday}\"\nHr: ${rLastHr}\""
+//            def rainDisp = "Day: ${rToday}\"\nHr: ${rLastHr}\""
+            def rainDisp = "Day: ${rToday}\"\nMon: ${rainMonth}\"\nYr: ${rainYear}\""
             send(name: "rainDisplay", value: rainDisp)
 
             // Sunrise / Sunset
