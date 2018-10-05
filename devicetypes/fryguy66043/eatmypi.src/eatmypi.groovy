@@ -27,9 +27,11 @@ metadata {
         attribute "update", "string"
         attribute "isServerRunning", "string"
         attribute "isImageServiceRunning", "string"
+        attribute "powerStatus", "string"
 
         command "refresh"
         command "getStatus"
+        command "setPowerStatus"
         command "imageServiceOff"
         command "imageServiceOn"
         command "callEmailCPU"
@@ -52,6 +54,7 @@ metadata {
             state "lowDiskSpace", label: 'Low Disk', icon: "st.Entertainment.entertainment1", backgroundColor:"#bc2323"
             state "highCPUTemp", label: 'CPU Temp', icon: "st.Entertainment.entertainment1", backgroundColor:"#bc2323"
             state "unavailable", label: 'Unavail', icon: "st.Entertainment.entertainment1", backgroundColor:"#bc2323"
+            state "noPower", label: 'Power', icon: "st.Entertainment.entertainment1", backgroundColor:"#bc2323"
             state "error", label: '${name}', icon: "st.Entertainment.entertainment1", backgroundColor:"#bc2323"
         }
         valueTile("status", "device.status", decoration: "flat", width: 6, height: 2) {
@@ -228,6 +231,18 @@ def getPiPage() {
         }
     } catch (err) {
         log.debug "Error making getHttp get_pic/refresh request: $err"
+    }
+}
+
+def setPowerStatus(val) {
+	log.debug "setPowerStatus($val)"
+    if (val == "true") {
+    	sendEvent(name: "powerStatus", value: "true")
+        refresh()
+    }
+    else {
+    	sendEvent(name: "powerStatus", value: "false")
+        sendEvent(name: "state", value: "noPower")
     }
 }
 
@@ -549,7 +564,12 @@ def getStatusErr() {
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     if (!state.getStatus) {
         sendEvent(name: "status", value: "${date}\nGet Status call timed out.")
-        sendEvent(name: "state", value: "unavailable")
+        if (device.currentValue("powerStatus") == "false") {
+	        sendEvent(name: "state", value: "noPower")
+        }
+        else {
+	        sendEvent(name: "state", value: "unavailable")
+        }
         sendEvent(name: "substatus", value: "")
         sendEvent(name: "diskSpace", value: 0)
         sendEvent(name: "cpuTemp", value: 0)
