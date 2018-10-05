@@ -548,8 +548,8 @@ def temperatureHandler(evt)
 	Calendar localCalendar = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
 	int day = localCalendar.get(Calendar.DAY_OF_WEEK)
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
-	def tt = thermostat.currentTemperature
-    def ot = outsideTemp.currentTemperature
+	def tt = thermostat.currentValue("temperature")
+    def ot = outsideTemp.currentValue("temperature")
     def hsp = thermostat.currentValue("heatingSetpoint")
     def csp = thermostat.currentValue("coolingSetpoint")
     def rainDisp = (outsideTemp.currentValue("rainLastHour")) ? outsideTemp.currentValue("rainLastHour") : "0.0"
