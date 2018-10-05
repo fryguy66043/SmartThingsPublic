@@ -273,8 +273,10 @@ def rainLastHourHandler(evt) {
     
     if (rainTotal > 0.0) {
         state.weekPrecipInches[day - 1] = rainTotal
-        myWxDevice.setRainThisMonth(Float.parseFloat("${state.currMonthPrecipInches}").round(2))
-        myWxDevice.setRainThisYear(Float.parseFloat("${state.currYearPrecipInches}").round(2))
+        float rainMonth = state.currMonthPrecipInches + rainTotal
+        float rainYear = state.currYearPrecipInches + rainTotal
+        myWxDevice.setRainThisMonth(rainMonth.round(2))
+        myWxDevice.setRainThisYear(rainYear.round(2))
     }
     
     if (rain > 0.0 && rainTotal > state.rainTotal && (now() > state.rainUpdate + (60 * 60 * 1000) || rain >= state.rainTotal + 0.1))  {
