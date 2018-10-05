@@ -29,6 +29,12 @@ preferences {
 	section("Pi Server") {
     	input "piServer", "device.eatmypi", title: "Select your Pi Handler."
     }
+    section("Pi Power") {
+    	input "piPower", "capability.switch", title: "Select your Pi Power Switch."
+        input "powerSchedule", "bool", title: "Do you want to schedule power cycles?"
+        input "powerOffTime", "time", required: false, title: "What time do you want to power off?"
+        input "powerOnTime", "time", required: false, title: "What time do you want to power on?"
+    }
     section("Image Capture Scheduling") {
         input "imageLoopSunriseAutoStart", "bool", title: "Auto-Start at sunrise?"
         input "imageLoopSunriseMinutesBefore", "number", required: false, title: "Number of minutes before sunrise?"
@@ -61,18 +67,59 @@ def initialize() {
     subscribe(app, appHandler)
     subscribe(piServer, "isServerRunning", piServerHandler)
     subscribe(piServer, "isImageServiceRunning", piImageServiceHandler)
+    subscribe(piPower, "switch", piPowerHandler)
     if (imageLoopSunriseAutoStart) {
     	subscribe(location, "sunriseTime", sunriseTimeHandler)
-        scheduleTurnOn(location.currentValue("sunriseTime"))
+        scheduleTurnOn()
     }
     if (imageLoopSunsetAutoStop) {
     	subscribe(location, "sunsetTime", sunsetTimeHandler)
-        scheduleTurnOff(location.currentValue("sunsetTime"))
+        scheduleTurnOff()
+    }
+    if (powerSchedule) {
+    	schedule(powerOffTime, powerOffHandler)
+        schedule(powerOnTime, powerOnHandler)
     }
 }
 
 def appHandler(evt) {
 	log.debug "appHandler"
+}
+
+def powerOffHandler(evt) {
+	log.debug "powerOffHandler"
+    piPower.on()
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "$date: Turning Off piPower."
+    if (phone) {
+        sendSms(phone, msg)
+    }
+    if (sendPush) {
+        sendPush(msg)
+    }
+}
+
+def powerOnHandler(evt) {
+	log.debug "powerOnHandler"
+    piPower.off()
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    def msg = "$date: Turning On piPower."
+    if (phone) {
+        sendSms(phone, msg)
+    }
+    if (sendPush) {
+        sendPush(msg)
+    }
+}
+
+def piPowerHandler(evt) {
+	log.debug "piPowerHandler(${evt.value})"
+    if (evt.value == "on") {
+    	piServer.setPowerStatus("true")
+    }
+    else {
+    	piServer.setPowerStatus("false")
+    }
 }
 
 def piServerHandler(evt) {
