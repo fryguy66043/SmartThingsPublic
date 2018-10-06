@@ -88,9 +88,10 @@ def appHandler(evt) {
 
 def powerOffHandler(evt) {
 	log.debug "powerOffHandler"
-    piPower.on()
+    piPower?.off()
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     def msg = "$date: Turning Off piPower."
+    log.debug msg
     if (phone) {
         sendSms(phone, msg)
     }
@@ -101,9 +102,10 @@ def powerOffHandler(evt) {
 
 def powerOnHandler(evt) {
 	log.debug "powerOnHandler"
-    piPower.off()
+    piPower?.on()
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     def msg = "$date: Turning On piPower."
+    log.debug msg
     if (phone) {
         sendSms(phone, msg)
     }
