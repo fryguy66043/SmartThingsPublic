@@ -211,7 +211,8 @@ metadata {
         	state "default", label: '${currentValue}'
         }
 
-		main(["temperature", "weatherIcon","feelsLike"])
+//		main(["temperature", "weatherIcon","feelsLike"])
+		main(["temperature"])
 		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "actual", "city", "percentPrecip", "rainDisplay", "forecast", "alert", "refresh", "rise", "set", "light", "moon", "lastUpdate", "message"])}
 }
 
@@ -337,12 +338,12 @@ def poll() {
             sendEvent(name: "stationID", value: obs.station_id)
 
             def weatherIcon = obs.icon_url.split("/")[-1].split("\\.")[0]
+            def tempF = Math.round(obs.temp_f)
 
             if(getTemperatureScale() == "C") {
                 send(name: "temperature", value: Math.round(obs.temp_c), unit: "C")
                 send(name: "feelsLike", value: Math.round(obs.feelslike_c as Double), unit: "C")
             } else {
-                def tempF = Math.round(obs.temp_f)
                 send(name: "temperature", value: tempF, unit: "F")
                 send(name: "feelsLike", value: Math.round(obs.feelslike_f as Double), unit: "F")
                 def nowTime = new Date().format("HH:mm:ss", location.timeZone)
