@@ -229,6 +229,12 @@ private anyMatches(list1, list2) {
 	log.debug "anyMatches(${list1} / ${list2})"
 	def result = false
 
+    if (list1.contains(",]")) {
+    	list1 = list1.replace(",]", "]")
+    }
+    if (list2.contains(",]")) {
+    	list2 = list2.replace(",]", "]")
+    }
 	if (list1[0] == "{" && list2[0] == "{") {
         def newList1 = new JsonSlurper().parseText(list1)
         def newList2 = new JsonSlurper().parseText(list2)
