@@ -182,11 +182,14 @@ def appHandler(evt) {
     def nowTime = localCalendar.format("h:mm a")
 	def msg = "${location}: ${nowTime} / Day = ${day}"
 
-//	state.currYearPrecipInches = 21.61
+/*
+	state.currYearPrecipInches = 28.38
+    state.currMonthPrecipInches = 6.78
 
 	log.debug "Setting rain totals: Month = ${state.currMonthPrecipInches} / Year = ${state.currYearPrecipInches}"
 	myWxDevice.setRainThisMonth(Float.parseFloat("${state.currMonthPrecipInches}").round(2))
 	myWxDevice.setRainThisYear(Float.parseFloat("${state.currYearPrecipInches}").round(2))
+*/
 
 	log.debug "precipUpdateValue = ${precipUpdateValue} / precipUpdateDay = ${precipUpdateDay}"
 	if (precipUpdateValue >= 0 && precipUpdateDay != "None") {
