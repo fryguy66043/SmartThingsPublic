@@ -672,6 +672,8 @@ def setOperatingState(val) {
                         heatCycleTodayCnt = heatCycleTodayCnt + 1
                         sendEvent(name: "heatCycles", value: heatCycleCnt)
                         sendEvent(name: "heatCyclesToday", value: heatCycleTodayCnt)
+                        sendEvent(name: "heatCycleStart", value: date)
+                        sendEvent(name: "heatCycleStop", value: "")
                         sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
                     case "emergencyHeat":
@@ -685,6 +687,8 @@ def setOperatingState(val) {
                         heatCycleTodayCnt = heatCycleTodayCnt + 1
                         sendEvent(name: "heatCycles", value: heatCycleCnt)
                         sendEvent(name: "heatCyclesToday", value: heatCycleTodayCnt)
+                        sendEvent(name: "heatCycleStart", value: date)
+                        sendEvent(name: "heatCycleStop", value: "")
                         sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
                     case "off":
