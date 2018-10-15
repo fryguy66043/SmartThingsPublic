@@ -297,7 +297,9 @@ def poll() {
     else {
     	log.debug "WU Success!"
     	obs = rep?.current_observation
-//        log.debug "obs: ${obs}"
+        if (!obs) {
+        	log.debug "! obs failure! rep: ${rep}"
+		}
 //    }
 //        log.debug "obs = ${obs}"
         def obsTime = obs?.observation_time
