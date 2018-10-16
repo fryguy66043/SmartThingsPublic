@@ -408,30 +408,38 @@ def poll() {
             def utf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
             utf.setTimeZone(TimeZone.getTimeZone("GMT"))
 
+			log.debug "a = $a / today = $today"
             def sunriseDate = ltf.parse("${today} ${a.sunrise.hour}:${a.sunrise.minute}")
             def sunsetDate = ltf.parse("${today} ${a.sunset.hour}:${a.sunset.minute}")
-            def moonriseDate = ltf.parse("${today} ${a.moonrise.hour}:${a.moonrise.minute}")
-            def moonsetDate = ltf.parse("${today} ${a.moonset.hour}:${a.moonset.minute}")
-
             def tf = new java.text.SimpleDateFormat("h:mm a")
             tf.setTimeZone(TimeZone.getTimeZone("GMT${obs.local_tz_offset}"))
             def localSunrise = "${tf.format(sunriseDate)}"
             def localSunset = "${tf.format(sunsetDate)}"
-            def localMoonrise = "${tf.format(moonriseDate)}"
-            def localMoonset = "${tf.format(moonsetDate)}"
-
-            def localMoonPhase = a.phaseofMoon
-            def localMoonIllumination = a.percentIlluminated
-
             send(name: "localSunrise", value: localSunrise, descriptionText: "Sunrise today is at $localSunrise")
             send(name: "localSunset", value: localSunset, descriptionText: "Sunset today is at $localSunset")
-            send(name: "moonRise", value: localMoonrise, descriptionText: "Moonrise today is at $localMoonrise")
-            send(name: "moonSet", value: localMoonset, descriptionText: "Moonset today is at $localMoonset")
-            send(name: "moonPercentIlluminated", value: localMoonIllumination, descriptionText: "Percent moon illumination: $localMoonIllumination")
-            send(name: "moonPhase", value: localMoonPhase, descriptionText: "Current moon phase: $localMoonPhase")
+            
+            if (!a.moonrise.hour || !a.moonset.hour) {
+            	log.debug "moon failure!"
+            }
+            else {
+                def moonriseDate = ltf.parse("${today} ${a.moonrise.hour}:${a.moonrise.minute}")
+                def moonsetDate = ltf.parse("${today} ${a.moonset.hour}:${a.moonset.minute}")
 
-            sendEvent(name: "moon", value: "Moon Phase: ${localMoonPhase} ${localMoonIllumination}% Illuminated\nRise: ${localMoonrise} Set: ${localMoonset}")
+                def localMoonrise = "${tf.format(moonriseDate)}"
+                def localMoonset = "${tf.format(moonsetDate)}"
 
+                def localMoonPhase = a.phaseofMoon
+                def localMoonIllumination = a.percentIlluminated
+
+                send(name: "moonRise", value: localMoonrise, descriptionText: "Moonrise today is at $localMoonrise")
+                send(name: "moonSet", value: localMoonset, descriptionText: "Moonset today is at $localMoonset")
+                send(name: "moonPercentIlluminated", value: localMoonIllumination, descriptionText: "Percent moon illumination: $localMoonIllumination")
+                send(name: "moonPhase", value: localMoonPhase, descriptionText: "Current moon phase: $localMoonPhase")
+
+                sendEvent(name: "moon", value: "Moon Phase: ${localMoonPhase} ${localMoonIllumination}% Illuminated\nRise: ${localMoonrise} Set: ${localMoonset}")
+            }
+
+			log.debug "***** estimated lux value"
             def luxVal = estimateLux(sunriseDate, sunsetDate, weatherIcon)
             send(name: "illuminance", value: luxVal)
             send(name: "luxValue", value: luxVal)
@@ -616,6 +624,7 @@ private send(map) {
 }
 
 private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
+	log.debug "***** estimateLux(${sunriseDate}, ${sunsetDate}, ${weathericon})"
 	def oneHour = 1000 * 60 * 60
     def halfHour = oneHour / 2
 	def firstLightDisplay = ""
