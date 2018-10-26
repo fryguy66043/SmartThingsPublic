@@ -161,11 +161,17 @@ def parse(String description) {
 }
 
 def installed() {
+	log.debug "installed"
 	poll()
-	runEvery10Minutes(poll)
+	runEvery5Minutes(poll)
+}
+
+def updated() {
+	log.debug "updated"
 }
 
 def uninstalled() {
+	log.debug "uninstalled"
 	unschedule()
 }
 
@@ -228,7 +234,6 @@ def pollHandler(sData) {
         else if(hServerMsg[i].contains("{Outside Temperature}=")) {
         	msg = hServerMsg[i].replace("{Outside Temperature}=","")
             msg = msg.replace("°F", "")
-            log.debug "outside temp msg = $msg"
             currTemp = Float.parseFloat(msg)
             sendEvent(name: "temperature", value: msg)
         }
@@ -415,7 +420,7 @@ def pollHandler(sData) {
 }
 
 def pollErr() {
-	log.debug "getStatusErr"
+	log.debug "getStatusErr (checking for errors)"
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
     if (!state.pollStatus) {
     	log.debug "Polling timed out..."
@@ -430,7 +435,4 @@ def refresh() {
 	poll()
 }
 
-def configure() {
-	poll()
-}
 
