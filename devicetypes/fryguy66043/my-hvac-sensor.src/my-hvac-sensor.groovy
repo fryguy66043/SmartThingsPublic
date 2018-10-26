@@ -351,10 +351,12 @@ def setMyThermostatName(tName) {
 
 def setMode(val) {
 	def os = device.currentValue("operatingState")
-	log.debug "setMode(${val}): Current operatingState = ${os} / mode = ${device.currentValue("mode")}"
+	log.debug "setMode(${val}): Current operatingState = ${os} / mode = ${device.currentValue("mode")} / hvacMode = ${device.currentValue("hvacMode")}"
 	def valid = true
     def filter = device.currentValue("filterChangeRequired") ?: "false"
-    if (val != device.currentValue("hvacMode")) {
+    log.debug "val != hvacMode == ${val != device.currentValue("hvacMode")}"
+    if (val != device.currentValue("hvacMode") || val != device.currentValue("mode")) {
+    	log.debug "${val} != ${device.currentValue("hvacMode")}" 
         switch (val) {
             case "off":
                 log.debug "Setting tile to off"
@@ -475,6 +477,7 @@ def setOperatingState(val) {
 
 	if (!mode) {
     	sendEvent(name: "mode", value: "off")
+        sendEvent(name: "hvacMode", value: "off")
     }
     coolCycleCnt = (device.currentValue("coolCycles")) ? device.currentValue("coolCycles") : 0
     coolCycleTodayCnt = (device.currentValue("coolCyclesToday")) ? device.currentValue("coolCyclesToday") : 0
