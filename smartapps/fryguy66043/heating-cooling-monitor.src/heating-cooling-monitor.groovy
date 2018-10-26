@@ -204,6 +204,13 @@ def appHandler(evt) {
 
 //	log.debug "${date}: thermostat.currentThermostat = ${thermostat.currentThermostat} / thermostat.currentValue("thermostatOperatingState") = ${thermostat.currentValue("thermostatOperatingState")}"
     
+/* Update heating count/minutes
+state.currMonthHeatCnt = 42
+state.currMonthHeatMin = 175
+state.currYearHeatCnt = 42
+state.currYearHeatMin = 175
+*/
+
 //	hvacSensor.resetDailyCycles()
 
 	log.debug "lowTempUpdate = ${lowTempUpdate} / lowTempValue = ${lowTempValue} / highTempUpdate = ${highTempUpdate} / highTempValue = ${highTempValue} / tempDay = ${tempDay}"
@@ -211,11 +218,11 @@ def appHandler(evt) {
     	log.debug "Calling tempUpdate()"
         tempUpdate()
     }
-//	evaluate(evt)
+	evaluate(evt)
 //	log.debug "Reset time: ${resetTime}"
 
-	sendWeeklyUpdate(evt)
-    sendYearlyUpdate(evt)
+//	sendWeeklyUpdate(evt)
+//    sendYearlyUpdate(evt)
 }
 
 def filterChangedHandler(evt) {
@@ -970,7 +977,7 @@ private evaluate(evt)
         }
         
         if (os == "heating") {
-        	state.currYeatHeatCnt = state.currYearHeatCnt + 1
+        	state.currYearHeatCnt = state.currYearHeatCnt + 1
             state.currMonthHeatCnt = state.currMonthHeatCnt + 1
             state.weekHeatCnt[day - 1] = state.weekHeatCnt[day - 1] + 1
         }
