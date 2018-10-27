@@ -115,6 +115,10 @@ metadata {
 			state "default", label:'Precip:\n${currentValue}'
 		}
 
+		valueTile("highLow", "device.highLow", decoration: "flat", width: 6, height: 2) {
+			state "default", label:'Today:\n${currentValue}'
+		}
+
 		standardTile("refresh", "device.weather", decoration: "flat", width: 2, height: 2) {
 			state "default", label: "", action: "refresh", icon:"st.secondary.refresh"
 		}
@@ -148,7 +152,7 @@ metadata {
 		}
         
 		main(["temperature"])
-		details(["temperature", "feelsLike", "humidity", "wind", "rainDisplay", "rise", "set", "moon", "week", "month", "year", "lastUpdate", "refresh"])}
+		details(["temperature", "feelsLike", "humidity", "wind", "rainDisplay", "highLow", "rise", "set", "moon", "week", "month", "year", "lastUpdate", "refresh"])}
 }
 
 
@@ -204,9 +208,6 @@ def uninstalled() {
 def poll() {
 	log.debug "polling..."
     state.pollStatus = false
-	def timestamp = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
-    sendEvent(name: "update", value: timestamp)
-    sendEvent(name: "status", value: "${timestamp}\nGetting Pi Status...")
 	state.getStatus = false
 
 	def path = "${getFullPath()}/wxcurrent"
@@ -233,6 +234,7 @@ def pollHandler(sData) {
 	log.debug "pollHandler()"
     state.pollStatus = true
     def hData = sData.replace("<br>", "")
+	def timestamp = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
 //    log.debug "hData = \n${hData}"
     def hServerMsg = hData.split('\n')
 	log.debug "hServerMsg.size = ${hServerMsg.size()}"
@@ -243,9 +245,11 @@ def pollHandler(sData) {
     def weekDisp = ""
     def monthDisp = ""
     def yearDisp = ""
+    def highLowDisp = ""
+    def updateDisp = ""
 
     for (int i = 0; i < hServerMsg.size(); i++) {
-    	log.debug "hServerMsg[i] = ${hServerMsg[i]}"
+//    	log.debug "hServerMsg[i] = ${hServerMsg[i]}"
         
         if (hServerMsg[i].contains("weewx data")) {
         	log.debug "Started parsing weather data..."
@@ -253,7 +257,8 @@ def pollHandler(sData) {
         else if (hServerMsg[i].contains("{CurrTime}=")) {
         	msg = hServerMsg[i].replace("{CurrTime}=","")
             sendEvent(name: "observationTime", value: msg)
-            sendEvent(name: "lastUpdate", value: msg)
+            updateDisp = "${timestamp}\n(${msg})"
+            sendEvent(name: "lastUpdate", value: updateDisp)
         }
         else if(hServerMsg[i].contains("{Outside Temperature}=")) {
         	msg = hServerMsg[i].replace("{Outside Temperature}=","")
@@ -310,10 +315,13 @@ def pollHandler(sData) {
         else if(hServerMsg[i].contains("{High Temperature}=")) {
         	msg = hServerMsg[i].replace("{High Temperature}=","")
             sendEvent(name: "actualHigh", value: msg)
+            highLowDisp = "High: ${msg}\n"
         }
         else if(hServerMsg[i].contains("{Low Temperature}=")) {
         	msg = hServerMsg[i].replace("{Low Temperature}=","")
             sendEvent(name: "actualLow", value: msg)
+            highLowDisp = highLowDisp + "Low: ${msg}"
+            sendEvent(name: "highLow", value: highLowDisp)
         }
         else if(hServerMsg[i].contains("{Today's Rain}=")) {
         	msg = hServerMsg[i].replace("{Today's Rain}=","")
