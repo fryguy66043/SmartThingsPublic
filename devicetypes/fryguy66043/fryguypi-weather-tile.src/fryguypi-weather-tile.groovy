@@ -99,19 +99,19 @@ metadata {
 				]
 		}
 
-		valueTile("humidity", "device.humidity", decoration: "flat", width: 4, height: 2) {
+		valueTile("humidity", "device.humidity", decoration: "flat", width: 2, height: 2) {
 			state "default", label:'Humidity:\n${currentValue}%'
 		}
 
-		valueTile("feelsLike", "device.feelsLike", decoration: "flat", width: 4, height: 2) {
+		valueTile("feelsLike", "device.feelsLike", decoration: "flat", width: 2, height: 2) {
 			state "default", label:'Feels Like:\n${currentValue}°'
 		}
 
-		valueTile("wind", "device.wind", decoration: "flat", width: 6, height: 2) {
+		valueTile("wind", "device.wind", decoration: "flat", width: 3, height: 2) {
 			state "default", label:'Wind:\n${currentValue}'
 		}
 
-		valueTile("rainDisplay", "device.rainDisplay", decoration: "flat", width: 6, height: 2) {
+		valueTile("rainDisplay", "device.rainDisplay", decoration: "flat", width: 3, height: 2) {
 			state "default", label:'Precip:\n${currentValue}'
 		}
 
@@ -123,11 +123,11 @@ metadata {
 			state "default", label: "", action: "refresh", icon:"st.secondary.refresh"
 		}
 
-		valueTile("rise", "device.localSunrise", decoration: "flat", width: 4, height: 2) {
+		valueTile("rise", "device.localSunrise", decoration: "flat", width: 3, height: 2) {
 			state "default", label:'Sunrise:\n${currentValue}'
 		}
 
-		valueTile("set", "device.localSunset", decoration: "flat", width: 4, height: 2) {
+		valueTile("set", "device.localSunset", decoration: "flat", width: 3, height: 2) {
 			state "default", label:'Sunset:\n${currentValue}'
 		}
 
