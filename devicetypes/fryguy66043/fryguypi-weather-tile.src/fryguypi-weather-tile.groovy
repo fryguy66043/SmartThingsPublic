@@ -79,6 +79,12 @@ metadata {
 		command "refresh"
 	}
 
+
+	preferences {
+		input "pollTime", "text", title: "Poll Minutes (optional)", required: false
+	}
+
+
 	tiles(scale: 2) {
 		valueTile("temperature", "device.temperature", width: 2, height: 2) {
 			state "default", label:'${currentValue}°',
@@ -168,6 +174,24 @@ def installed() {
 
 def updated() {
 	log.debug "updated"
+    def min = 10
+    unschedule()
+    if (pollTime) {
+    	min = Integer.parseInt(pollTime)
+    }
+    log.debug "min = ${min}"
+    if (min <= 5) {
+    	log.debug "5"
+    	runEvery5Minutes(poll)
+    }
+    else if (min <= 10) {
+    	log.debug "10"
+    	runEvery10Minutes(poll)
+    }
+    else {
+    	log.debug "15"
+    	runEvery15Minutes(poll)
+    }
 }
 
 def uninstalled() {
@@ -209,7 +233,7 @@ def pollHandler(sData) {
 	log.debug "pollHandler()"
     state.pollStatus = true
     def hData = sData.replace("<br>", "")
-    log.debug "hData = \n${hData}"
+//    log.debug "hData = \n${hData}"
     def hServerMsg = hData.split('\n')
 	log.debug "hServerMsg.size = ${hServerMsg.size()}"
     def msg = ""
