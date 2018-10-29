@@ -107,11 +107,11 @@ metadata {
 			state "default", label:'Feels Like:\n${currentValue}°'
 		}
 
-		valueTile("wind", "device.wind", decoration: "flat", width: 3, height: 2) {
+		valueTile("wind", "device.wind", decoration: "flat", width: 6, height: 2) {
 			state "default", label:'Wind:\n${currentValue}'
 		}
 
-		valueTile("rainDisplay", "device.rainDisplay", decoration: "flat", width: 3, height: 2) {
+		valueTile("rainDisplay", "device.rainDisplay", decoration: "flat", width: 6, height: 2) {
 			state "default", label:'Precip:\n${currentValue}'
 		}
 
@@ -123,15 +123,15 @@ metadata {
 			state "default", label: "", action: "refresh", icon:"st.secondary.refresh"
 		}
 
-		valueTile("rise", "device.localSunrise", decoration: "flat", width: 3, height: 2) {
+		valueTile("rise", "device.localSunrise", decoration: "flat", width: 6, height: 2) {
 			state "default", label:'Sunrise:\n${currentValue}'
 		}
 
-		valueTile("set", "device.localSunset", decoration: "flat", width: 3, height: 2) {
+		valueTile("set", "device.localSunset", decoration: "flat", width: 6, height: 2) {
 			state "default", label:'Sunset:\n${currentValue}'
 		}
 
-        valueTile("moon", "device.moon", decoration: "flat", width: 4, height: 2) {
+        valueTile("moon", "device.moon", decoration: "flat", width: 6, height: 2) {
         	state "default", label: 'Moon:\n${currentValue}'
         }
         
@@ -247,6 +247,7 @@ def pollHandler(sData) {
     def yearDisp = ""
     def highLowDisp = ""
     def updateDisp = ""
+    def windDisp = ""
 
     for (int i = 0; i < hServerMsg.size(); i++) {
 //    	log.debug "hServerMsg[i] = ${hServerMsg[i]}"
@@ -301,7 +302,19 @@ def pollHandler(sData) {
         }
         else if(hServerMsg[i].contains("{Wind}=")) {
         	msg = hServerMsg[i].replace("{Wind}=","")
-            sendEvent(name: "wind", value: msg)
+            windDisp = "Last: ${msg}\n"
+            //sendEvent(name: "wind", value: msg)
+        }
+        else if(hServerMsg[i].contains("{High Wind}=")) {
+        	msg = hServerMsg[i].replace("{High Wind}=", "")
+            
+            def idx1 = msg.indexOf("from")
+            def idx2 = msg.indexOf("at")
+            def highWind = msg[0..idx1-1] + msg[idx2..msg.size()-1]
+            sendEvent(name: "highWind", value: highWind)
+            
+            windDisp = windDisp + "Gust: ${highWind}"
+            sendEvent(name: "wind", value: windDisp)
         }
         else if(hServerMsg[i].contains("{Rain Rate}=")) {
         	msg = hServerMsg[i].replace("{Rain Rate}=","")
@@ -332,10 +345,15 @@ def pollHandler(sData) {
         	msg = hServerMsg[i].replace("{High Rain Rate}=","")
             sendEvent(name: "highRainRate", value: msg)
         }
+/*        
         else if(hServerMsg[i].contains("{High Wind}=")) {
         	msg = hServerMsg[i].replace("{High Wind}=","")
-            sendEvent(name: "highWind", value: msg)
+            def idx1 = msg.indexof("from")
+            def idx2 = msg.indexof("at")
+            def highWind = msg[0..idx1] + msg[idx2..msg.size()]
+            sendEvent(name: "highWind", value: highWind)
         }
+*/        
         else if(hServerMsg[i].contains("{Average Wind}=")) {
         	msg = hServerMsg[i].replace("{Average Wind}=","")
             sendEvent(name: "avgWind", value: msg)
@@ -381,8 +399,11 @@ def pollHandler(sData) {
         }
         else if(hServerMsg[i].contains("{Weekly High Wind Speed}=")) {
         	msg = hServerMsg[i].replace("{Weekly High Wind Speed}=","")
+            def idx1 = msg.indexOf("from")
+            def idx2 = msg.indexOf("at")
+            def highWind = msg[0..idx1-1] + msg[idx2..msg.size()-1]
+            weekDisp = weekDisp + "High Wind: ${highWind}"
             sendEvent(name: "weeklyHighWindSpeed", value: msg)
-            weekDisp = weekDisp + "High Wind: ${msg}"
             sendEvent(name: "week", value: weekDisp)
         }
         else if(hServerMsg[i].contains("{Monthly High Temperature}=")) {
@@ -412,7 +433,10 @@ def pollHandler(sData) {
         else if(hServerMsg[i].contains("{Monthly High Wind Speed}=")) {
         	msg = hServerMsg[i].replace("{Monthly High Wind Speed}=","")
             sendEvent(name: "monthlyHighWindSpeed", value: msg)
-            monthDisp = monthDisp + "High Wind: ${msg}"
+            def idx1 = msg.indexOf("from")
+            def idx2 = msg.indexOf("at")
+            def highWind = msg[0..idx1-1] + msg[idx2..msg.size()-1]
+            monthDisp = monthDisp + "High Wind: ${highWind}"
             sendEvent(name: "month", value: monthDisp)
         }
         else if(hServerMsg[i].contains("{Yearly High Temperature}=")) {
@@ -442,7 +466,10 @@ def pollHandler(sData) {
         else if(hServerMsg[i].contains("{Yearly High Wind Speed}=")) {
         	msg = hServerMsg[i].replace("{Yearly High Wind Speed}=","")
             sendEvent(name: "yearlyHighWindSpeed", value: msg)
-            yearDisp = yearDisp + "High Wind: ${msg}"
+            def idx1 = msg.indexOf("from")
+            def idx2 = msg.indexOf("at")
+            def highWind = msg[0..idx1-1] + msg[idx2..msg.size()-1]
+            yearDisp = yearDisp + "High Wind: ${highWind}"
             sendEvent(name: "year", value: yearDisp)
         }
         else {
