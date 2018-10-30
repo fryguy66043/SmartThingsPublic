@@ -492,6 +492,7 @@ def pollErr() {
 def refresh() {
 	log.debug "refresh()"
 	poll()
+    updated()
 }
 
 
