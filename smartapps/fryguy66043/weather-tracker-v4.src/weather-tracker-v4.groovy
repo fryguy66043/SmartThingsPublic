@@ -147,6 +147,7 @@ def installed() {
 
 def updated() {
 	log.debug "Updated: $settings"
+    unsubscribe()
 	unschedule()
     scheduleEvents()
 }
