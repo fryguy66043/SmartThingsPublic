@@ -186,6 +186,9 @@ def appHandler(evt) {
     def nowTime = localCalendar.format("h:mm a")
 	def msg = "${location}: ${nowTime} / Day = ${day}"
 
+	log.debug "fryguypi.rainToday = ${fryguypi.currentValue("rainToday")} / rate = ${fryguypi.currentValue("rainRate")}"
+    rainLastHourHandler()
+
 /*
 	state.currYearPrecipInches = 28.38
     state.currMonthPrecipInches = 6.78
@@ -267,10 +270,11 @@ def rainTodayHandler(evt) {
 }
 
 def rainLastHourHandler(evt) {
-	log.debug "rainLastHourHandler(${evt.value}) / rainLastHour = ${fryguypi.currentValue("rainRate")} / rainToday = ${fryguypi.currentValue("rainToday")} / state.rainTotal = ${state.rainTotal}"
+//	log.debug "rainLastHourHandler(${evt.value}) / rainLastHour = ${fryguypi.currentValue("rainRate")} / rainToday = ${fryguypi.currentValue("rainToday")} / state.rainTotal = ${state.rainTotal}"
+	log.debug "rainLastHourHandler"
 	Calendar localCalendar = Calendar.getInstance(TimeZone.getTimeZone("America/Chicago"))
 	int day = localCalendar.get(Calendar.DAY_OF_WEEK)
-    def rain = Float.parseFloat(fryguypi.currentValue("rainRate")) ?: Float.parseFloat(evt.value)
+    def rain = Float.parseFloat(fryguypi.currentValue("rainRate"))
     def rainTotal = Float.parseFloat(fryguypi.currentValue("rainToday"))
     def date = new Date().format("MM/dd/yy h:mm a", location.timeZone)
     def msg = "${location} ${date}: "
@@ -286,7 +290,7 @@ def rainLastHourHandler(evt) {
         myWxDevice.setRainThisYear(rainYear.round(2))
     }
     
-    if (rain > 0.0 && rainTotal > state.rainTotal && (now() > state.rainUpdate + (60 * 60 * 1000) || rain >= state.rainTotal + 0.1))  {
+    if ((rainTotal > 0.0 && state.rainTotal == 0.0) || (rain > 0.0 && rainTotal > state.rainTotal && (now() > state.rainUpdate + (60 * 60 * 1000) || rainTotal >= state.rainTotal + 0.1)))  {
         state.raining = true
         state.rainUpdate = now()
         state.rainTotal = rainTotal
