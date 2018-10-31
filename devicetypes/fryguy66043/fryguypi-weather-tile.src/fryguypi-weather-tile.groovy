@@ -33,6 +33,28 @@ metadata {
         attribute "actualHigh", "string"
 		attribute "feelsLike", "string"
         attribute "dewpoint", "string"
+        attribute "insideTemperature", "string"
+        attribute "actualLow", "string"
+        attribute "actualHigh", "string"
+		attribute "feelsLike", "string"
+        attribute "dewpoint", "string"
+
+		attribute "wind", "string"
+        attribute "highWind", "string"
+        attribute "avgWind", "string"
+        
+		attribute "sunriseDate", "string"
+		attribute "sunsetDate", "string"
+        
+        attribute "moonPhase", "string"
+        
+        attribute "highRainRate", "string"
+        attribute "rainRate", "string"
+        attribute "rainToday", "string"
+        attribute "rainDisplay", "string"
+
+        attribute "barometer", "string"
+        attribute "barometerTrend", "string"
 
 		attribute "wind", "string"
         attribute "highWind", "string"
@@ -318,7 +340,8 @@ def pollHandler(sData) {
         }
         else if(hServerMsg[i].contains("{Rain Rate}=")) {
         	msg = hServerMsg[i].replace("{Rain Rate}=","")
-            sendEvent(name: "rainRate", value: msg)
+            def rainRateIn = msg.replace(" in/hr", "")
+            sendEvent(name: "rainRate", value: rainRateIn)
             rainRate = msg
         }
         else if(hServerMsg[i].contains("{Inside Temperature}=")) {
@@ -327,18 +350,23 @@ def pollHandler(sData) {
         }
         else if(hServerMsg[i].contains("{High Temperature}=")) {
         	msg = hServerMsg[i].replace("{High Temperature}=","")
-            sendEvent(name: "actualHigh", value: msg)
+            def idx = msg.indexOf("°F")
+            def high = msg[0..idx - 1]
+            sendEvent(name: "actualHigh", value: high)
             highLowDisp = "High: ${msg}\n"
         }
         else if(hServerMsg[i].contains("{Low Temperature}=")) {
         	msg = hServerMsg[i].replace("{Low Temperature}=","")
-            sendEvent(name: "actualLow", value: msg)
+            def idx = msg.indexOf("°F")
+            def low = msg[0..idx - 1]
+            sendEvent(name: "actualLow", value: low)
             highLowDisp = highLowDisp + "Low: ${msg}"
             sendEvent(name: "highLow", value: highLowDisp)
         }
         else if(hServerMsg[i].contains("{Today's Rain}=")) {
         	msg = hServerMsg[i].replace("{Today's Rain}=","")
-            sendEvent(name: "rainToday", value: msg)
+            def rainTodayIn = msg.replace (" in", "")
+            sendEvent(name: "rainToday", value: rainTodayIn)
             sendEvent(name: "rainDisplay", value: "Today: ${msg}\nRate: ${rainRate}")
         }
         else if(hServerMsg[i].contains("{High Rain Rate}=")) {
@@ -375,13 +403,17 @@ def pollHandler(sData) {
         }
         else if(hServerMsg[i].contains("{Weekly High Temperature}=")) {
         	msg = hServerMsg[i].replace("{Weekly High Temperature}=","")
-            sendEvent(name: "weeklyHigh", value: msg)
+            def idx = msg.indexOf("°F")
+            def high = msg[0..idx - 1]
+            sendEvent(name: "weeklyHigh", value: high)
             weekDisp = "High: ${msg}\n"
             //sendEvent(name: "", value: msg)
         }
         else if(hServerMsg[i].contains("{Weekly Low Temperature}=")) {
         	msg = hServerMsg[i].replace("{Weekly Low Temperature}=","")
-            sendEvent(name: "weeklyLow", value: msg)
+            def idx = msg.indexOf("°F")
+            def low = msg[0..idx - 1]
+            sendEvent(name: "weeklyLow", value: low)
             weekDisp = weekDisp + "Low: ${msg}\n"
             //sendEvent(name: "", value: msg)
         }
