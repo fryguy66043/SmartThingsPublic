@@ -172,9 +172,13 @@ metadata {
 		valueTile("lastUpdate", "device.lastUpdate", width: 6, height: 2, decoration: "flat") {
 			state "default", label:'Last Updated:\n${currentValue}'
 		}
+
+        htmlTile(name: "htmlTempPage", action: "getHtmlPage", refreshInterval: 10, width: 6, height: 6, whitelist: ["fryguypi.ddns.net", "65.28.96.234", "192.168.2.3"])
         
+        htmlTile(name: "htmlRainPage", action: "getRainPic", refreshInterval: 10, width: 6, height: 6, whitelist: ["fryguypi.ddns.net"])
+
 		main(["temperature"])
-		details(["temperature", "feelsLike", "humidity", "wind", "rainDisplay", "highLow", "rise", "set", "moon", "week", "month", "year", "lastUpdate", "refresh"])}
+		details(["temperature", "feelsLike", "humidity", "wind", "rainDisplay", "highLow", "rise", "set", "moon", "week", "month", "year", "lastUpdate", "htmlTempPage", "htmlRainPage", "refresh"])}
 }
 
 
@@ -183,6 +187,65 @@ def getFullPath() {
 	def PI_PORT = "80"
 
 	return "http://${PI_IP}:${PI_PORT}"
+}
+
+mappings {
+	path("/getHtmlPage") {
+    	action: [GET: "getHtmlPage"]
+    }
+    path("/getRainPic") {
+    	action: [GET: "getRainPic"]
+    }
+}
+
+def getHtmlPage() {
+	log.debug "getHtmlPage"
+    def date = new Date().format("HH:mm:ss", location.timeZone)
+
+	def html = """
+		<!DOCTYPE html>
+			<html>
+				<head>
+					<meta http-equiv="cache-control" content="max-age=0"/>
+					<meta http-equiv="cache-control" content="no-cache"/>
+					<meta http-equiv="expires" content="0"/>
+					<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT"/>
+					<meta http-equiv="pragma" content="no-cache"/>
+					<meta name="viewport" content="width = device-width">
+					<meta name="viewport" content="initial-scale = 1.0, user-scalable=no">
+				</head>
+				<body>
+					Last 24 Hour Temperature Readings<br>
+                    <img src="${getFullPath()}/wxtemppic/${date}" alt="Pi Image" height="300" width="360"> 
+				</body>
+			</html>
+		"""
+    render contentType: "text/html", data: html, status: 200
+}
+
+def getRainPic() {
+	log.debug "getRainPic"
+    def date = new Date().format("HH:mm:ss", location.timeZone)
+
+	def html = """
+		<!DOCTYPE html>
+			<html>
+				<head>
+					<meta http-equiv="cache-control" content="max-age=0"/>
+					<meta http-equiv="cache-control" content="no-cache"/>
+					<meta http-equiv="expires" content="0"/>
+					<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT"/>
+					<meta http-equiv="pragma" content="no-cache"/>
+					<meta name="viewport" content="width = device-width">
+					<meta name="viewport" content="initial-scale = 1.0, user-scalable=no">
+				</head>
+				<body>
+					Last 24 Hour Rain Readings<br>
+                    <img src="${getFullPath()}/wxrainpic/${date}" alt="Pi Image" height="300" width="360"> 
+				</body>
+			</html>
+		"""
+    render contentType: "text/html", data: html, status: 200
 }
 
 
