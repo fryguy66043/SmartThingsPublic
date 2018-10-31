@@ -195,7 +195,7 @@ def getHtmlPage(page) {
 				</head>
 				<body>
 					Pi Picture<br>
-                    <img src="${getFullPath()}/get_pic/${date}" alt="Pi Image" height="300" width="360"> 
+                    <img src="${getFullPath()}/wxpic/${date}" alt="Pi Image" height="300" width="360"> 
 				</body>
 			</html>
 		"""
