@@ -35,6 +35,9 @@ preferences {
 	section("HVAC Sensor") {
     	input "hvac", "device.myHVACSensor", required: false
     }
+    section("Button 1") {
+    	input "button1", "capability.button", required: false
+    }
 	section("Switch 1") {
     	input "switch1", "capability.switch", multiple: true, required: false
     }
@@ -78,6 +81,7 @@ def initialize() {
     state.onTime = 0
     state.testTime = now()
     subscribe(app, appHandler)
+    subscribe(button1, "button", buttonHandler)
     subscribe(hvac, "operatingState", hvacHandler)
     subscribe(switch1, "switch", switchHandler)
     subscribe(switch2, "switch", switchHandler)
@@ -90,6 +94,10 @@ def initialize() {
 }
 
 import groovy.time.TimeCategory
+
+def buttonHandler(evt) {
+	log.debug "buttonHandler(${evt.value})"
+}
 
 def appHandler(evt) {
 	log.debug "appHandler: ${evt.value} / evt.data = ${evt?.data}"
