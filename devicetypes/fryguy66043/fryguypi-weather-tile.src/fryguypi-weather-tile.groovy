@@ -177,8 +177,12 @@ metadata {
         
         htmlTile(name: "htmlRainPage", action: "getRainPic", refreshInterval: 10, width: 6, height: 6, whitelist: ["fryguypi.ddns.net"])
 
+        htmlTile(name: "htmlMonthTempPage", action: "getMonthTempPic", refreshInterval: 10, width: 6, height: 6, whitelist: ["fryguypi.ddns.net", "65.28.96.234", "192.168.2.3"])
+        
+        htmlTile(name: "htmlMonthRainPage", action: "getMonthRainPic", refreshInterval: 10, width: 6, height: 6, whitelist: ["fryguypi.ddns.net"])
+
 		main(["temperature"])
-		details(["temperature", "feelsLike", "humidity", "wind", "rainDisplay", "highLow", "rise", "set", "moon", "week", "month", "year", "lastUpdate", "htmlTempPage", "htmlRainPage", "refresh"])}
+		details(["temperature", "feelsLike", "humidity", "wind", "rainDisplay", "highLow", "rise", "set", "moon", "week", "month", "year", "lastUpdate", "htmlTempPage", "htmlRainPage", "htmlMonthTempPage", "htmlMonthRainPage", "refresh"])}
 }
 
 
@@ -195,6 +199,12 @@ mappings {
     }
     path("/getRainPic") {
     	action: [GET: "getRainPic"]
+    }
+	path("/getMonthTempPic") {
+    	action: [GET: "getMonthTempPic"]
+    }
+    path("/getMonthRainPic") {
+    	action: [GET: "getMonthRainPic"]
     }
 }
 
@@ -242,6 +252,56 @@ def getRainPic() {
 				<body>
 					Last 24 Hour Rain Readings<br>
                     <img src="${getFullPath()}/wxrainpic/${date}" alt="Pi Image" height="300" width="360"> 
+				</body>
+			</html>
+		"""
+    render contentType: "text/html", data: html, status: 200
+}
+
+def getMonthTempPic() {
+	log.debug "getMonthTempPic"
+    def date = new Date().format("HH:mm:ss", location.timeZone)
+
+	def html = """
+		<!DOCTYPE html>
+			<html>
+				<head>
+					<meta http-equiv="cache-control" content="max-age=0"/>
+					<meta http-equiv="cache-control" content="no-cache"/>
+					<meta http-equiv="expires" content="0"/>
+					<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT"/>
+					<meta http-equiv="pragma" content="no-cache"/>
+					<meta name="viewport" content="width = device-width">
+					<meta name="viewport" content="initial-scale = 1.0, user-scalable=no">
+				</head>
+				<body>
+					Last 30 Days Temperature Readings<br>
+                    <img src="${getFullPath()}/wxmonthtemppic/${date}" alt="Pi Image" height="300" width="360"> 
+				</body>
+			</html>
+		"""
+    render contentType: "text/html", data: html, status: 200
+}
+
+def getMonthRainPic() {
+	log.debug "getMonthRainPic"
+    def date = new Date().format("HH:mm:ss", location.timeZone)
+
+	def html = """
+		<!DOCTYPE html>
+			<html>
+				<head>
+					<meta http-equiv="cache-control" content="max-age=0"/>
+					<meta http-equiv="cache-control" content="no-cache"/>
+					<meta http-equiv="expires" content="0"/>
+					<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT"/>
+					<meta http-equiv="pragma" content="no-cache"/>
+					<meta name="viewport" content="width = device-width">
+					<meta name="viewport" content="initial-scale = 1.0, user-scalable=no">
+				</head>
+				<body>
+					Last 30 Days Rain Readings<br>
+                    <img src="${getFullPath()}/wxmonthrainpic/${date}" alt="Pi Image" height="300" width="360"> 
 				</body>
 			</html>
 		"""
