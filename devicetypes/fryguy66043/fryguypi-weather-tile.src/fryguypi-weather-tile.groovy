@@ -173,13 +173,13 @@ metadata {
 			state "default", label:'Last Updated:\n${currentValue}'
 		}
 
-        htmlTile(name: "htmlTempPage", action: "getHtmlPage", refreshInterval: 10, width: 6, height: 6, whitelist: ["fryguypi.ddns.net", "65.28.96.234", "192.168.2.3"])
+        htmlTile(name: "htmlTempPage", action: "getHtmlPage", refreshInterval: 60, width: 6, height: 5, whitelist: ["fryguypi.ddns.net", "65.28.96.234", "192.168.2.3"])
         
-        htmlTile(name: "htmlRainPage", action: "getRainPic", refreshInterval: 10, width: 6, height: 6, whitelist: ["fryguypi.ddns.net"])
+        htmlTile(name: "htmlRainPage", action: "getRainPic", refreshInterval: 60, width: 6, height: 5, whitelist: ["fryguypi.ddns.net"])
 
-        htmlTile(name: "htmlMonthTempPage", action: "getMonthTempPic", refreshInterval: 10, width: 6, height: 6, whitelist: ["fryguypi.ddns.net", "65.28.96.234", "192.168.2.3"])
+        htmlTile(name: "htmlMonthTempPage", action: "getMonthTempPic", refreshInterval: 60, width: 6, height: 5, whitelist: ["fryguypi.ddns.net", "65.28.96.234", "192.168.2.3"])
         
-        htmlTile(name: "htmlMonthRainPage", action: "getMonthRainPic", refreshInterval: 10, width: 6, height: 6, whitelist: ["fryguypi.ddns.net"])
+        htmlTile(name: "htmlMonthRainPage", action: "getMonthRainPic", refreshInterval: 60, width: 6, height: 5, whitelist: ["fryguypi.ddns.net"])
 
 		main(["temperature"])
 		details(["temperature", "feelsLike", "humidity", "wind", "rainDisplay", "highLow", "rise", "set", "moon", "week", "month", "year", "lastUpdate", "htmlTempPage", "htmlRainPage", "htmlMonthTempPage", "htmlMonthRainPage", "refresh"])}
@@ -226,7 +226,7 @@ def getHtmlPage() {
 				</head>
 				<body>
 					Last 24 Hour Temperature Readings<br>
-                    <img src="${getFullPath()}/wxtemppic/${date}" alt="Pi Image" height="300" width="360"> 
+                    <img src="${getFullPath()}/wxtemppic/${date}" alt="Pi Image" height="260" width="360"> 
 				</body>
 			</html>
 		"""
@@ -251,7 +251,7 @@ def getRainPic() {
 				</head>
 				<body>
 					Last 24 Hour Rain Readings<br>
-                    <img src="${getFullPath()}/wxrainpic/${date}" alt="Pi Image" height="300" width="360"> 
+                    <img src="${getFullPath()}/wxrainpic/${date}" alt="Pi Image" height="260" width="360"> 
 				</body>
 			</html>
 		"""
@@ -276,7 +276,7 @@ def getMonthTempPic() {
 				</head>
 				<body>
 					Last 30 Days Temperature Readings<br>
-                    <img src="${getFullPath()}/wxmonthtemppic/${date}" alt="Pi Image" height="300" width="360"> 
+                    <img src="${getFullPath()}/wxmonthtemppic/${date}" alt="Pi Image" height="260" width="360"> 
 				</body>
 			</html>
 		"""
@@ -301,7 +301,7 @@ def getMonthRainPic() {
 				</head>
 				<body>
 					Last 30 Days Rain Readings<br>
-                    <img src="${getFullPath()}/wxmonthrainpic/${date}" alt="Pi Image" height="300" width="360"> 
+                    <img src="${getFullPath()}/wxmonthrainpic/${date}" alt="Pi Image" height="260" width="360"> 
 				</body>
 			</html>
 		"""
