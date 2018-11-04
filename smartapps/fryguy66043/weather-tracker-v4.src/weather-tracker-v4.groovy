@@ -39,7 +39,7 @@ preferences {
         input "dailyEveForecastTime", "time", required: false, title: "What time?"
     }
     section("Choose FryGuyPi Weather Device") {
-    	input "fryguypi", "device.fryguypiWeatherTile", title: "Use Jeff's FryGuyPi Weather Tile to get the rain events."
+    	input "fryguypi", "device.fryguypiWxDevice", title: "Use Jeff's FryGuyPi Weather Tile to get the rain events."
     }
 	section("Choose Jeff's Custom Weather Device") {
     	input "myWxDevice", "device.mySmartweatherTile", required: false
