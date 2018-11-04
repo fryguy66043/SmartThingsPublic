@@ -131,16 +131,10 @@ metadata {
             state "taking", label:'Taking', action: "", icon: "st.camera.dropcam", backgroundColor: "#00A0DC"
             state "image", label: "Take", action: "Image Capture.take", icon: "st.camera.dropcam", backgroundColor: "#FFFFFF", nextState:"taking"
         }
-//        htmlTile(name: "htmlPage", action: "getHtmlPage", refreshInterval: 10, width: 6, height: 5, whitelist: ["65.28.96.234", "192.168.1.128", "www.youtube.com"])
         htmlTile(name: "htmlPage", action: "getHtmlPage", refreshInterval: 10, width: 6, height: 5, whitelist: ["fryguypi.ddns.net", "65.28.96.234", "192.168.2.3"])
 
 		main "state"
-//		main "image"
-//		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "tweetPicAndCPU", "status", "substatus", "refresh", "safetyControl", "imageService", "htmlPage"])
-//		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "status", "substatus", "refresh", "safetyControl", "imageService",  "htmlPage", "image", "cameraDetails", "take"])
-		details(["htmlPage", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "tweetPicAndCPU", "status", "substatus", "refresh", "safetyControl", "imageService", "cameraDetails", "take"])
-//		details(["state", "diskSpace", "cpuTemp", "nbrPics", "emailCPU", "emailPic", "status", "substatus", "refresh", "safetyControl", "imageService", "cameraDetails", "take"])
-	}
+		details(["diskSpace", "cpuTemp", "nbrPics", "emailCPU", "status", "substatus", "refresh"])}
 }
 
 def getFullPath() {
@@ -571,12 +565,12 @@ def getStatusErr() {
 	        sendEvent(name: "state", value: "unavailable")
         }
         sendEvent(name: "substatus", value: "")
-        sendEvent(name: "diskSpace", value: 0)
-        sendEvent(name: "cpuTemp", value: 0)
+//        sendEvent(name: "diskSpace", value: 0)
+//        sendEvent(name: "cpuTemp", value: 0)
         sendEvent(name: "nbrPics", value: 0)
         sendEvent(name: "emailCPU", value: "off")
-        sendEvent(name: "emailPic", value: "off")
-        sendEvent(name: "tweetPicAndCPU", value: "off")
+//        sendEvent(name: "emailPic", value: "off")
+//        sendEvent(name: "tweetPicAndCPU", value: "off")
         sendEvent(name: "imageService", value: "off")
         sendEvent(name: "isServerRunning", value: "false")
         sendEvent(name: "isImageServiceRunning", value: "false")
@@ -685,7 +679,8 @@ def statusHandler(sData) {
                 }
             	break
 			case 3:
-            	if (hServerMsg[i].contains("Avail Disk Space") && sVal == "ok") {
+            	if (hServerMsg[i].contains("Avail Disk Space")) {
+                	log.debug "Avail Disk Space"
                 	temp = hServerMsg[i].replace(" GB Avail Disk Space", "")
                     tSize = Float.parseFloat(temp)
                     log.debug "tSize = ${tSize}"
@@ -693,16 +688,16 @@ def statusHandler(sData) {
                     if (tSize < 0.1) {
                     	sVal = "lowDiskSpace"
                     }
-                    else {
-                    	sVal = "ok"
-                    }
                 }
                 else if (sVal == "ok") {
                 	sVal = "error"
                 }
+                else {
+                	log.debug "???"
+                }
             	break
             case 4:
-            	if (hServerMsg[i].contains("CPU Temp") && sVal == "ok") {
+            	if (hServerMsg[i].contains("CPU Temp")) {
                 	temp = hServerMsg[i].replace("CPU Temp=", "")
                     if (temp.contains("Fail")) {
                 		sVal = "error"
@@ -713,9 +708,6 @@ def statusHandler(sData) {
                         sendEvent(name: "cpuTemp", value: tSize)
                         if (tSize > 200) {
                         	sVal = "highCPUTemp"
-                        }
-                        else {
-                        	sVal = "ok"
                         }
                     }
                 }
