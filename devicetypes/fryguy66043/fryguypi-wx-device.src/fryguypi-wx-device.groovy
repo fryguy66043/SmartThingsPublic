@@ -406,6 +406,7 @@ def updated() {
     	log.debug "15"
     	runEvery15Minutes(poll)
     }
+    runEvery15Minutes(WUPoll)
 }
 
 def uninstalled() {
