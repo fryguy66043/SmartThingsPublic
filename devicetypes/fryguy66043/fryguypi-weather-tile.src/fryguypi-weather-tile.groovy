@@ -410,12 +410,13 @@ def pollHandler(sData) {
         	msg = hServerMsg[i].replace("{Outside Temperature}=","")
             msg = msg.replace("°F", "")
             currTemp = Float.parseFloat(msg)
+            feelsLikeTemp = currTemp
             sendEvent(name: "temperature", value: msg)
         }
         else if(hServerMsg[i].contains("{Wind Chill}=")) {
         	msg = hServerMsg[i].replace("{Wind Chill}=","")
             msg = msg.replace("°F", "")
-            if (feelsLikeTemp != currTemp) {
+            if (feelsLikeTemp == currTemp) {
 	            feelsLikeTemp = Float.parseFloat(msg)
                 sendEvent(name: "feelsLike", value: feelsLikeTemp)
             }
@@ -423,7 +424,7 @@ def pollHandler(sData) {
         else if(hServerMsg[i].contains("{Heat Index}=")) {
         	msg = hServerMsg[i].replace("{Heat Index}=","")
             msg = msg.replace("°F", "")
-            if (feelsLikeTemp != currTemp) {
+            if (feelsLikeTemp == currTemp) {
 	            feelsLikeTemp = Float.parseFloat(msg)
                 sendEvent(name: "feelsLike", value: feelsLikeTemp)
             }
