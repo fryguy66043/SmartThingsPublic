@@ -37,6 +37,9 @@ preferences {
 	section("Turn Off What?"){
     	input "switch1", "capability.switch", required: true, multiple: true
     }
+    section("Turn Off When?"){
+    	input "offTime", "enum", options: ["Anytime", "Evening", "Morning"], title: "Turn Off When?"
+	}
 	section("Wait How Long To Turn Off?") {
     	input "minutes", "number", required: false, title: "Minutes?", defaultValue: 0
     }
@@ -124,6 +127,13 @@ def powerHandler(evt) {
 	log.debug "powerHandler (${evt.value})"
 	def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     def msg = ""
+    def nowDate = new Date().format("MM/dd/yy", location.timeZone)
+    def nowTime = Date.parse("MM/dd/yy H:mm:ss", new Date().format("MM/dd/yy H:mm:ss", location.timeZone))
+    def timeTest = true
+    def MORNING_START_TIME = "05:00:00"
+    def MORNING_END_TIME = "12:00:00"
+    def EVENING_START_TIME = "17:00:00"
+    def EVENING_END_TIME = "23:59:59"
     
 	if (state.powerCheckAlert) {
         log.debug "Power has been restored!"
@@ -136,8 +146,26 @@ def powerHandler(evt) {
         }
     }
 	state.powerCheckTime = now()
+
+	if (offTime == "Evening" || offTime == "Morning") {
+    	def startTime = ""
+        def endTime = ""
+        log.debug "nowDate = ${nowDate} ${EVENING_START_TIME}"
+    	if (offTime == "Evening") {
+        	startTime = Date.parse("MM/dd/yy H:mm:ss", "${nowDate} ${EVENING_START_TIME}")
+            endTime = Date.parse("MM/dd/yy H:mm:ss", "${nowDate} ${EVENING_END_TIME}")
+        }
+        else {
+        	startTime = Date.parse("MM/dd/yy H:mm:ss", "${nowDate} ${MORNING_START_TIME}")
+            endTime = Date.parse("MM/dd/yy H:mm:ss", "${nowDate} ${MORNING_END_TIME}")
+        }
+        timeTest = (nowTime >= startTime && nowtime <= endTime)
+        log.debug "startTime = ${startTime} / nowTime = ${nowTime} / endTime = ${endTime}"
+        log.debug "nowTime in timeframe = ${timeTest}"
+    }
+
     state.powerCheckAlert = false
-	if (!state.running && appliance.currentPower >= watts) {
+	if (timeTest && !state.running && appliance.currentPower >= watts) {
     	state.running = true
     	runIn(60 * minutes, delayHandler)
     }
