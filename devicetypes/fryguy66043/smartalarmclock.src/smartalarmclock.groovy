@@ -28,10 +28,12 @@ metadata {
         attribute "alarm1CurrPres", "string"
         attribute "alarm1Time", "string"
         attribute "alarm1Days", "string"
+        attribute "alarm1Presence", "string"
 
         command "getSettings"
         command "setAlarm"
         command "setPresence"
+        command "changePresence"
 	}
 
 	simulator {
@@ -66,20 +68,20 @@ metadata {
                 [value: 200, color: "#bc2323"]
             ]
         }
-        valueTile("nbrPics", "device.nbrPics", decoration: "flat", width: 2, height: 2) {
-        	state "default", label: '${currentValue}\nPics', defaultState: true, backgroundColors: [
-            	[value: 0, color: "#ffffff"],
-            	[value: 1, color: "#44b621"],
-                [value: 2000, color: "#bc2323"]
-            ]
+        standardTile("alarm1", "device.alarm1", decoration: "flat", width: 2, height: 2) {
+        	state "error", label: '${name}', icon: "st.Office.office6", backgroundColor:"#bc2323"
+        	state "off", label: '${name}', icon: "st.Office.office6", backgroundColor:"#ffffff"
+            state "on", label: '${name}', icon: "st.Office.office6", backgroundColor:"#00A0DC"
+            state "onPresent", label: 'ON', icon: "st.Office.office6", backgroundColor:"#00A0DC"
+            state "onAway", label: 'OFF', icon: "st.Office.office6", backgroundColor:"#ffffff"
         }
-        standardTile("emailCPU", "device.emailCPU", decoration: "flat", width: 2, height: 2) {
-        	state "error", label: '${name}', icon: "st.Office.office19", backgroundColor:"#bc2323"
-        	state "off", label: '${name}', icon: "st.Office.office19", backgroundColor:"#ffffff"
-            state "on", label: 'CPU', action: "callEmailCPU", icon: "st.Office.office19", backgroundColor:"#00A0DC", nextState: "sending"
-            state "sending", label: 'Sending', icon: "st.Office.office19", backgroundColor:"#e86d13", nextState: "sent"
-            state "sent", label: 'CPU', action: "callEmailCPU", icon: "st.Office.office19", backgroundColor:"#00A0DC", nextState: "on"
-        }
+		standardTile("alarm1Presence", "device.alarm1Presence", decoration: "flat", width: 2, height: 2) {
+			state "home", label: '${name}', action: "changePresence", icon:"st.Home.home4", backgroundColor:"#00A0DC", nextState: "changingAway"
+            state "changingAway", label: 'UPDATING', icon:"st.Home.home4", backgroundColor:"#00A0DC", nextState: "away"
+			state "away", label: '${name}', action: "changePresence", icon:"st.Home.home3", backgroundColor:"#ffffff", nextState: "changingHome"
+            state "changingHome", label: 'UPDATING', icon:"st.Home.home3", backgroundColor:"#ffffff", nextState: "home"
+			state "noCheck", label: 'OFF', icon:"st.Lighting.light8", backgroundColor:"#ffffff"
+		}
 		standardTile("refresh", "device.refresh", decoration: "flat", width: 2, height: 2) {
 			state "default", label: '', action: "refresh", icon:"st.secondary.refresh"
 		}
@@ -89,7 +91,7 @@ metadata {
 
 
 		main "state"
-		details(["diskSpace", "cpuTemp", "nbrPics", "emailCPU", "status", "substatus", "refresh"])}
+		details(["alarm1","alarm1Presence", "status", "substatus", "refresh"])}
 }
 
 def getFullPath() {
@@ -129,6 +131,30 @@ def parse(String description) {
     log.debug "data = ${data}"
 }
 
+def changePresence() {
+	log.debug "changePresence"
+    state.changePresence = false
+    def newPres = device.currentValue("alarm1CurrPres") == "true" ? "False" : "True"
+    sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Presence...")
+    sendEvent(name: "substatus", value: "")
+	def result = new physicalgraph.device.HubAction(
+        method: "GET",
+        path: "/setpresence?nbr=1&pres=${newPres}",
+        headers: [
+                "HOST" : "192.168.1.137:5000"],
+                null,
+                [callback: changePresenceHandler]
+	)
+    log.debug result.toString()
+    sendHubCommand(result)
+}
+
+def changePresenceHandler(sData) {
+	log.debug "changePresenceHandler"
+    state.changePresence = true
+	refresh()
+}
+
 def getSettings() {
 	log.debug "getSettings"
     state.getSettings = false
@@ -142,7 +168,7 @@ def getSettings() {
                 null,
                 [callback: getSettingsHandler]
 	)
-    log.debug result.toString()
+//    log.debug result.toString()
     sendHubCommand(result)
 }
 
@@ -152,9 +178,9 @@ def getSettingsHandler(sData) {
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
 	def hData = sData
     def header = hData.header
-    log.debug "header = ${header}"
+//    log.debug "header = ${header}"
     def body = hData.body
-    log.debug "body = ${body}"
+//    log.debug "body = ${body}"
     body = body.replace("<br><br>", "\n")
     body = body.replace("<br>", "<>")
     def reply = body
@@ -168,12 +194,12 @@ def getSettingsHandler(sData) {
     
    	//log.debug "hMsg = ${hMsg}"
     for (int i = 0; i < hMsg.size(); i++) {
-    	log.debug "hMsg[${i}] = ${hMsg[i]}"
+//    	log.debug "hMsg[${i}] = ${hMsg[i]}"
         switch (i) {
         	case 2:
             	if (hMsg[i].contains("Alarm On")) {
                 	temp = hMsg[i].replace("Alarm On = ", "")
-                    log.debug "val = ${temp}"
+//                    log.debug "val = ${temp}"
                     if (temp == "True" ) {
                     	sendEvent(name: "alarm1On", value: "true")
 //                        if (device.currentValue("alarm1On") == "true") {
@@ -188,7 +214,7 @@ def getSettingsHandler(sData) {
             case 3:
             	if (hMsg[i].contains("Alarm Check Pres")) {
                 	temp = hMsg[i].replace("Alarm Check Pres = ", "")
-                    log.debug "val = ${temp}"
+//                    log.debug "val = ${temp}"
                     if (temp == "True" ) {
                     	sendEvent(name: "alarm1CheckPres", value: "true")
                     }
@@ -200,7 +226,7 @@ def getSettingsHandler(sData) {
             case 4:
             	if (hMsg[i].contains("Alarm Curr Pres")) {
                 	temp = hMsg[i].replace("Alarm Curr Pres = ", "")
-                    log.debug "val = ${temp}"
+//                    log.debug "val = ${temp}"
                     if (temp == "True" ) {
                     	sendEvent(name: "alarm1CurrPres", value: "true")
                     }
@@ -212,20 +238,40 @@ def getSettingsHandler(sData) {
             case 5:
             	if (hMsg[i].contains("Alarm Time")) {
                 	temp = hMsg[i].replace("Alarm Time = ", "")
-                    log.debug "val = ${temp}"
+//                    log.debug "val = ${temp}"
                     sendEvent(name: "alarm1Time", value: temp)
                 }
                 break
             case 6:
             	if (hMsg[i].contains("Alarm Days")) {
                 	temp = hMsg[i].replace("Alarm Days (M->Su) = ", "")
-                    log.debug "val = ${temp}"
+//                    log.debug "val = ${temp}"
                     sendEvent(name: "alarm1Days", value: temp)
                 }
                 break
             default:
             	break
         }
+    }
+    if (device.currentValue("alarm1On") == "true") {
+    	if (device.currentValue("alarm1CheckPres") == "true") {
+        	if (device.currentValue("alarm1CurrPres") == "true") {
+            	sendEvent(name: "alarm1", value: "onPresent")
+                sendEvent(name: "alarm1Presence", value: "home")
+            }
+            else {
+            	sendEvent(name: "alarm1", value: "onAway")
+                sendEvent(name: "alarm1Presence", value: "away")
+            }
+        }
+        else {
+        	sendEvent(name: "alarm1", value: "on")
+            sendEvent(name: "alarm1Presence", value: "noCheck")
+        }
+    }
+    else {
+    	sendEvent(name: "alarm1", value: "off")
+        sendEvent(name: "alarm1Presence", value: "noCheck")
     }
 }
 
