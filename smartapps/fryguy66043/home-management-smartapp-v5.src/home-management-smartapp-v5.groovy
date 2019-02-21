@@ -1354,6 +1354,7 @@ private setDisarmed() {
             	homeAlarm?.strobe()
             }
             else {
+            	//sendSms(phone, "Turning off lights and alarm...")
 	        	log.debug "Turning off lights and alarm"
 	            homeAlarm?.off()
             	homeInidcatorLight?.off()
@@ -1375,6 +1376,7 @@ private setDisarmed() {
         default:
         	break
     }
+    //sendSms(phone, "Calling alarmSensor.setDisarmed()")
     alarmSensor.setDisarmed()
 }
 
@@ -1990,9 +1992,14 @@ def morningHandler(evt) {
 	if (presenceValue) { 
     	log.debug "Someone is home in the morning..."
         if (alarmActive && morningHomeSetAlarm) {
+        	sendSms(phone, "Disarming Alarm...")
         	def newAlarmMsg = "Setting Alarm Controller to: Disarmed"
             setDisarmed()
             alarmMsg = "Alarm Disarmed"
+//            *jdf*
+        }
+        else {
+        	sendSms(phone, "Not Disarming Alarm...")
         }
         location.helloHome?.execute(settings.morningHomeAlarmRoutine)
         location.helloHome?.execute(settings.morningHomeRoutine)
@@ -2020,6 +2027,8 @@ def morningHandler(evt) {
     }
     else {
     	log.debug "Everyone is away in the morning..."
+//        *jdf*
+        sendSms(phone, "Everyone Away. Not Disarming Alarm...")
         location.helloHome?.execute(settings.morningAwayAlarmRoutine)
         location.helloHome?.execute(settings.morningAwayRoutine)
         morningAwayOnSwitches?.on()
