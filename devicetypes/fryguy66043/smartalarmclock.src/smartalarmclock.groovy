@@ -54,6 +54,9 @@ metadata {
         valueTile("substatus", "device.substatus", decoration: "flat", width: 6, height: 2) {
         	state "default", label: '${currentValue}'
         }
+        valueTile("alarm1Time", "device.alarm1TimeDisp", decoration: "flat", width: 2, height: 2) {
+        	state "default", label: '${currentValue}', backgroundColor: "#00A0DC"
+        }
         valueTile("diskSpace", "device.diskSpace", decoration: "flat", width: 2, height: 2) {
         	state "default", label: '${currentValue}\nGB', defaultState: true, backgroundColors: [
             	[value: 0, color: "#ffffff"],
@@ -90,8 +93,8 @@ metadata {
         }
 
 
-		main "state"
-		details(["alarm1","alarm1Presence", "status", "substatus", "refresh"])}
+		main "alarm1"
+		details(["alarm1","alarm1Time", "alarm1Presence", "state", "status", "substatus", "refresh"])}
 }
 
 def getFullPath() {
@@ -292,8 +295,19 @@ def getSettingsHandler(sData) {
             case 5:
             if (hMsg[i].contains("Alarm Time")) {
                 temp = hMsg[i].replace("Alarm Time = ", "")
-                //                    log.debug "val = ${temp}"
+                def ap = "am"
+                def hhD = (temp[0] + temp[1]).toInteger()
+                def mm = temp[2] + temp[3] + temp[4]
+                if (hhD > 12) {
+                	hhD = hhD - 12
+                    ap = "pm"
+                }
+                def hh = String.format("%02d", hhD)
+                log.debug "hh = ${hh}"
+                def aTime = "${hh}${mm} ${ap}"
+                log.debug "aTime = ${aTime}"
                 sendEvent(name: "alarm1Time", value: temp)
+                sendEvent(name: "alarm1TimeDisp", value: aTime)
             }
             break
             case 6:
