@@ -33,6 +33,9 @@ preferences {
     	input "alarm1CheckPres", "bool", title: "Only Trigger Alarm 1 if Someone is Home?"
         input "alarm1Pres", "capability.presenceSensor", title: "Who?", multiple: true
     }
+    section("Set Alarm Time") {
+    	input "alarm1Time", "time", title: "Alarm time."
+    }
 	section("Send Push Notification?") {
         input "sendPush", "bool", title: "Send Push Notification when command executed?"
     }
@@ -41,8 +44,10 @@ preferences {
     }
 }
 
+
 def installed() {
 	log.debug "Installed with settings: ${settings}"
+	state.alarm1Time = ""
 
 	initialize()
 }
@@ -53,6 +58,13 @@ def updated() {
 	unschedule()
 	unsubscribe()
 	initialize()
+    if (state.alarm1Time != alarm1Time) {
+    	def aDate = new Date(timeToday(alarm1Time).time)
+        def aTime = aDate.format("HH:mm", location.timeZone)
+        log.debug "aTime = ${aTime}"
+    	alarmClock.setAlarmTime(1, aTime)
+        state.alarm1Time = alarm1Time
+    }
 }
 
 def initialize() {
