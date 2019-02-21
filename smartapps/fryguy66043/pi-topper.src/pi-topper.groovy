@@ -84,6 +84,7 @@ def initialize() {
 
 def appHandler(evt) {
 	log.debug "appHandler"
+    piServer.callACGetSettings()
 }
 
 def powerOffHandler(evt) {
