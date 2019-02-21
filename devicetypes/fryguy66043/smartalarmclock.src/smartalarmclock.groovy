@@ -131,6 +131,24 @@ def parse(String description) {
     log.debug "data = ${data}"
 }
 
+def setPresence(nbr, val) {
+	log.debug "setPresence(${nbr}, ${val})"
+    
+    if (val == "true") {
+    	if (device.currentValue("alarm1CurrPres") == "false") {
+        	changePresence()
+        }
+    }
+    else {
+    	if (val == "false") {
+        	if (device.currentValue("alarm1CurrPres") == "true") {
+            	changePresence()
+            }
+        }
+    }
+    refresh()
+}
+
 def changePresence() {
 	log.debug "changePresence"
     state.changePresence = false
@@ -145,7 +163,7 @@ def changePresence() {
                 null,
                 [callback: changePresenceHandler]
 	)
-    log.debug result.toString()
+//    log.debug result.toString()
     sendHubCommand(result)
 }
 

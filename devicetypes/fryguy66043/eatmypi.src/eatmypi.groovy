@@ -40,6 +40,8 @@ metadata {
 		command "setSafetyControl"
 
 		command "getPiPage"
+        
+        command "callACGetSettings"
 	}
 
 	simulator {
@@ -131,7 +133,7 @@ metadata {
             state "taking", label:'Taking', action: "", icon: "st.camera.dropcam", backgroundColor: "#00A0DC"
             state "image", label: "Take", action: "Image Capture.take", icon: "st.camera.dropcam", backgroundColor: "#FFFFFF", nextState:"taking"
         }
-        htmlTile(name: "htmlPage", action: "getHtmlPage", refreshInterval: 10, width: 6, height: 5, whitelist: ["fryguypi.ddns.net", "65.28.96.234", "192.168.2.3"])
+        htmlTile(name: "htmlPage", action: "getHtmlPage", refreshInterval: 10, width: 6, height: 5, whitelist: ["fryguypi.ddns.net", "65.28.96.234", "192.168.2.3", "192.168.1.137"])
 
 		main "state"
 		details(["diskSpace", "cpuTemp", "nbrPics", "emailCPU", "status", "substatus", "refresh"])}
@@ -504,6 +506,38 @@ def callEmailCPUHandler(sData) {
     }
     else {
     	sendEvent(name: "emailCPU", value: "error")
+    }
+}
+
+def callACGetSettings() {
+	log.debug "callACGetSettings"
+    state.ACGetSettings = false
+	def result = new physicalgraph.device.HubAction(
+        method: "GET",
+        path: "/getalarmsettings",
+        headers: [
+                "HOST" : "192.168.1.137:5000"],
+                null,
+                [callback: callACGetSettingsHandler]
+	)
+    log.debug result.toString()
+    sendHubCommand(result)
+}
+
+def callACGetSettingsHandler(sData) {
+	log.debug "callACGetSettingsHandler (${state.ACGetSettings})"
+    if (state.ACGetSettings == false) {
+        state.ACGetSettings = true
+        def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+        def hData = sData
+        def header = hData.header
+        log.debug "header = ${header}"
+        def body = hData.body
+        log.debug "body = ${body}"
+        def data = hData.data
+        log.debug "data = ${data}"
+        sendEvent(name: "status", value: header)
+        sendEvent(name: "substatus", value: body)
     }
 }
 
