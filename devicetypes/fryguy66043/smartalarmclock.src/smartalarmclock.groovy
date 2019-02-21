@@ -188,17 +188,26 @@ def getSettings() {
 	)
 //    log.debug result.toString()
     sendHubCommand(result)
+    runIn(10, getSettingsErrCheck)
+}
+
+def getSettingsErrCheck() {
+	log.debug "getSettingsErrCheck"
+	if (state.getSettings == false) {
+    	sendEvent(name: "status", value: "Smart Alarm Clock call failed...")
+        sendEvent(name: "substatus", value: "Check server availabilty.")
+    }
 }
 
 def getSettingsHandler(sData) {
 	log.debug "getSettingsHandler"
     state.getSettings = true
     def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
-	def hData = sData
+    def hData = sData
     def header = hData.header
-//    log.debug "header = ${header}"
+    //    log.debug "header = ${header}"
     def body = hData.body
-//    log.debug "body = ${body}"
+    //    log.debug "body = ${body}"
     body = body.replace("<br><br>", "\n")
     body = body.replace("<br>", "<>")
     def reply = body
@@ -209,86 +218,86 @@ def getSettingsHandler(sData) {
     reply = reply.replace("<>", "\n")
     def hMsg = reply.split('\n')
     def temp = ""
-    
-   	//log.debug "hMsg = ${hMsg}"
+
+    //log.debug "hMsg = ${hMsg}"
     for (int i = 0; i < hMsg.size(); i++) {
-//    	log.debug "hMsg[${i}] = ${hMsg[i]}"
+        //    	log.debug "hMsg[${i}] = ${hMsg[i]}"
         switch (i) {
-        	case 2:
-            	if (hMsg[i].contains("Alarm On")) {
-                	temp = hMsg[i].replace("Alarm On = ", "")
-//                    log.debug "val = ${temp}"
-                    if (temp == "True" ) {
-                    	sendEvent(name: "alarm1On", value: "true")
-//                        if (device.currentValue("alarm1On") == "true") {
-//                        	log.debug "It worked!"
-//                        }
-                    }
-                    else {
-                    	sendEvent(name: "alarm1On", value: "false")
-                    }
+            case 2:
+            if (hMsg[i].contains("Alarm On")) {
+                temp = hMsg[i].replace("Alarm On = ", "")
+                //                    log.debug "val = ${temp}"
+                if (temp == "True" ) {
+                    sendEvent(name: "alarm1On", value: "true")
+                    //                        if (device.currentValue("alarm1On") == "true") {
+                    //                        	log.debug "It worked!"
+                    //                        }
                 }
-                break
+                else {
+                    sendEvent(name: "alarm1On", value: "false")
+                }
+            }
+            break
             case 3:
-            	if (hMsg[i].contains("Alarm Check Pres")) {
-                	temp = hMsg[i].replace("Alarm Check Pres = ", "")
-//                    log.debug "val = ${temp}"
-                    if (temp == "True" ) {
-                    	sendEvent(name: "alarm1CheckPres", value: "true")
-                    }
-                    else {
-                    	sendEvent(name: "alarm1CheckPres", value: "false")
-                    }
+            if (hMsg[i].contains("Alarm Check Pres")) {
+                temp = hMsg[i].replace("Alarm Check Pres = ", "")
+                //                    log.debug "val = ${temp}"
+                if (temp == "True" ) {
+                    sendEvent(name: "alarm1CheckPres", value: "true")
                 }
-                break
+                else {
+                    sendEvent(name: "alarm1CheckPres", value: "false")
+                }
+            }
+            break
             case 4:
-            	if (hMsg[i].contains("Alarm Curr Pres")) {
-                	temp = hMsg[i].replace("Alarm Curr Pres = ", "")
-//                    log.debug "val = ${temp}"
-                    if (temp == "True" ) {
-                    	sendEvent(name: "alarm1CurrPres", value: "true")
-                    }
-                    else {
-                    	sendEvent(name: "alarm1CurrPres", value: "false")
-                    }
+            if (hMsg[i].contains("Alarm Curr Pres")) {
+                temp = hMsg[i].replace("Alarm Curr Pres = ", "")
+                //                    log.debug "val = ${temp}"
+                if (temp == "True" ) {
+                    sendEvent(name: "alarm1CurrPres", value: "true")
                 }
-                break
+                else {
+                    sendEvent(name: "alarm1CurrPres", value: "false")
+                }
+            }
+            break
             case 5:
-            	if (hMsg[i].contains("Alarm Time")) {
-                	temp = hMsg[i].replace("Alarm Time = ", "")
-//                    log.debug "val = ${temp}"
-                    sendEvent(name: "alarm1Time", value: temp)
-                }
-                break
+            if (hMsg[i].contains("Alarm Time")) {
+                temp = hMsg[i].replace("Alarm Time = ", "")
+                //                    log.debug "val = ${temp}"
+                sendEvent(name: "alarm1Time", value: temp)
+            }
+            break
             case 6:
-            	if (hMsg[i].contains("Alarm Days")) {
-                	temp = hMsg[i].replace("Alarm Days (M->Su) = ", "")
-//                    log.debug "val = ${temp}"
-                    sendEvent(name: "alarm1Days", value: temp)
-                }
-                break
+            if (hMsg[i].contains("Alarm Days")) {
+                temp = hMsg[i].replace("Alarm Days (M->Su) = ", "")
+                //                    log.debug "val = ${temp}"
+                sendEvent(name: "alarm1Days", value: temp)
+            }
+            break
             default:
-            	break
+                break
         }
     }
     if (device.currentValue("alarm1On") == "true") {
-    	if (device.currentValue("alarm1CheckPres") == "true") {
-        	if (device.currentValue("alarm1CurrPres") == "true") {
-            	sendEvent(name: "alarm1", value: "onPresent")
+        if (device.currentValue("alarm1CheckPres") == "true") {
+            if (device.currentValue("alarm1CurrPres") == "true") {
+                sendEvent(name: "alarm1", value: "onPresent")
                 sendEvent(name: "alarm1Presence", value: "home")
             }
             else {
-            	sendEvent(name: "alarm1", value: "onAway")
+                sendEvent(name: "alarm1", value: "onAway")
                 sendEvent(name: "alarm1Presence", value: "away")
             }
         }
         else {
-        	sendEvent(name: "alarm1", value: "on")
+            sendEvent(name: "alarm1", value: "on")
             sendEvent(name: "alarm1Presence", value: "noCheck")
         }
     }
     else {
-    	sendEvent(name: "alarm1", value: "off")
+        sendEvent(name: "alarm1", value: "off")
         sendEvent(name: "alarm1Presence", value: "noCheck")
     }
 }
