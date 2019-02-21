@@ -31,7 +31,7 @@ metadata {
         attribute "alarm1Presence", "string"
 
         command "getSettings"
-        command "setAlarm"
+        command "setAlarmTime"
         command "setPresence"
         command "changePresence"
 	}
@@ -129,6 +129,33 @@ def parse(String description) {
 	log.debug "headers = ${headerMap}"
     log.debug "body = ${body}"
     log.debug "data = ${data}"
+}
+
+def setAlarmTime(nbr, time) {
+	log.debug "setAlarmTime(${nbr}, ${time})"
+
+	if (time != device.currentValue("alarm1Time")) {
+    	log.debug "Updating alarm1Time from ${device.currentValue("alarm1Time")} to ${time}..."
+        state.setAlarmTime = false
+        sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Alarm Time...")
+        sendEvent(name: "substatus", value: "")
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/setalarm?nbr=1&time=${time}",
+            headers: [
+                    "HOST" : "192.168.1.137:5000"],
+                    null,
+                    [callback: setAlarmTimeHandler]
+        )
+    //    log.debug result.toString()
+        sendHubCommand(result)
+    }
+}
+
+def setAlarmTimeHandler(sData) {
+	log.debug "setAlarmTimeHandler"
+    
+    refresh()
 }
 
 def setPresence(nbr, val) {
