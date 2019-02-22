@@ -22,15 +22,20 @@ metadata {
 		capability "Sensor"
 		capability "Health Check"
 		
+        attribute "startupDateTime", "string"
         attribute "update", "string"
+        attribute "alarmMin", "string"
         attribute "alarm1On", "string"
         attribute "alarm1CheckPres", "string"
         attribute "alarm1CurrPres", "string"
         attribute "alarm1Time", "string"
         attribute "alarm1Days", "string"
         attribute "alarm1Presence", "string"
-
+        attribute "alarm1Alarm", "string"
+        
         command "getSettings"
+        command "setAlarmMin"
+        command "alarmOnOff"
         command "setAlarmTime"
         command "setPresence"
         command "changePresence"
@@ -55,7 +60,7 @@ metadata {
         	state "default", label: '${currentValue}'
         }
         valueTile("alarm1Time", "device.alarm1TimeDisp", decoration: "flat", width: 2, height: 2) {
-        	state "default", label: '${currentValue}', backgroundColor: "#00A0DC"
+        	state "default", label: '${currentValue}', backgroundColor: "#ffffff"
         }
         valueTile("diskSpace", "device.diskSpace", decoration: "flat", width: 2, height: 2) {
         	state "default", label: '${currentValue}\nGB', defaultState: true, backgroundColors: [
@@ -77,6 +82,7 @@ metadata {
             state "on", label: '${name}', icon: "st.Office.office6", backgroundColor:"#00A0DC"
             state "onPresent", label: 'ON', icon: "st.Office.office6", backgroundColor:"#00A0DC"
             state "onAway", label: 'OFF', icon: "st.Office.office6", backgroundColor:"#ffffff"
+            state "alarm", label: '${name}', icon: "st.Office.office6", backgroundColor:"bc2323"
         }
 		standardTile("alarm1Presence", "device.alarm1Presence", decoration: "flat", width: 2, height: 2) {
 			state "home", label: '${name}', action: "changePresence", icon:"st.Home.home4", backgroundColor:"#00A0DC", nextState: "changingAway"
@@ -132,6 +138,69 @@ def parse(String description) {
 	log.debug "headers = ${headerMap}"
     log.debug "body = ${body}"
     log.debug "data = ${data}"
+}
+
+def alarmOnOff(nbr, val) {
+	log.debug "alarmOnOff(${nbr}, ${val})"
+	def temp = ""
+
+    if (val.toUpperCase() == "TRUE" || val.toUpperCase() == "FALSE") {
+    	if (val.toUpperCase() == "TRUE") {
+        	temp = "True"
+        }
+        else {
+        	temp = "False"
+        }
+        if (nbr == 1 && val.toUpperCase() != device.currentValue("alarm1On").toUpperCase()) {
+            log.debug "Updating alarm1On from ${device.currentValue("alarm1On")} to ${temp}..."
+            state.alarmOnOff = false
+            sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Alarm 1 ${val}...")
+            sendEvent(name: "substatus", value: "")
+            def result = new physicalgraph.device.HubAction(
+                method: "GET",
+                path: "/setalarm?nbr=1&on=${temp}",
+                headers: [
+                        "HOST" : "192.168.1.137:5000"],
+                        null,
+                        [callback: alarmOnOffHandler]
+            )
+        //    log.debug result.toString()
+            sendHubCommand(result)
+        }
+    }
+}
+
+def alarmOnOffHandler(sData) {
+	log.debug "alarmOnOffHandler"
+    
+    refresh()
+}
+
+def setAlarmMin(val) {
+	log.debug "setAlarmMin(${val})"
+
+	if (val != device.currentValue("alarmMin")) {
+    	log.debug "Updating alarmMin from ${device.currentValue("alarmMin")} to ${val}..."
+        state.setAlarmMin = false
+        sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Alarm Minutes...")
+        sendEvent(name: "substatus", value: "")
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/setalarm?min=${val}",
+            headers: [
+                    "HOST" : "192.168.1.137:5000"],
+                    null,
+                    [callback: setAlarmMinHandler]
+        )
+    //    log.debug result.toString()
+        sendHubCommand(result)
+    }
+}
+
+def setAlarmMinHandler(sData) {
+	log.debug "setAlarmMinHandler"
+
+	refresh()
 }
 
 def setAlarmTime(nbr, time) {
@@ -242,7 +311,9 @@ def getSettingsHandler(sData) {
     body = body.replace("<br>", "<>")
     def reply = body
     body = body.replace("Alarm 1<>", "Alarm 1: (")
-    body = body.replace("]<>", "])")
+//    body = body.replace("]<>", "])")
+	body += ")"
+    body = body.replace("<>)", ")")
     sendEvent(name: "status", value: header)
     sendEvent(name: "substatus", value: body)
     reply = reply.replace("<>", "\n")
@@ -252,80 +323,188 @@ def getSettingsHandler(sData) {
     //log.debug "hMsg = ${hMsg}"
     for (int i = 0; i < hMsg.size(); i++) {
         //    	log.debug "hMsg[${i}] = ${hMsg[i]}"
-        switch (i) {
-            case 2:
-            if (hMsg[i].contains("Alarm On")) {
-                temp = hMsg[i].replace("Alarm On = ", "")
-                //                    log.debug "val = ${temp}"
-                if (temp == "True" ) {
-                    sendEvent(name: "alarm1On", value: "true")
-                    //                        if (device.currentValue("alarm1On") == "true") {
-                    //                        	log.debug "It worked!"
-                    //                        }
-                }
-                else {
-                    sendEvent(name: "alarm1On", value: "false")
-                }
+        if (hMsg[i].contains("Startup =")) {
+        	temp = hMsg[i].replace("Startup = ", "")
+            log.debug "Startup = ${temp}"
+            log.debug "startupDateTime = ${device.currentValue("startupDateTime")}"
+            if (temp != device.currentValue("startupDateTime")) {
+            	log.debug "Server Restarted.  Need to send update for alarm settings and presence value."
+            	sendEvent(name: "startupDateTime", value: temp)
             }
-            break
-            case 3:
-            if (hMsg[i].contains("Alarm Check Pres")) {
-                temp = hMsg[i].replace("Alarm Check Pres = ", "")
-                //                    log.debug "val = ${temp}"
-                if (temp == "True" ) {
-                    sendEvent(name: "alarm1CheckPres", value: "true")
-                }
-                else {
-                    sendEvent(name: "alarm1CheckPres", value: "false")
-                }
+        }
+        if (hMsg[i].contains("Alarm Min = ")) {
+        	temp = hMsg[i].replace("Alarm Min = ", "")
+            sendEvent(name: "alarmMin", value: temp)
+        }
+        if (hMsg[i].contains("Alarm On")) {
+            temp = hMsg[i].replace("Alarm On = ", "")
+            //                    log.debug "val = ${temp}"
+            if (temp == "True" ) {
+                sendEvent(name: "alarm1On", value: "true")
+                //                        if (device.currentValue("alarm1On") == "true") {
+                //                        	log.debug "It worked!"
+                //                        }
             }
-            break
-            case 4:
-            if (hMsg[i].contains("Alarm Curr Pres")) {
-                temp = hMsg[i].replace("Alarm Curr Pres = ", "")
-                //                    log.debug "val = ${temp}"
-                if (temp == "True" ) {
-                    sendEvent(name: "alarm1CurrPres", value: "true")
-                }
-                else {
-                    sendEvent(name: "alarm1CurrPres", value: "false")
-                }
+            else {
+                sendEvent(name: "alarm1On", value: "false")
             }
-            break
-            case 5:
-            if (hMsg[i].contains("Alarm Time")) {
-                temp = hMsg[i].replace("Alarm Time = ", "")
+        }
+        if (hMsg[i].contains("Alarm Check Pres")) {
+            temp = hMsg[i].replace("Alarm Check Pres = ", "")
+            //                    log.debug "val = ${temp}"
+            if (temp == "True" ) {
+                sendEvent(name: "alarm1CheckPres", value: "true")
+            }
+            else {
+                sendEvent(name: "alarm1CheckPres", value: "false")
+            }
+        }
+        if (hMsg[i].contains("Alarm Curr Pres")) {
+            temp = hMsg[i].replace("Alarm Curr Pres = ", "")
+            //                    log.debug "val = ${temp}"
+            if (temp == "True" ) {
+                sendEvent(name: "alarm1CurrPres", value: "true")
+            }
+            else {
+                sendEvent(name: "alarm1CurrPres", value: "false")
+            }
+        }
+        if (hMsg[i].contains("Alarm Time")) {
+            temp = hMsg[i].replace("Alarm Time = ", "")
+            log.debug "converting time: ${temp}"
+            if (temp > "" && temp != "null") {
                 def ap = "am"
                 def hhD = (temp[0] + temp[1]).toInteger()
                 def mm = temp[2] + temp[3] + temp[4]
-                if (hhD > 12) {
-                	hhD = hhD - 12
+                if (hhD > 11) {
                     ap = "pm"
+                }
+                if (hhD > 12) {
+                    hhD = hhD - 12
                 }
                 def hh = String.format("%02d", hhD)
                 log.debug "hh = ${hh}"
-                def aTime = "${hh}${mm} ${ap}"
-                log.debug "aTime = ${aTime}"
+                def aTime = "${hh}${mm} ${ap}\n(${device.currentValue("alarmMin")} min)"
+                log.debug "temp = ${temp} / aTime = ${aTime}"
                 sendEvent(name: "alarm1Time", value: temp)
                 sendEvent(name: "alarm1TimeDisp", value: aTime)
             }
-            break
-            case 6:
-            if (hMsg[i].contains("Alarm Days")) {
-                temp = hMsg[i].replace("Alarm Days (M->Su) = ", "")
-                //                    log.debug "val = ${temp}"
-                sendEvent(name: "alarm1Days", value: temp)
+            else {
+            	log.debug "Alarm 1 Time from server invalid!"
             }
-            break
+        }
+        if (hMsg[i].contains("Alarm Days")) {
+            temp = hMsg[i].replace("Alarm Days (M->Su) = ", "")
+            //                    log.debug "val = ${temp}"
+            sendEvent(name: "alarm1Days", value: temp)
+        }
+        if (hMsg[i].contains("Alarm =")) {
+            temp = hMsg[i].replace("Alarm = ", "")
+            if (temp == "True") {
+                sendEvent(name: "alarm1Alarm", value: "true")
+            }
+            else {
+                sendEvent(name: "alarm1Alarm", value: "false")
+            }
+        }
+    }
+
+/*
+    for (int i = 0; i < hMsg.size(); i++) {
+        //    	log.debug "hMsg[${i}] = ${hMsg[i]}"
+        switch (i) {
+            case 2:
+                if (hMsg[i].contains("Alarm On")) {
+                    temp = hMsg[i].replace("Alarm On = ", "")
+                    //                    log.debug "val = ${temp}"
+                    if (temp == "True" ) {
+                        sendEvent(name: "alarm1On", value: "true")
+                        //                        if (device.currentValue("alarm1On") == "true") {
+                        //                        	log.debug "It worked!"
+                        //                        }
+                    }
+                    else {
+                        sendEvent(name: "alarm1On", value: "false")
+                    }
+                }
+                break
+            case 3:
+                if (hMsg[i].contains("Alarm Check Pres")) {
+                    temp = hMsg[i].replace("Alarm Check Pres = ", "")
+                    //                    log.debug "val = ${temp}"
+                    if (temp == "True" ) {
+                        sendEvent(name: "alarm1CheckPres", value: "true")
+                    }
+                    else {
+                        sendEvent(name: "alarm1CheckPres", value: "false")
+                    }
+                }
+                break
+            case 4:
+                if (hMsg[i].contains("Alarm Curr Pres")) {
+                    temp = hMsg[i].replace("Alarm Curr Pres = ", "")
+                    //                    log.debug "val = ${temp}"
+                    if (temp == "True" ) {
+                        sendEvent(name: "alarm1CurrPres", value: "true")
+                    }
+                    else {
+                        sendEvent(name: "alarm1CurrPres", value: "false")
+                    }
+                }
+                break
+            case 5:
+                if (hMsg[i].contains("Alarm Time")) {
+                    temp = hMsg[i].replace("Alarm Time = ", "")
+                    def ap = "am"
+                    def hhD = (temp[0] + temp[1]).toInteger()
+                    def mm = temp[2] + temp[3] + temp[4]
+                    if (hhD > 11) {
+                        ap = "pm"
+                    }
+                    if (hhD > 12) {
+                        hhD = hhD - 12
+                    }
+                    def hh = String.format("%02d", hhD)
+                    log.debug "hh = ${hh}"
+                    def aTime = "${hh}${mm} ${ap}"
+                    log.debug "temp = ${temp} / aTime = ${aTime}"
+                    sendEvent(name: "alarm1Time", value: temp)
+                    sendEvent(name: "alarm1TimeDisp", value: aTime)
+                }
+                break
+            case 6:
+                if (hMsg[i].contains("Alarm Days")) {
+                    temp = hMsg[i].replace("Alarm Days (M->Su) = ", "")
+                    //                    log.debug "val = ${temp}"
+                    sendEvent(name: "alarm1Days", value: temp)
+                }
+                break
+            case 7:
+            	if (hMsg[i].contains("Alarm =")) {
+                	temp = hMsg[i].replace("Alarm = ", "")
+                    if (temp == "True") {
+	                    sendEvent(name: "alarm1Alarm", value: "true")
+                    }
+                    else {
+                    	sendEvent(name: "alarm1Alarm", value: "false")
+                    }
+                }
             default:
                 break
         }
     }
+*/
+
+
+    def checkAlarm = false
+    def checkTime = new Date()
+    
     if (device.currentValue("alarm1On") == "true") {
         if (device.currentValue("alarm1CheckPres") == "true") {
             if (device.currentValue("alarm1CurrPres") == "true") {
                 sendEvent(name: "alarm1", value: "onPresent")
                 sendEvent(name: "alarm1Presence", value: "home")
+                checkAlarm = true
             }
             else {
                 sendEvent(name: "alarm1", value: "onAway")
@@ -335,12 +514,26 @@ def getSettingsHandler(sData) {
         else {
             sendEvent(name: "alarm1", value: "on")
             sendEvent(name: "alarm1Presence", value: "noCheck")
+            checkAlarm = true
+        }
+        if (device.currentValue("alarm1Alarm") == "true") {
+            sendEvent(name: "alarm1", value: "alarm")
+            log.debug "Alarming..."
+            runIn(60, refresh)
+        }
+        else if (checkAlarm) {
+        	log.debug "checkAlarm = true"
+        	def tDate = new Date().format("MM/dd/yyyy", location.timeZone)
+            tDate += " ${device.currentValue("alarm1Time")}"
+            checkTime = Date.parse("MM/dd/yyyy HH:mm", tDate)
+            log.debug "checkTime = ${checkTime}"
         }
     }
     else {
         sendEvent(name: "alarm1", value: "off")
         sendEvent(name: "alarm1Presence", value: "noCheck")
     }
+//    runEvery10Minutes(refresh)
 }
 
 def refresh() {
