@@ -33,6 +33,7 @@ metadata {
         attribute "alarm1Presence", "string"
         attribute "alarm1Alarm", "string"
         
+        command "getLogData"
         command "getSettings"
         command "setAlarmMin"
         command "alarmOnOff"
@@ -57,6 +58,9 @@ metadata {
         	state "default", label: '${currentValue}' 
         }
         valueTile("substatus", "device.substatus", decoration: "flat", width: 6, height: 2) {
+        	state "default", label: '${currentValue}'
+        }
+        valueTile("logData", "device.logData", decoration: "flat", width: 6, height: 6) {
         	state "default", label: '${currentValue}'
         }
         valueTile("alarm1Time", "device.alarm1TimeDisp", decoration: "flat", width: 2, height: 2) {
@@ -91,6 +95,9 @@ metadata {
             state "changingHome", label: 'UPDATING', icon:"st.Home.home3", backgroundColor:"#ffffff", nextState: "home"
 			state "noCheck", label: 'OFF', icon:"st.Lighting.light8", backgroundColor:"#ffffff"
 		}
+        standardTile("getLogData", "device.getLogData", decoration: "flat", width: 2, height: 2) {
+        	state "default", label: 'Get Log', action: "getLogData"
+        }
 		standardTile("refresh", "device.refresh", decoration: "flat", width: 2, height: 2) {
 			state "default", label: '', action: "refresh", icon:"st.secondary.refresh"
 		}
@@ -100,7 +107,7 @@ metadata {
 
 
 		main "alarm1"
-		details(["alarm1","alarm1Time", "alarm1Presence", "state", "status", "substatus", "refresh"])}
+		details(["alarm1","alarm1Time", "alarm1Presence", "state", "status", "substatus", "refresh", "logData"])}
 }
 
 def getFullPath() {
@@ -139,6 +146,37 @@ def parse(String description) {
     log.debug "body = ${body}"
     log.debug "data = ${data}"
 }
+
+
+def getLogData() {
+	log.debug "getLogData"
+    def result = new physicalgraph.device.HubAction(
+        method: "GET",
+        path: "/getalarmlog",
+        headers: [
+            "HOST" : "192.168.1.137:5000"],
+        null,
+        [callback: getLogDataHandler]
+    )
+    //    log.debug result.toString()
+    sendHubCommand(result)
+}
+
+
+def getLogDataHandler(sData) {
+	log.debug "getLogDataHandler"
+    
+    def hBody = sData.body
+    def data = hBody.split('\n')
+    if (data.size() > 25) {
+    	hBody = ""
+    	for (int i=data.size()-25; i < data.size(); i++) {
+        	hBody += data[i]
+        }
+    }
+    sendEvent(name: "logData", value: hBody)
+}
+
 
 def alarmOnOff(nbr, val) {
 	log.debug "alarmOnOff(${nbr}, ${val})"
@@ -409,91 +447,6 @@ def getSettingsHandler(sData) {
         }
     }
 
-/*
-    for (int i = 0; i < hMsg.size(); i++) {
-        //    	log.debug "hMsg[${i}] = ${hMsg[i]}"
-        switch (i) {
-            case 2:
-                if (hMsg[i].contains("Alarm On")) {
-                    temp = hMsg[i].replace("Alarm On = ", "")
-                    //                    log.debug "val = ${temp}"
-                    if (temp == "True" ) {
-                        sendEvent(name: "alarm1On", value: "true")
-                        //                        if (device.currentValue("alarm1On") == "true") {
-                        //                        	log.debug "It worked!"
-                        //                        }
-                    }
-                    else {
-                        sendEvent(name: "alarm1On", value: "false")
-                    }
-                }
-                break
-            case 3:
-                if (hMsg[i].contains("Alarm Check Pres")) {
-                    temp = hMsg[i].replace("Alarm Check Pres = ", "")
-                    //                    log.debug "val = ${temp}"
-                    if (temp == "True" ) {
-                        sendEvent(name: "alarm1CheckPres", value: "true")
-                    }
-                    else {
-                        sendEvent(name: "alarm1CheckPres", value: "false")
-                    }
-                }
-                break
-            case 4:
-                if (hMsg[i].contains("Alarm Curr Pres")) {
-                    temp = hMsg[i].replace("Alarm Curr Pres = ", "")
-                    //                    log.debug "val = ${temp}"
-                    if (temp == "True" ) {
-                        sendEvent(name: "alarm1CurrPres", value: "true")
-                    }
-                    else {
-                        sendEvent(name: "alarm1CurrPres", value: "false")
-                    }
-                }
-                break
-            case 5:
-                if (hMsg[i].contains("Alarm Time")) {
-                    temp = hMsg[i].replace("Alarm Time = ", "")
-                    def ap = "am"
-                    def hhD = (temp[0] + temp[1]).toInteger()
-                    def mm = temp[2] + temp[3] + temp[4]
-                    if (hhD > 11) {
-                        ap = "pm"
-                    }
-                    if (hhD > 12) {
-                        hhD = hhD - 12
-                    }
-                    def hh = String.format("%02d", hhD)
-                    log.debug "hh = ${hh}"
-                    def aTime = "${hh}${mm} ${ap}"
-                    log.debug "temp = ${temp} / aTime = ${aTime}"
-                    sendEvent(name: "alarm1Time", value: temp)
-                    sendEvent(name: "alarm1TimeDisp", value: aTime)
-                }
-                break
-            case 6:
-                if (hMsg[i].contains("Alarm Days")) {
-                    temp = hMsg[i].replace("Alarm Days (M->Su) = ", "")
-                    //                    log.debug "val = ${temp}"
-                    sendEvent(name: "alarm1Days", value: temp)
-                }
-                break
-            case 7:
-            	if (hMsg[i].contains("Alarm =")) {
-                	temp = hMsg[i].replace("Alarm = ", "")
-                    if (temp == "True") {
-	                    sendEvent(name: "alarm1Alarm", value: "true")
-                    }
-                    else {
-                    	sendEvent(name: "alarm1Alarm", value: "false")
-                    }
-                }
-            default:
-                break
-        }
-    }
-*/
 
 
     def checkAlarm = false
@@ -540,13 +493,12 @@ def refresh() {
 	log.debug "switch: request refresh()"
     sendEvent(name: "substatus", value: "")
     getSettings()
-//    getStatus() 
+    getLogData()
 }
 
 def installed() {
 	log.trace "Executing 'installed'"
 	initialize()
-//	reset()
 }
 
 def updated() {
@@ -560,6 +512,6 @@ private initialize() {
 	sendEvent(name: "DeviceWatch-DeviceStatus", value: "online")
 	sendEvent(name: "healthStatus", value: "online")
 	sendEvent(name: "DeviceWatch-Enroll", value: [protocol: "cloud", scheme:"untracked"].encodeAsJson(), displayed: false)
-//	refresh()
+	refresh()
     runEvery10Minutes(refresh)
 }
