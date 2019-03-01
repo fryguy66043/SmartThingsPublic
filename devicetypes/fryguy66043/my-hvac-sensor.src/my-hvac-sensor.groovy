@@ -421,6 +421,7 @@ def setMode(val) {
                         break
                 }
                 break
+            case "emergency heat":
             case "emergencyHeat":
                 switch (os) {
                     case "idle":
