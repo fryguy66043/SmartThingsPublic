@@ -202,7 +202,7 @@ def appHandler(evt) {
 	log.debug "Checking hvacSensor..."
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
 
-//	log.debug "${date}: thermostat.currentThermostat = ${thermostat.currentThermostat} / thermostat.currentValue("thermostatOperatingState") = ${thermostat.currentValue("thermostatOperatingState")}"
+	log.debug "${date}: thermostat.currentThermostat = ${thermostat.currentThermostat} / thermostat.thermostatOperatingState = ${thermostat.currentValue("thermostatOperatingState")}"
     
 /* Update heating count/minutes
 state.currMonthHeatCnt = 42
@@ -216,7 +216,7 @@ state.currYearHeatMin = 175
 	log.debug "lowTempUpdate = ${lowTempUpdate} / lowTempValue = ${lowTempValue} / highTempUpdate = ${highTempUpdate} / highTempValue = ${highTempValue} / tempDay = ${tempDay}"
     if ((lowTempUpdate || highTempUpdate) && tempDay != "None") {
     	log.debug "Calling tempUpdate()"
-        tempUpdate()
+//        tempUpdate()
     }
 	evaluate(evt)
 //	log.debug "Reset time: ${resetTime}"
