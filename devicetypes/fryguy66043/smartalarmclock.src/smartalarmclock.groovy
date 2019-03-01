@@ -24,8 +24,10 @@ metadata {
 		
         attribute "startupDateTime", "string"
         attribute "update", "string"
+        attribute "logSize", "string"
         attribute "alarmMin", "string"
         attribute "alarm1On", "string"
+        attribute "alarm1Skip", "string"
         attribute "alarm1CheckPres", "string"
         attribute "alarm1CurrPres", "string"
         attribute "alarm1Time", "string"
@@ -35,9 +37,12 @@ metadata {
         
         command "getLogData"
         command "getSettings"
+        command "setLogSize"
         command "setAlarmMin"
         command "alarmOnOff"
+        command "alarmCheckPresence"
         command "setAlarmTime"
+        command "alarmSkip"
         command "setPresence"
         command "changePresence"
 	}
@@ -101,13 +106,19 @@ metadata {
 		standardTile("refresh", "device.refresh", decoration: "flat", width: 2, height: 2) {
 			state "default", label: '', action: "refresh", icon:"st.secondary.refresh"
 		}
+        standardTile("skip", "device.skip", decoration: "flat", width: 2, height: 2) {
+        	state "skip", label: 'Skip', action: "alarmSkip", backgroundColor:"#00A0DC", nextState: "changingSkip"
+            state "changingSkip", label: 'Updating', backgroundColor:"#00A0DC", nextState: "noSkip"
+            state "noSkip", label: 'No Skip', action: "alarmSkip", backgroundColor: "#ffffff", nextState: "changingNoSkip"
+            state "changingNoSkip", label: 'Updating', backgroundColor:"#ffffff", nextState: "Skip"
+        }
 		controlTile("safetyControl", "device.safetyControl", "slider", height: 2, width: 2, inactiveLabel: false, range: "(0..10)") {
         	state "level", action: "setSafetyControl"
         }
 
 
 		main "alarm1"
-		details(["alarm1","alarm1Time", "alarm1Presence", "state", "status", "substatus", "refresh", "logData"])}
+		details(["alarm1","alarm1Time", "alarm1Presence", "state", "status", "substatus", "refresh", "skip", "logData"])}
 }
 
 def getFullPath() {
@@ -165,18 +176,51 @@ def getLogData() {
 
 def getLogDataHandler(sData) {
 	log.debug "getLogDataHandler"
+    def String strSize = device.currentValue("logSize")
+    def maxSize = strSize ? strSize as Integer : 25
+    log.debug "Max Log Size = ${maxSize}"
     
-    def hBody = sData.body
+    def hBody = sData.body.replace("<br>", "")
     def data = hBody.split('\n')
-    if (data.size() > 25) {
-    	hBody = ""
-    	for (int i=data.size()-25; i < data.size(); i++) {
-        	hBody += data[i]
+    log.debug "Log Size = ${data.size()}"
+//    if (data.size() > maxSize) {
+    	hBody = "Log Size: ${data.size()}\n"
+//    	for (int i=data.size() - maxSize; i < data.size(); i++) {
+    	for (int i=0; i < data.size(); i++) {
+        	hBody += data[i] + "\n"
         }
-    }
+//    }
+//    else {
+//    	hBody = "Log Size: ${data.size()}\n" + hBody
+//    }
     sendEvent(name: "logData", value: hBody)
 }
 
+
+def setLogSize(val) {
+	log.debug "setLogSize(${val})"
+    if (val != device.currentValue("logSize")) {
+        log.debug "Updating logSize from ${device.currentValue("logSize")} to ${val}..."
+        state.setLogSize = false
+        sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Log Size to ${val}...")
+        sendEvent(name: "substatus", value: "")
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/setalarm?nbr=1&log=${val}",
+            headers: [
+                "HOST" : "192.168.1.137:5000"],
+            null,
+            [callback: setLogSizeHandler]
+        )
+        //    log.debug result.toString()
+        sendHubCommand(result)
+    }
+}
+
+def setLogSizeHandler(sData) {
+	log.debug "setLogSizeHandler"
+    refresh()
+}
 
 def alarmOnOff(nbr, val) {
 	log.debug "alarmOnOff(${nbr}, ${val})"
@@ -265,6 +309,79 @@ def setAlarmTime(nbr, time) {
 def setAlarmTimeHandler(sData) {
 	log.debug "setAlarmTimeHandler"
     
+    refresh()
+}
+
+def alarmSkip() {
+	log.debug "alarmSkip"
+    def tSkip = device.currentValue("alarm1Skip")
+    def temp = ""
+    if (tSkip == "true") {
+    	temp = "False"
+    }
+    else if (tSkip == "false") {
+    	temp = "True"
+    }
+    if (temp) {
+        state.alarmSkip = false
+        sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Skip Next Alarm State...")
+        sendEvent(name: "substatus", value: "")
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/alarmskip?skip=${temp}",
+            headers: [
+                "HOST" : "192.168.1.137:5000"],
+            null,
+            [callback: alarmSkipHandler]
+        )
+        //    log.debug result.toString()
+        sendHubCommand(result)
+    }
+}
+
+def alarmSkipHandler(sData) {
+	log.debug "alarmSkipHandler"
+    refresh()
+}
+
+def alarmCheckPresence(nbr, val) {
+	log.debug "alarmCheckPresence(${nbr}, ${val})"
+    def temp = "False"
+    def updt = false
+    log.debug "Current Check Pres = ${device.currentValue("alarm1CheckPres")}"
+    if (val == "true") {
+    	if (device.currentValue("alarm1CheckPres") == "false") {
+        	temp = "True"
+            updt = true
+        }        
+    }
+    else {
+    	if (device.currentValue("alarm1CheckPres") == "true") {
+    		temp = "False"
+            updt = true
+        }
+    }
+
+	if (updt) {
+        log.debug "Updating alarm1CheckPres from ${device.currentValue("alarm1CheckPres")} to ${val}..."
+        state.alarmCheckPres = false
+        sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Check Presence to ${val}...")
+        sendEvent(name: "substatus", value: "")
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/setalarm?nbr=1&pres=${temp}",
+            headers: [
+                "HOST" : "192.168.1.137:5000"],
+            null,
+            [callback: alarmCheckPresenceHandler]
+        )
+        //    log.debug result.toString()
+        sendHubCommand(result)
+    }
+}
+
+def alarmCheckPresenceHandler(sData) {
+	log.debug "alarmCheckPresenceHandler"
     refresh()
 }
 
@@ -370,26 +487,39 @@ def getSettingsHandler(sData) {
             	sendEvent(name: "startupDateTime", value: temp)
             }
         }
+        if (hMsg[i].contains("Log Size = ")) {
+        	temp = hMsg[i].replace("Log Size = ", "")
+            log.debug "Log Size = ${temp}"
+            sendEvent(name: "logSize", value: temp)
+        }
         if (hMsg[i].contains("Alarm Min = ")) {
         	temp = hMsg[i].replace("Alarm Min = ", "")
             sendEvent(name: "alarmMin", value: temp)
         }
         if (hMsg[i].contains("Alarm On")) {
             temp = hMsg[i].replace("Alarm On = ", "")
-            //                    log.debug "val = ${temp}"
             if (temp == "True" ) {
                 sendEvent(name: "alarm1On", value: "true")
-                //                        if (device.currentValue("alarm1On") == "true") {
-                //                        	log.debug "It worked!"
-                //                        }
             }
             else {
                 sendEvent(name: "alarm1On", value: "false")
             }
         }
+        if (hMsg[i].contains("Alarm Skip")) {
+            temp = hMsg[i].replace("Alarm Skip = ", "")
+            if (temp == "True" ) {
+            	log.debug "Setting to skip..."
+                sendEvent(name: "alarm1Skip", value: "true")
+                sendEvent(name: "skip", value: "skip")
+            }
+            else {
+            	log.debug "Setting to noSkip..."
+                sendEvent(name: "alarm1Skip", value: "false")
+                sendEvent(name: "skip", value: "noSkip")
+            }
+        }
         if (hMsg[i].contains("Alarm Check Pres")) {
             temp = hMsg[i].replace("Alarm Check Pres = ", "")
-            //                    log.debug "val = ${temp}"
             if (temp == "True" ) {
                 sendEvent(name: "alarm1CheckPres", value: "true")
             }
@@ -399,7 +529,7 @@ def getSettingsHandler(sData) {
         }
         if (hMsg[i].contains("Alarm Curr Pres")) {
             temp = hMsg[i].replace("Alarm Curr Pres = ", "")
-            //                    log.debug "val = ${temp}"
+            log.debug "Curr Pres = ${temp}"
             if (temp == "True" ) {
                 sendEvent(name: "alarm1CurrPres", value: "true")
             }
@@ -433,7 +563,6 @@ def getSettingsHandler(sData) {
         }
         if (hMsg[i].contains("Alarm Days")) {
             temp = hMsg[i].replace("Alarm Days (M->Su) = ", "")
-            //                    log.debug "val = ${temp}"
             sendEvent(name: "alarm1Days", value: temp)
         }
         if (hMsg[i].contains("Alarm =")) {
