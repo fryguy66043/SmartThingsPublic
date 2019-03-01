@@ -40,10 +40,10 @@ preferences {
     	input "alarm1Time", "time", title: "Set Alarm 1 time."
     }
 	section("Send Push Notification?") {
-        input "sendPush", "bool", title: "Send Push Notification when command executed?"
+        input "sendPush", "bool", title: "Send Push Notification when alarm is activated?"
     }
     section("Send a Text Message?") {
-        input "phone", "phone", required: false, title: "Send a Text Message when command executed?"
+        input "phone", "phone", required: false, title: "Send a Text Message when alarm is activated?"
     }
 }
 
@@ -131,6 +131,14 @@ def alarm1AlarmHandler(evt) {
 	log.debug "alarm1AlarmHandler: alarmClock.alarm1Alarm = ${alarmClock.currentValue("alarm1Alarm")}"
     if (alarmClock.currentValue("alarm1Alarm") == "true") {
     	log.debug "Alarm 1 is Alarming..."
+        def date = new Date().format("MM/dd/yy hh:mm a", location.timeZone)
+        def msg = "${location} ${date}: Smart Alarm Clock: Alarm Activated"
+        if (sendPush) {
+        	sendPush(msg)
+        }
+        if (phone) {
+        	sendSms(phone, msg)
+        }
     }
     else {
     	log.debug "Alarm 1 has stopped Alarming..."
