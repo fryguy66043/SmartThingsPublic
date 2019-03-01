@@ -29,6 +29,7 @@ preferences {
 	section("Smart Alarm Clock") {
     	input "alarmClock", "device.smartalarmclock", title: "Select your Smart Alarm Clock."
         input "alarmMin", "number", title: "Max alarm time before turning off?"
+        input "alarmLogSize", "number", title: "Max log file size?"
     }
     section("Alarm 1 Presence Settings") {
     	input "alarm1CheckPres", "bool", title: "Only Trigger Alarm 1 if Someone is Home?"
@@ -60,12 +61,23 @@ def updated() {
 	unschedule()
 	unsubscribe()
 	initialize()
+    if (alarmLogSize as String != alarmClock.currentValue("logSize")) {
+    	log.debug "Update Log Size"
+        alarmClock.setLogSize(alarmLogSize as String)
+    }
     if (Boolean.toString(alarm1OnOff).toUpperCase() != alarmClock.currentValue("alarm1On").toUpperCase()) {
     	log.debug "Updating Alarm 1 on/off"
 	    alarmClock.alarmOnOff(1, Boolean.toString(alarm1OnOff))
     }
-    if (alarmMin != alarmClock.currentValue("alarmMin")) {
+    log.debug "Alarm Min: ${alarmMin} / ${alarmClock.currentValue("alarmMin")}"
+    if (alarmMin as String != alarmClock.currentValue("alarmMin")) {
+    	log.debug "Updating Alarm Minutes"
 	    alarmClock.setAlarmMin(alarmMin)
+    }
+    log.debug "Check Pres: ${Boolean.toString(alarm1CheckPres).toUpperCase()} / ${alarmClock.currentValue("alarm1CheckPres").toUpperCase()}"
+    if (Boolean.toString(alarm1CheckPres).toUpperCase() != alarmClock.currentValue("alarm1CheckPres").toUpperCase()) {
+    	log.debug "Updating Check Presence"
+    	alarmClock.alarmCheckPresence(1, alarm1CheckPres as String)
     }
     alarm1PresenceHandler()
     alarm1SetTime()
@@ -83,15 +95,17 @@ def alarm1SetTime() {
 	log.debug "alarm1SetTime"
     def aDate = new Date(timeToday(alarm1Time).time)
     def aTime = aDate.format("HH:mm", location.timeZone)
-    log.debug "aTime = ${aTime} / aDate = ${aDate}"
-    alarmClock.setAlarmTime(1, aTime)
+    log.debug "Check Time: ${aTime} / ${alarmClock.currentValue("alarm1Time")}"
+    if (aTime != alarmClock.currentValue("alarm1Time")) {
+        alarmClock.setAlarmTime(1, aTime)
+    }
     state.alarm1Time = alarm1Time
     schedule(alarm1Time, alarm1AlarmCheck)
 }
 
 def appHandler(evt) {
 	log.debug "appHandler"
-    alarmClock.getSettings()
+    alarmClock.refresh()
 }
 
 def alarmClockStartupHandler(evt) {
@@ -126,12 +140,16 @@ def alarm1AlarmHandler(evt) {
 def alarm1PresenceHandler(evt) {
 	log.debug "alarm1PresenceHandler"
     def presenceValue = alarm1Pres.find{it.currentPresence == "present"}
-    log.debug "presence = ${presenceValue}"
+    log.debug "presence = ${presenceValue} / ${alarmClock.currentValue("alarm1CurrPres")}"
 	if (presenceValue) {
-    	alarmClock.setPresence(1, "true")
+    	if (alarmClock.currentValue("alarm1CurrPres") != "true") {
+	    	alarmClock.setPresence(1, "true")
+        }
     }
     else {
-    	alarmClock.setPresence(1, "false")
+    	if (alarmClock.currentValue("alarm1CurrPres") != "false") {
+    		alarmClock.setPresence(1, "false")
+        }
     }
 }
 
