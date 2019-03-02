@@ -23,6 +23,8 @@ metadata {
 		capability "Health Check"
 		
         attribute "startupDateTime", "string"
+        attribute "availDiskSpace", "string"
+        attribute "cpuTempF", "string"
         attribute "update", "string"
         attribute "logSize", "string"
         attribute "alarmMin", "string"
@@ -35,6 +37,7 @@ metadata {
         attribute "alarm1Presence", "string"
         attribute "alarm1Alarm", "string"
         
+        command "getHealthStatus"
         command "getLogData"
         command "getSettings"
         command "setLogSize"
@@ -79,7 +82,7 @@ metadata {
         	]
         }
         valueTile("cpuTemp", "device.cpuTemp", decoration: "flat", width: 2, height: 2) {
-        	state "default", label: '${currentValue}\nCPU', defaultState: true, backgroundColors: [
+        	state "default", label: '${currentValue}°\nCPU', defaultState: true, backgroundColors: [
             	[value: 0, color: "#ffffff"],
                 [value: 100, color: "#44b621"],
                 [value: 200, color: "#bc2323"]
@@ -107,9 +110,9 @@ metadata {
 			state "default", label: '', action: "refresh", icon:"st.secondary.refresh"
 		}
         standardTile("skip", "device.skip", decoration: "flat", width: 2, height: 2) {
-        	state "skip", label: 'Skip', action: "alarmSkip", backgroundColor:"#00A0DC", nextState: "changingSkip"
+        	state "skip", label: 'Silence', action: "alarmSkip", backgroundColor:"#00A0DC", nextState: "changingSkip"
             state "changingSkip", label: 'Updating', backgroundColor:"#00A0DC", nextState: "noSkip"
-            state "noSkip", label: 'No Skip', action: "alarmSkip", backgroundColor: "#ffffff", nextState: "changingNoSkip"
+            state "noSkip", label: 'Active', action: "alarmSkip", backgroundColor: "#ffffff", nextState: "changingNoSkip"
             state "changingNoSkip", label: 'Updating', backgroundColor:"#ffffff", nextState: "Skip"
         }
 		controlTile("safetyControl", "device.safetyControl", "slider", height: 2, width: 2, inactiveLabel: false, range: "(0..10)") {
@@ -118,7 +121,7 @@ metadata {
 
 
 		main "alarm1"
-		details(["alarm1","alarm1Time", "alarm1Presence", "state", "status", "substatus", "refresh", "skip", "logData"])}
+		details(["alarm1","alarm1Time", "alarm1Presence", "diskSpace", "cpuTemp", "substatus", "refresh", "skip", "logData"])}
 }
 
 def getFullPath() {
@@ -159,8 +162,47 @@ def parse(String description) {
 }
 
 
+def getHealthStatus() {
+	log.debug "getHealthStatus"
+
+	sendEvent(name: "substatus", value: "Requesting Health Status...")
+    def result = new physicalgraph.device.HubAction(
+        method: "GET",
+        path: "/healthcheck",
+        headers: [
+            "HOST" : "192.168.1.137:5000"],
+        null,
+        [callback: getHealthStatusHandler]
+    )
+    //    log.debug result.toString()
+    sendHubCommand(result)
+}
+
+def getHealthStatusHandler(sData) {
+	log.debug "getHealthStatusHandler"
+
+    def hBody = sData.body.replace("<br>", "")
+    def data = hBody.split('\n')
+
+    for (int i=0; i < data.size(); i++) {
+        hBody = data[i]
+        if (hBody.contains("Avail Disk Space = ")) {
+	        hBody = hBody.replace("Avail Disk Space = ", "")
+            hBody = hBody.replace(" GB", "")
+            sendEvent(name: "diskSpace", value: hBody)
+        }
+        if (hBody.contains("CPU Temp = ")) {
+        	hBody = hBody.replace("CPU Temp = ", "")
+            hBody = hBody.replace(" F", "")
+            sendEvent(name: "cpuTemp", value: hBody)
+        }
+    }
+}
+
 def getLogData() {
 	log.debug "getLogData"
+    
+    sendEvent(name: "substatus", value: "Requesting Log Data...")
     def result = new physicalgraph.device.HubAction(
         method: "GET",
         path: "/getalarmlog",
@@ -202,8 +244,8 @@ def setLogSize(val) {
     if (val != device.currentValue("logSize")) {
         log.debug "Updating logSize from ${device.currentValue("logSize")} to ${val}..."
         state.setLogSize = false
-        sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Log Size to ${val}...")
-        sendEvent(name: "substatus", value: "")
+        sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Change Log Size to ${val}...")
+//        sendEvent(name: "substatus", value: "")
         def result = new physicalgraph.device.HubAction(
             method: "GET",
             path: "/setalarm?nbr=1&log=${val}",
@@ -236,8 +278,8 @@ def alarmOnOff(nbr, val) {
         if (nbr == 1 && val.toUpperCase() != device.currentValue("alarm1On").toUpperCase()) {
             log.debug "Updating alarm1On from ${device.currentValue("alarm1On")} to ${temp}..."
             state.alarmOnOff = false
-            sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Alarm 1 ${val}...")
-            sendEvent(name: "substatus", value: "")
+            sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Change Alarm 1 ${val}...")
+//            sendEvent(name: "substatus", value: "")
             def result = new physicalgraph.device.HubAction(
                 method: "GET",
                 path: "/setalarm?nbr=1&on=${temp}",
@@ -264,8 +306,8 @@ def setAlarmMin(val) {
 	if (val != device.currentValue("alarmMin")) {
     	log.debug "Updating alarmMin from ${device.currentValue("alarmMin")} to ${val}..."
         state.setAlarmMin = false
-        sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Alarm Minutes...")
-        sendEvent(name: "substatus", value: "")
+        sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Change Alarm Minutes...")
+//        sendEvent(name: "substatus", value: "")
         def result = new physicalgraph.device.HubAction(
             method: "GET",
             path: "/setalarm?min=${val}",
@@ -291,8 +333,8 @@ def setAlarmTime(nbr, time) {
 	if (time != device.currentValue("alarm1Time")) {
     	log.debug "Updating alarm1Time from ${device.currentValue("alarm1Time")} to ${time}..."
         state.setAlarmTime = false
-        sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Alarm Time...")
-        sendEvent(name: "substatus", value: "")
+        sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Change Alarm Time...")
+//        sendEvent(name: "substatus", value: "")
         def result = new physicalgraph.device.HubAction(
             method: "GET",
             path: "/setalarm?nbr=1&time=${time}",
@@ -324,8 +366,8 @@ def alarmSkip() {
     }
     if (temp) {
         state.alarmSkip = false
-        sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Skip Next Alarm State...")
-        sendEvent(name: "substatus", value: "")
+        sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Change Skip Next Alarm State...")
+//        sendEvent(name: "substatus", value: "")
         def result = new physicalgraph.device.HubAction(
             method: "GET",
             path: "/alarmskip?skip=${temp}",
@@ -365,8 +407,8 @@ def alarmCheckPresence(nbr, val) {
 	if (updt) {
         log.debug "Updating alarm1CheckPres from ${device.currentValue("alarm1CheckPres")} to ${val}..."
         state.alarmCheckPres = false
-        sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Check Presence to ${val}...")
-        sendEvent(name: "substatus", value: "")
+        sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Change Check Presence to ${val}...")
+//        sendEvent(name: "substatus", value: "")
         def result = new physicalgraph.device.HubAction(
             method: "GET",
             path: "/setalarm?nbr=1&pres=${temp}",
@@ -407,8 +449,8 @@ def changePresence() {
 	log.debug "changePresence"
     state.changePresence = false
     def newPres = device.currentValue("alarm1CurrPres") == "true" ? "False" : "True"
-    sendEvent(name: "status", value: "Requesting Smart Alarm Clock Change Presence...")
-    sendEvent(name: "substatus", value: "")
+    sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Change Presence...")
+//    sendEvent(name: "substatus", value: "")
 	def result = new physicalgraph.device.HubAction(
         method: "GET",
         path: "/setpresence?nbr=1&pres=${newPres}",
@@ -430,8 +472,8 @@ def changePresenceHandler(sData) {
 def getSettings() {
 	log.debug "getSettings"
     state.getSettings = false
-    sendEvent(name: "status", value: "Requesting Smart Alarm Clock Settings...")
-    sendEvent(name: "substatus", value: "")
+    sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Settings...")
+//    sendEvent(name: "substatus", value: "")
 	def result = new physicalgraph.device.HubAction(
         method: "GET",
         path: "/getalarmsettings",
@@ -448,8 +490,8 @@ def getSettings() {
 def getSettingsErrCheck() {
 	log.debug "getSettingsErrCheck"
 	if (state.getSettings == false) {
-    	sendEvent(name: "status", value: "Smart Alarm Clock call failed...")
-        sendEvent(name: "substatus", value: "Check server availabilty.")
+    	sendEvent(name: "substatus", value: "Smart Alarm Clock call failed...")
+//        sendEvent(name: "substatus", value: "Check server availabilty.")
     }
 }
 
@@ -622,6 +664,7 @@ def refresh() {
 	log.debug "switch: request refresh()"
     sendEvent(name: "substatus", value: "")
     getSettings()
+    getHealthStatus()
     getLogData()
 }
 
