@@ -61,6 +61,20 @@ def updated() {
 	unschedule()
 	unsubscribe()
 	initialize()
+    syncSettings()
+}
+
+def initialize() {
+    subscribe(app, appHandler)
+    subscribe(alarmClock, "startupDateTime", alarmClockStartupHandler)
+    subscribe(alarmClock, "update", alarmClockUpdateHandler)
+    subscribe(alarm1Pres, "presence", alarm1PresenceHandler)
+    subscribe(alarmClock, "alarm1Alarm", alarm1AlarmHandler)
+}
+
+def syncSettings() {
+	log.debug "syncSettings"
+
     if (alarmLogSize as String != alarmClock.currentValue("logSize")) {
     	log.debug "Update Log Size"
         alarmClock.setLogSize(alarmLogSize as String)
@@ -83,14 +97,6 @@ def updated() {
     alarm1SetTime()
 }
 
-def initialize() {
-    subscribe(app, appHandler)
-    subscribe(alarmClock, "startupDateTime", alarmClockStartupHandler)
-    subscribe(alarmClock, "update", alarmClockUpdateHandler)
-    subscribe(alarm1Pres, "presence", alarm1PresenceHandler)
-    subscribe(alarmClock, "alarm1Alarm", alarm1AlarmHandler)
-}
-
 def alarm1SetTime() {
 	log.debug "alarm1SetTime"
     def aDate = new Date(timeToday(alarm1Time).time)
@@ -110,21 +116,20 @@ def appHandler(evt) {
 
 def alarmClockStartupHandler(evt) {
 	log.debug "alarmClockStartupHandler"
-    alarm1SetTime()
-    alarm1PresenceHandler()
+	syncSettings()
 }
 
 def alarm1AlarmCheck(evt) {
 	log.debug "alarm1AlarmCheck"
     alarmClock.refresh()
-    runIn(60, alarm1AlarmCheck2)
+    runIn(60 * alarmMin, alarm1AlarmCheck2)
 }
 
 def alarm1AlarmCheck2() {
 	log.debug "alarm1AlarmCheck2"
-    if (alarmClock.currentValue("alarm1Alarm") == "false") {
+//    if (alarmClock.currentValue("alarm1Alarm") == "false") {
     	alarmClock.refresh()
-    }
+//    }
 }
 
 def alarm1AlarmHandler(evt) {
