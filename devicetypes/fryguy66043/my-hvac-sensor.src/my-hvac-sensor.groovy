@@ -32,7 +32,7 @@ metadata {
         attribute "filterChangeInterval", "number"
         attribute "filterChangeCurrentValue", "string"
         attribute "myThermostatName", "string"
-        attribute "mode", "enum", ["off", "auto", "cool", "heat", "emergencyHeat"]
+        attribute "mode", "enum", ["off", "auto", "cool", "heat", "emergencyHeat", "emergency heat"]
         attribute "operatingState", "enum", ["idle", "cooling", "fanOnly", "heating"]
         attribute "setTemp", "string"
         attribute "insideTemp", "string"
@@ -579,6 +579,7 @@ def setOperatingState(val) {
                             sendEvent(name: "totals", value: totalsDisp)
                         }
                         break
+                    case "emergency heat":
                     case "emergencyHeat":
                     	if (filter == "true") {
                         	sendEvent(name: "hvac", value: "heatIdleFilter")
@@ -680,6 +681,7 @@ def setOperatingState(val) {
                         sendEvent(name: "heatCycleStop", value: "")
                         sendEvent(name: "heat", value: "Today: ${heatCycleTodayCnt} / Month: ${heatCycleCnt}\nLast Cycle Start: ${date}\nLast Cycle Stop: Pending")                    
                         break
+                    case "emergency heat":
                     case "emergencyHeat":
                     	if (filter == "true") {
                         	sendEvent(name: "hvac", value: "heatHeatingFilter")
