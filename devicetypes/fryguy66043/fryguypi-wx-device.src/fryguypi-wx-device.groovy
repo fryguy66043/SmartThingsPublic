@@ -244,8 +244,10 @@ metadata {
         htmlTile(name: "htmlMonthRainPage", action: "getMonthRainPic", refreshInterval: 60, width: 6, height: 5, whitelist: ["fryguypi.ddns.net"])
 
 		main(["temperature"])
-		details(["temperature", "weatherIcon", "weather", "alert", "feelsLike", "humidity", "wind", "percentPrecip", "rainDisplay", "forecast", "highLow", 
+		details(["temperature", "feelsLike", "humidity", "wind", "rainDisplay", "highLow", 
         	"rise", "set", "moon", "week", "month", "year", "lastUpdate", "htmlTempPage", "htmlRainPage", "htmlMonthTempPage", "htmlMonthRainPage", "refresh"])}
+//		details(["temperature", "weatherIcon", "weather", "alert", "feelsLike", "humidity", "wind", "percentPrecip", "rainDisplay", "forecast", "highLow", 
+//        	"rise", "set", "moon", "week", "month", "year", "lastUpdate", "htmlTempPage", "htmlRainPage", "htmlMonthTempPage", "htmlMonthRainPage", "refresh"])}
 }
 
 
@@ -745,6 +747,11 @@ def pollErr() {
 }
 
 def WUPoll() {
+	log.debug "WUPoll() - Obsoleted..."
+}
+
+def x_WUPoll() {
+// WeatherUnderground is no longer a SmartThings partner...
 	log.debug "Polling WeatherUnderground: ${location}..."
     
 	// Current conditions
