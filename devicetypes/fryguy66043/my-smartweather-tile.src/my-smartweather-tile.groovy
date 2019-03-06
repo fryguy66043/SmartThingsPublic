@@ -64,6 +64,8 @@ metadata {
         attribute "stationID", "string"
         attribute "rainDisplay", "string"
 
+		attribute "TWCIcons", "string"
+
 		command "refresh"
         command "setActualLow"
         command "setActualHigh"
@@ -152,7 +154,7 @@ metadata {
 			state "flurries", icon:"st.custom.wu1.flurries", label: ""
 			state "fog", icon:"st.custom.wu1.fog", label: ""
 			state "hazy", icon:"st.custom.wu1.hazy", label: ""
-			state "mostlycloudy", icon:"st.custom.wu1.mostlycloudy", label: ""
+			state "2800", icon:"st.custom.wu1.mostlycloudy", label: ""
 			state "mostlysunny", icon:"st.custom.wu1.mostlysunny", label: ""
 			state "3400", icon:"st.custom.wu1.partlycloudy", label: ""
 			state "partlysunny", icon:"st.custom.wu1.partlysunny", label: ""
@@ -168,7 +170,7 @@ metadata {
 			state "nt_chancesleet", icon:"st.custom.wu1.nt_chancesleet", label: ""
 			state "nt_chancesnow", icon:"st.custom.wu1.nt_chancesnow", label: ""
 			state "nt_chancetstorms", icon:"st.custom.wu1.nt_chancetstorms", label: ""
-			state "nt_clear", icon:"st.custom.wu1.nt_clear", label: ""
+			state "3100", icon:"st.custom.wu1.nt_clear", label: ""
 			state "nt_cloudy", icon:"st.custom.wu1.nt_cloudy", label: ""
 			state "nt_flurries", icon:"st.custom.wu1.nt_flurries", label: ""
 			state "nt_fog", icon:"st.custom.wu1.nt_fog", label: ""
@@ -354,7 +356,7 @@ def twcPoll() {
             def timeStamp = "${new Date().format("MM/dd/yy h:mm a", location.timeZone)}\n(${obsTime})"
             sendEvent(name: "lastUpdate", value: timeStamp)
 
-            def weatherIcon = obs.iconCodeExtend
+            def weatherIcon = obs.iconCodeExtend as String
             log.debug "wxIcon = ${weatherIcon}"
             def tempF = Math.round(tempCheck)
 
@@ -384,6 +386,15 @@ def twcPoll() {
             send(name: "wind", value: Math.round(obs.windSpeed) as String, unit: "MPH") // as String because of bug in determining state change of 0 numbers
 			log.debug "TWCwxIcon = ${device.currentValue("TWCwxIcon")}"
 
+			def strIcons = device.currentValue("TWCIcons") ? device.currentValue("TWCIcons") : ""
+//            if (strIcons) {
+                if (!strIcons.contains(weatherIcon)) {
+                    strIcons += "[${weatherIcon} : ${obs.wxPhraseLong}]"
+                    sendEvent(name: "TWCIcons", value: strIcons)
+                }
+            	log.debug "TWCIcons = ${device.currentValue("TWCIcons")}"
+//            }
+            
             send(name: "zipCode", value: zipCode)
 
             send(name: "ultravioletIndex", value: Math.round(obs.uvIndex as Double))
