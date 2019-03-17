@@ -1376,7 +1376,7 @@ private setDisarmed() {
         default:
         	break
     }
-    //sendSms(phone, "Calling alarmSensor.setDisarmed()")
+    sendSms(alarmPhone2, "Calling alarmSensor.setDisarmed()")
     alarmSensor.setDisarmed()
 }
 
@@ -1978,6 +1978,14 @@ def runEveningSchedule(evt) {
     }
 }
 
+def checkDisarm() {
+	log.debug "checkDisarm"
+    if (alarmSensor.currentValue("alarmState") != "Disarmed") {
+    	sendSms(alarmPhone2, "Second disarm attempt...")
+        setDisarmed()
+    }
+}
+
 def morningHandler(evt) {
 	log.debug "Running Morning Schedule."
 	def current = presence1.currentValue("presence")
@@ -1996,6 +2004,7 @@ def morningHandler(evt) {
         	def newAlarmMsg = "Setting Alarm Controller to: Disarmed"
             setDisarmed()
             alarmMsg = "Alarm Disarmed"
+            runIn(60, checkDisarm)
 //            *jdf*
         }
         else {
