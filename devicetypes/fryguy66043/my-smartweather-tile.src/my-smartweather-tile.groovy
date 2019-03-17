@@ -66,6 +66,7 @@ metadata {
 
 		attribute "TWCIcons", "string"
 
+		command "resetIconList"
 		command "refresh"
         command "setActualLow"
         command "setActualHigh"
@@ -149,44 +150,50 @@ metadata {
 			state "chancesleet", icon:"st.custom.wu1.chancesleet", label: ""
 			state "chancesnow", icon:"st.custom.wu1.chancesnow", label: ""
 			state "chancetstorms", icon:"st.custom.wu1.chancetstorms", label: ""
-			state "clear", icon:"st.custom.wu1.clear", label: ""
-			state "cloudy", icon:"st.custom.wu1.cloudy", label: ""
+			state "31", icon:"st.custom.wu1.clear", label: ""
+			state "26", icon:"st.custom.wu1.cloudy", label: ""
 			state "flurries", icon:"st.custom.wu1.flurries", label: ""
-			state "fog", icon:"st.custom.wu1.fog", label: ""
+			state "20", icon:"st.custom.wu1.fog", label: ""
 			state "hazy", icon:"st.custom.wu1.hazy", label: ""
-			state "2800", icon:"st.custom.wu1.mostlycloudy", label: ""
+			state "28", icon:"st.custom.wu1.mostlycloudy", label: ""
 			state "mostlysunny", icon:"st.custom.wu1.mostlysunny", label: ""
-			state "3400", icon:"st.custom.wu1.partlycloudy", label: ""
+			state "29", icon:"st.custom.wu1.partlycloudy", label: ""
+			state "34", icon:"st.custom.wu1.partlycloudy", label: ""
 			state "partlysunny", icon:"st.custom.wu1.partlysunny", label: ""
-			state "rain", icon:"st.custom.wu1.rain", label: ""
+			state "11", icon:"st.custom.wu1.rain", label: ""
+			state "12", icon:"st.custom.wu1.rain", label: ""
+			state "28", icon:"st.custom.wu1.rain", label: ""
 			state "sleet", icon:"st.custom.wu1.sleet", label: ""
 			state "snow", icon:"st.custom.wu1.snow", label: ""
-			state "3200", icon:"st.custom.wu1.sunny", label: ""
+			state "32", icon:"st.custom.wu1.sunny", label: ""
 			state "tstorms", icon:"st.custom.wu1.tstorms", label: ""
 			state "cloudy", icon:"st.custom.wu1.cloudy", label: ""
-			state "partlycloudy", icon:"st.custom.wu1.partlycloudy", label: ""
+			state "30", icon:"st.custom.wu1.partlycloudy", label: ""
 			state "nt_chanceflurries", icon:"st.custom.wu1.nt_chanceflurries", label: ""
 			state "nt_chancerain", icon:"st.custom.wu1.nt_chancerain", label: ""
 			state "nt_chancesleet", icon:"st.custom.wu1.nt_chancesleet", label: ""
 			state "nt_chancesnow", icon:"st.custom.wu1.nt_chancesnow", label: ""
 			state "nt_chancetstorms", icon:"st.custom.wu1.nt_chancetstorms", label: ""
-			state "3100", icon:"st.custom.wu1.nt_clear", label: ""
-			state "nt_cloudy", icon:"st.custom.wu1.nt_cloudy", label: ""
+			state "31N", icon:"st.custom.wu1.nt_clear", label: ""
+			state "33N", icon:"st.custom.wu1.nt_clear", label: ""
+			state "26N", icon:"st.custom.wu1.nt_cloudy", label: ""
 			state "nt_flurries", icon:"st.custom.wu1.nt_flurries", label: ""
+			state "20N", icon:"st.custom.wu1.nt_fog", label: ""
 			state "nt_fog", icon:"st.custom.wu1.nt_fog", label: ""
 			state "nt_hazy", icon:"st.custom.wu1.nt_hazy", label: ""
-			state "nt_mostlycloudy", icon:"st.custom.wu1.nt_mostlycloudy", label: ""
+			state "27N", icon:"st.custom.wu1.nt_mostlycloudy", label: ""
 			state "nt_mostlysunny", icon:"st.custom.wu1.nt_mostlysunny", label: ""
 			state "nt_partlycloudy", icon:"st.custom.wu1.nt_partlycloudy", label: ""
 			state "nt_partlysunny", icon:"st.custom.wu1.nt_partlysunny", label: ""
 			state "nt_sleet", icon:"st.custom.wu1.nt_sleet", label: ""
-			state "nt_rain", icon:"st.custom.wu1.nt_rain", label: ""
+			state "12N", icon:"st.custom.wu1.nt_rain", label: ""
+			state "27N", icon:"st.custom.wu1.nt_rain", label: ""
 			state "nt_sleet", icon:"st.custom.wu1.nt_sleet", label: ""
 			state "nt_snow", icon:"st.custom.wu1.nt_snow", label: ""
 			state "nt_sunny", icon:"st.custom.wu1.nt_sunny", label: ""
-			state "nt_tstorms", icon:"st.custom.wu1.nt_tstorms", label: ""
+			state "4N", icon:"st.custom.wu1.nt_tstorms", label: ""
 			state "nt_cloudy", icon:"st.custom.wu1.nt_cloudy", label: ""
-			state "nt_partlycloudy", icon:"st.custom.wu1.nt_partlycloudy", label: ""
+			state "29N", icon:"st.custom.wu1.nt_partlycloudy", label: ""
 		}
         
 		valueTile("feelsLike", "device.feelsLike", decoration: "flat", width: 2, height: 2) {
@@ -258,9 +265,13 @@ metadata {
         valueTile("message", "device.message", width: 6, height: 2, decoration: "flat") {
         	state "default", label: '${currentValue}'
         }
+        
+        standardTile("resetIcons", "device.resetIcons", width: 2, height: 2, decoration: "flat") {
+        	state "default", label: 'Reset Icons', action: "resetIconList"
+        }
 
 		main(["temperature"])
-		details(["temperature", "humidity", "TWCwxIcon", "feelsLike", "wind", "weather", "actual", "city", "percentPrecip", "rainDisplay", "forecast", "alert", "refresh", "rise", "set", "moon", "lastUpdate", "message"])}
+		details(["temperature", "humidity", "TWCwxIcon", "feelsLike", "wind", "weather", "actual", "city", "percentPrecip", "rainDisplay", "forecast", "alert", "refresh", "rise", "set", "moon", "lastUpdate", "message", "resetIcons"])}
 //		details(["temperature", "humidity", "weatherIcon", "feelsLike", "wind", "weather", "actual", "city", "percentPrecip", "rainDisplay", "forecast", "alert", "refresh", "rise", "set", "light", "moon", "lastUpdate", "message"])}
 }
 
@@ -279,6 +290,12 @@ def uninstalled() {
 }
 
 // handle commands
+
+def resetIconList() {
+	log.debug "resetIconList"
+    // Only using to help collect missing TWC Icons
+    sendEvent(name: "TWCIcons", value: "")
+}
 
 def setRainThisMonth(val) {
 	log.debug "setRainThisMonth($val)"
@@ -330,14 +347,14 @@ def twcPoll() {
     sendEvent(name: "message", value: msg)
     state.failCnt = state.failCnt ?: 0
     
-    msg = "${location} ${msgDate}: "
+    msg = "${location} ${msgDate}\n"
     
     state.failCnt = 0
     
 	// Current conditions
 	def rep = getTwcConditions(zipCode)
     if (!rep) {
-    	sendEvent(name: "message", value: "TCW Conditions call failed...")
+    	sendEvent(name: "message", value: msg + "TCW Conditions call failed...")
         log.debug "TCW Conditions call failed..."
 	    return
     }
@@ -350,14 +367,21 @@ def twcPoll() {
             // Last update time stamp
             def tDate = obs.validTimeLocal
             tDate = tDate.replace("T", " ")
+            tDate = tDate.replace("-0500", "")
             tDate = tDate.replace("-0600", "")
             def obsDate = Date.parse("yyyy-MM-dd H:mm:ss", tDate)
             def obsTime = obsDate.format("MM/dd/yy h:mm a", location.timeZone)
             def timeStamp = "${new Date().format("MM/dd/yy h:mm a", location.timeZone)}\n(${obsTime})"
             sendEvent(name: "lastUpdate", value: timeStamp)
 
-            def weatherIcon = obs.iconCodeExtend as String
-            log.debug "wxIcon = ${weatherIcon}"
+//            def weatherIcon = obs.iconCodeExtend as String
+            def weatherIcon = obs.iconCode as String
+
+			log.debug "wxIcon = ${weatherIcon}"
+            if (obs.dayOrNight == "N") {
+            	weatherIcon += "N"
+            }
+            
             def tempF = Math.round(tempCheck)
 
             send(name: "temperature", value: tempF, unit: "F")
@@ -389,7 +413,7 @@ def twcPoll() {
 			def strIcons = device.currentValue("TWCIcons") ? device.currentValue("TWCIcons") : ""
 //            if (strIcons) {
                 if (!strIcons.contains(weatherIcon)) {
-                    strIcons += "[${weatherIcon} : ${obs.wxPhraseLong}]"
+                    strIcons += "[${weatherIcon} : ${obs.dayOrNight}-${obs.wxPhraseLong}]"
                     sendEvent(name: "TWCIcons", value: strIcons)
                 }
             	log.debug "TWCIcons = ${device.currentValue("TWCIcons")}"
@@ -415,32 +439,46 @@ def twcPoll() {
             send(name: "rainDisplay", value: rainDisp)
 
             // Sunrise / Sunset
+//            log.debug "obs = $obs"
             def strDate = obs.sunriseTimeLocal
             strDate = strDate.replace("T", " ")
+            strDate = strDate.replace("-0500", "")
             strDate = strDate.replace("-0600", "")
             def sunriseDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
-            def localSunrise = sunriseDate.format("h:mm a", location.timeZone)
+            def localSunrise = sunriseDate.format("h:mm a")
             send(name: "localSunrise", value: localSunrise, descriptionText: "Sunrise today is at $localSunrise")
             
             strDate = obs.sunsetTimeLocal
             strDate = strDate.replace("T", " ")
+            strDate = strDate.replace("-0500", "")
             strDate = strDate.replace("-0600", "")
             def sunsetDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
-            def localSunset = sunsetDate.format("h:mm a", location.timeZone)
+            def localSunset = sunsetDate.format("h:mm a")
             send(name: "localSunset", value: localSunset, descriptionText: "Sunset today is at $localSunset")
             
             def a = getTwcForecast(zipCode)
 			strDate = a.moonriseTimeLocal[0]
+            if (!strDate) {
+            	strDate = a.moonriseTimeLocal[1]
+            }
             strDate = strDate.replace("T", " ")
+            strDate = strDate.replace("-0500", "")
             strDate = strDate.replace("-0600", "")
+            log.debug "moonriseDate = $strDate"
+//            log.debug "a = $a"
             def moonriseDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
-            def localMoonrise = moonriseDate.format("h:mm a", location.timeZone)
+            def localMoonrise = moonriseDate.format("EEE h:mm a")
 
 			strDate = a.moonsetTimeLocal[0]
+            if (!strDate) {
+            	strDate = a.moonsetTimeLocal[1]
+            }
             strDate = strDate.replace("T", " ")
+            strDate = strDate.replace("-0500", "")
             strDate = strDate.replace("-0600", "")
+            log.debug "moonsetDate = $strDate"
             def moonsetDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
-            def localMoonset = moonsetDate.format("h:mm a", location.timeZone)
+            def localMoonset = moonsetDate.format("EEE h:mm a")
 
             def localMoonPhase = a.moonPhase[0]
 
@@ -448,7 +486,7 @@ def twcPoll() {
             send(name: "moonSet", value: localMoonset, descriptionText: "Moonset today is at $localMoonset")
             send(name: "moonPhase", value: localMoonPhase, descriptionText: "Current moon phase: $localMoonPhase")
 
-            sendEvent(name: "moon", value: "Moon Phase: ${localMoonPhase}\nRise: ${localMoonrise} Set: ${localMoonset}")
+            sendEvent(name: "moon", value: "Moon Phase: ${localMoonPhase}\nRise: ${localMoonrise}\nSet: ${localMoonset}")
 
 /*
 			log.debug "***** estimated lux value"
@@ -501,37 +539,55 @@ def twcPoll() {
 
             // Alerts
             def alerts = getTwcAlerts("${locLat},${locLong}")
-            log.debug "alerts = ${alerts}"
-            alerts = alerts?.alerts
-            def newKeys = alerts?.collect{it.eventDescription} ?: []
+//            alerts = alerts?.alerts
+			log.debug "Nbr Alerts = ${alerts.size()}"
+//            log.debug "alerts = ${alerts}"
+			def newKeys = []
+            def alertMsg = ""
+			for (i = 0; i < alerts.size(); i++) {
+            	newKeys.add(alerts[i].eventDescription)
+                alertMsg += "[${alerts[i].eventDescription}]\n"
+            }
     		log.debug "WUSTATION: newKeys = $newKeys"
-    //		log.trace device.currentState("alertKeys")
+            
             def oldKeys = device.currentState("alertKeys")?.jsonValue
-    //		log.debug "WUSTATION: oldKeys = $oldKeys"
 
             def noneString = "no current weather alerts"
             if (!newKeys && oldKeys == null) {
+            	log.debug "path 1..."
                 send(name: "alertKeys", value: newKeys.encodeAsJSON(), displayed: false)
                 send(name: "alert", value: noneString, descriptionText: "${device.displayName} has no current weather alerts", isStateChange: true)
             }
             else if (newKeys != oldKeys) {
+            	log.debug "path 2..."
                 if (oldKeys == null) {
                     oldKeys = []
                 }
                 send(name: "alertKeys", value: newKeys.encodeAsJSON(), displayed: false)
-
+				send(name: "alert", value: alertMsg, description: "Alerts", isStateChange: true)
+/*
                 def newAlerts = false
+                def alertMsg = ""
+                log.debug "alerts.size() = ${alerts.size()}"
                 alerts.each {alert ->
-                    if (!oldKeys.contains(alert.type + alert.date_epoch)) {
-                        def alertMsg = "${alert.description} from ${alert.date} until ${alert.expires}"
-                        send(name: "alert", value: pad(alert.description), descriptionText: alertMsg, isStateChange: true)
+//                    if (!oldKeys.contains(alert.eventDescription)) {
+                        alertMsg += "${alert.eventDescription}\n"
+                        log.debug "alrtMsg = ${alertMsg}"
+//                        send(name: "alert", value: pad(alert.eventDescription), descriptionText: alertMsg, isStateChange: true)
                         newAlerts = true
-                    }
+//                    }
+                }
+                if (alertMsg) {
+                    send(name: "alert", value: pad(alert.eventDescription), descriptionText: alertMsg, isStateChange: true)
                 }
 
                 if (!newAlerts && device.currentValue("alert") != noneString) {
                     send(name: "alert", value: noneString, descriptionText: "${device.displayName} has no current weather alerts", isStateChange: true)
                 }
+*/                
+            }
+            else {
+            	log.debug "path 3..."
             }
         }
         else {
@@ -544,7 +600,7 @@ def twcPoll() {
         }
     }
     else {
-    	sendEvent(name: "message", value: "Failure loading observations...")
+    	sendEvent(name: "message", value: msg + "Failure loading observations...")
         log.debug "TCW Observations call failed..."
 	    return
     }
@@ -844,6 +900,9 @@ def configure() {
 }
 
 private pad(String s, size = 25) {
+	if (!s) {
+    return null
+    }
 	def n = (size - s.size()) / 2
 	if (n > 0) {
 		def sb = ""
