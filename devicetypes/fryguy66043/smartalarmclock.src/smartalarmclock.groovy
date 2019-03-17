@@ -45,9 +45,14 @@ metadata {
         command "alarmOnOff"
         command "alarmCheckPresence"
         command "setAlarmTime"
+        command "setAlarmDays"
         command "alarmSkip"
         command "setPresence"
         command "changePresence"
+        
+        command "setAlarmOn"
+        command "setAlarmOff"
+        command "setAlarmSkip"
 	}
 
 	simulator {
@@ -261,7 +266,6 @@ def setLogSize(val) {
 
 def setLogSizeHandler(sData) {
 	log.debug "setLogSizeHandler"
-    refresh()
 }
 
 def alarmOnOff(nbr, val) {
@@ -297,7 +301,6 @@ def alarmOnOff(nbr, val) {
 def alarmOnOffHandler(sData) {
 	log.debug "alarmOnOffHandler"
     
-    refresh()
 }
 
 def setAlarmMin(val) {
@@ -324,7 +327,6 @@ def setAlarmMin(val) {
 def setAlarmMinHandler(sData) {
 	log.debug "setAlarmMinHandler"
 
-	refresh()
 }
 
 def setAlarmTime(nbr, time) {
@@ -351,7 +353,30 @@ def setAlarmTime(nbr, time) {
 def setAlarmTimeHandler(sData) {
 	log.debug "setAlarmTimeHandler"
     
-    refresh()
+}
+
+def setAlarmDays(nbr, days) {
+	log.debug "setAlarmDays"
+
+	if (days != device.currentValue("alarm1Days")) {
+    	log.debug "Updating alarm1Days from ${device.currentValue("alarm1Days")} to ${days}..."
+        state.setAlarmDays = false
+        sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Change Alarm Days...")
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/setalarm?nbr=1&days=${days}",
+            headers: [
+                    "HOST" : "192.168.1.137:5000"],
+                    null,
+                    [callback: setAlarmDaysHandler]
+        )
+        sendHubCommand(result)
+    }
+}
+
+def setAlarmDaysHandler(sData) {
+	log.debug "setAlarmDaysHandler"
+    
 }
 
 def alarmSkip() {
@@ -618,6 +643,11 @@ def getSettingsHandler(sData) {
         }
     }
 
+	updateDisplay()
+}
+
+def updateDisplay() {
+	log.debug "updateDisplay"
 
 
     def checkAlarm = false
@@ -643,7 +673,7 @@ def getSettingsHandler(sData) {
         if (device.currentValue("alarm1Alarm") == "true") {
             sendEvent(name: "alarm1", value: "alarm")
             log.debug "Alarming..."
-            runIn(60, refresh)
+//            runIn(60, refresh)
         }
         else if (checkAlarm) {
         	log.debug "checkAlarm = true"
@@ -657,14 +687,39 @@ def getSettingsHandler(sData) {
         sendEvent(name: "alarm1", value: "off")
         sendEvent(name: "alarm1Presence", value: "noCheck")
     }
-//    runEvery10Minutes(refresh)
+}
+
+def setAlarmOn() {
+	log.debug "alarmOn"
+    
+    sendEvent(name: "alarm1Alarm", value: "true")
+//    updateDisplay()
+    refresh()
+}
+
+def setAlarmOff() {
+	log.debug "alarmOff"
+    
+    sendEvent(name: "alarm1Alarm", value: "false")
+//    updateDisplay()
+    refresh()
+}
+
+def setAlarmSkip() {
+	log.debug "alarmSkip"
+
+    sendEvent(name: "alarm1Alarm", value: "false")
+    sendEvent(name: "alarm1Skip", value: "true")
+    sendEvent(name: "skip", value: "skip")
+//    updateDisplay()
+	refresh()
 }
 
 def refresh() {
 	log.debug "switch: request refresh()"
     sendEvent(name: "substatus", value: "")
     getSettings()
-    getHealthStatus()
+//    getHealthStatus()
     getLogData()
 }
 
@@ -686,4 +741,5 @@ private initialize() {
 	sendEvent(name: "DeviceWatch-Enroll", value: [protocol: "cloud", scheme:"untracked"].encodeAsJson(), displayed: false)
 	refresh()
     runEvery10Minutes(refresh)
+    runEvery10Minutes(getHealthStatus)
 }
