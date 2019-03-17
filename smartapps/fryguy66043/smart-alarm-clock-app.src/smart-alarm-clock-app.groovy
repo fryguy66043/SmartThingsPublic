@@ -31,13 +31,19 @@ preferences {
         input "alarmMin", "number", title: "Max alarm time before turning off?"
         input "alarmLogSize", "number", title: "Max log file size?"
     }
-    section("Alarm 1 Presence Settings") {
-    	input "alarm1CheckPres", "bool", title: "Only Trigger Alarm 1 if Someone is Home?"
-        input "alarm1Pres", "capability.presenceSensor", title: "Who?", multiple: true
-    }
     section("Alarm 1 Settings") {
     	input "alarm1OnOff", "bool", title: "Turn Alarm 1 on?"
+        input "alarm1CheckPres", "bool", title: "Only Trigger Alarm 1 if Someone is Home?"
+        input "alarm1Pres", "capability.presenceSensor", title: "Who?", multiple: true
     	input "alarm1Time", "time", title: "Set Alarm 1 time."
+        input "alarm1Mon", "bool", title: "Monday"
+        input "alarm1Tue", "bool", title: "Tuesday"
+        input "alarm1Wed", "bool", title: "Wednesday"
+        input "alarm1Thu", "bool", title: "Thursday"
+        input "alarm1Fri", "bool", title: "Friday"
+        input "alarm1Sat", "bool", title: "Saturday"
+        input "alarm1Sun", "bool", title: "Sunday"
+        
     }
 	section("Send Push Notification?") {
         input "sendPush", "bool", title: "Send Push Notification when alarm is activated?"
@@ -95,6 +101,8 @@ def syncSettings() {
     }
     alarm1PresenceHandler()
     alarm1SetTime()
+    alarm1SetDays()
+    alarmClock.refresh()
 }
 
 def alarm1SetTime() {
@@ -106,7 +114,59 @@ def alarm1SetTime() {
         alarmClock.setAlarmTime(1, aTime)
     }
     state.alarm1Time = alarm1Time
-    schedule(alarm1Time, alarm1AlarmCheck)
+//    schedule(alarm1Time, alarm1AlarmCheck)
+}
+
+def alarm1SetDays() {
+	log.debug "alarm1SetDays"
+    def days = "["
+    
+    if (alarm1Mon) {
+    	days += "1"
+    }
+    else {
+    	days += "0"
+    }
+    if (alarm1Tue) {
+    	days += ", 1"
+    }
+    else {
+    	days += ", 0"
+    }
+    if (alarm1Wed) {
+    	days += ", 1"
+    }
+    else {
+    	days += ", 0"
+    }
+    if (alarm1Thu) {
+    	days += ", 1"
+    }
+    else {
+    	days += ", 0"
+    }
+    if (alarm1Fri) {
+    	days += ", 1"
+    }
+    else {
+    	days += ", 0"
+    }
+    if (alarm1Sat) {
+    	days += ", 1"
+    }
+    else {
+    	days += ", 0"
+    }
+    if (alarm1Sun) {
+    	days += ", 1"
+    }
+    else {
+    	days += ", 0"
+    }
+
+	days += "]"
+    log.debug "Days = ${days}"
+    alarmClock.setAlarmDays(1, days)
 }
 
 def appHandler(evt) {
@@ -122,7 +182,7 @@ def alarmClockStartupHandler(evt) {
 def alarm1AlarmCheck(evt) {
 	log.debug "alarm1AlarmCheck"
     alarmClock.refresh()
-    runIn(60 * alarmMin, alarm1AlarmCheck2)
+//    runIn(60 * alarmMin, alarm1AlarmCheck2)
 }
 
 def alarm1AlarmCheck2() {
