@@ -17,6 +17,9 @@
  */
  
 metadata {
+	preferences {
+    	input "serverOn", "bool", title: "Is the Smart Alarm Clock Server Running?"
+    }
 	definition (name: "SmartAlarmClock", namespace: "FryGuy66043", author: "Jeffrey Fry") {
 		capability "Refresh"
 		capability "Sensor"
@@ -170,7 +173,12 @@ def parse(String description) {
 def getHealthStatus() {
 	log.debug "getHealthStatus"
 
-	sendEvent(name: "substatus", value: "Requesting Health Status...")
+	if(!serverOn) {
+    	log.debug "Server disabled in preferences"
+        return
+    }
+    
+//	sendEvent(name: "substatus", value: "Requesting Health Status...")
     def result = new physicalgraph.device.HubAction(
         method: "GET",
         path: "/healthcheck",
@@ -202,10 +210,16 @@ def getHealthStatusHandler(sData) {
             sendEvent(name: "cpuTemp", value: hBody)
         }
     }
+    updateDisplay()
 }
 
 def getLogData() {
 	log.debug "getLogData"
+    
+	if(!serverOn) {
+    	log.debug "Server disabled in preferences"
+        return
+    }
     
     sendEvent(name: "substatus", value: "Requesting Log Data...")
     def result = new physicalgraph.device.HubAction(
@@ -496,7 +510,13 @@ def changePresenceHandler(sData) {
 
 def getSettings() {
 	log.debug "getSettings"
-    state.getSettings = false
+
+	if(!serverOn) {
+    	log.debug "Server disabled in preferences"
+        return
+    }
+
+	state.getSettings = false
     sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Settings...")
 //    sendEvent(name: "substatus", value: "")
 	def result = new physicalgraph.device.HubAction(
