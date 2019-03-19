@@ -480,6 +480,20 @@ def twcPoll() {
             def moonsetDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
             def localMoonset = moonsetDate.format("EEE h:mm a")
 
+			if (moonsetDate < moonriseDate) {
+            	log.debug "Fixing moonrise..."
+                strDate = a.moonsetTimeLocal[1]
+                if (!strDate) {
+                    strDate = a.moonsetTimeLocal[2]
+                }
+                strDate = strDate.replace("T", " ")
+                strDate = strDate.replace("-0500", "")
+                strDate = strDate.replace("-0600", "")
+                log.debug "moonsetDate = $strDate"
+                moonsetDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
+                localMoonset = moonsetDate.format("EEE h:mm a")
+            }
+            
             def localMoonPhase = a.moonPhase[0]
 
             send(name: "moonRise", value: localMoonrise, descriptionText: "Moonrise today is at $localMoonrise")
@@ -545,10 +559,15 @@ def twcPoll() {
 			def newKeys = []
             def alertMsg = ""
 			for (i = 0; i < alerts.size(); i++) {
-            	newKeys.add(alerts[i].eventDescription)
-                alertMsg += "[${alerts[i].eventDescription}]\n"
+            	if (!newKeys.contains(alerts[i].eventDescription)) {
+                    newKeys.add(alerts[i].eventDescription)
+                    alertMsg += "[${alerts[i].eventDescription}]\n"
+                }
+                else {
+                	log.debug "Duplicate alert found..."
+                }
             }
-    		log.debug "WUSTATION: newKeys = $newKeys"
+    		log.debug "WUSTATION: newKeys = $newKeys / alertMsg = $alertMsg"
             
             def oldKeys = device.currentState("alertKeys")?.jsonValue
 
