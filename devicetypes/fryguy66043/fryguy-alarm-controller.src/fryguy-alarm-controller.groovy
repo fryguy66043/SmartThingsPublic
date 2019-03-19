@@ -17,6 +17,11 @@
  */
  
 metadata {
+	preferences {
+    	input "alarmService", "bool", title: "Turn calls to Alarm Service On?", default: false, required: false
+    	input "alarmServiceIP", "text", title: "(Optional) Alarm Service IP", requried: false
+        input "alarmServicePort", "text", title: "(Optional) Alarm Service Port", required: false
+    }
 	definition (name: "FryGuy Alarm Controller", namespace: "FryGuy66043", author: "Jeffrey Fry") {
 		capability "Actuator"
 		capability "Contact Sensor"
@@ -103,12 +108,14 @@ def setArmedAwayMonitoredList(list) {
 	log.debug "setArmedAwayMonitoredList(${list})"
     def monitored = list ?: "None"
     sendEvent(name: "armedAwayMonitoredList", value: monitored)
+    updateServerList("away", monitored)
 }
 
 def setArmedHomeMonitoredList(list) {
 	log.debug "setArmedHomeMonitoredList(${list})"
     def monitored = list ?: "None"
     sendEvent(name: "armedHomeMonitoredList", value: monitored)
+    updateServerList("home", monitored)
 }
 
 def setUnsecureList(list) {
@@ -116,6 +123,16 @@ def setUnsecureList(list) {
     def monitored = list ?: "None"
     sendEvent(name: "unsecureList", value: monitored)
     sendEvent(name: "unsecure", value: monitored)
+    if (state.serverRefresh) {
+    	def alist = device.currentValue("armedAwayMonitoredList")
+    	if (alist) {
+	    	updateServerList("away", alist)
+        }
+    	def hlist = device.currentValue("armedHomeMonitoredList")
+    	if (hlist) {
+	    	updateServerList("home", hlist)
+        }
+    }
 }
 
 def setArmedAway() {
@@ -290,6 +307,122 @@ private updateSummary() {
     	"Armed Home: ${armedHome}\n" +
         "Disarmed: ${lastDisarmed}"
     sendEvent(name: "summary", value: sum)
+    updateServer()
+}
+
+def getFullPath() {
+	def PI_URL = alarmServiceIP
+	def PI_PORT = alarmServicePort
+
+	return "http://${PI_URL}:${PI_PORT}"
+}
+
+private updateServerList(list, values) {
+	log.debug "updateServerList(${list}, ${values})"
+
+	if (alarmService && alarmServiceIP && alarmServicePort) {
+    	def listVals =  URLEncoder.encode(values, "UTF-8")
+        state.serverRefresh = false
+        
+        def cmd = "monitored?${list}=${listVals}"
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/${cmd}",
+            headers: [
+                "HOST" : "${alarmServiceIP}:${alarmServicePort}"],
+            null,
+            [callback: updateServerListHandler]
+        )
+        //    log.debug result.toString()
+        sendHubCommand(result)
+	}
+    else {
+    	log.debug "Alarm Service Not Configured"
+    }
+}
+
+def updateServerListHandler(sData) {
+	log.debug "updateServerListHandler(status: ${sData.status} / body = ${sData.body})"
+}
+
+private updateServer() {
+	log.debug "updateServer: alarm = ${device.currentValue("alarmState")} / state = ${device.currentValue("alertState")}"
+
+	log.debug "Alarm Service: ${alarmService} / ${alarmServiceIP} / ${alarmServicePort}"
+	if (alarmService && alarmServiceIP && alarmServicePort) {
+        def alarm = device.currentValue("alarmState")
+        def alert = device.currentValue("alertState")
+        def cmd = ""
+
+        switch (alarm) {
+            case "Armed Home":
+                cmd = "armedhome"
+                break
+            case "Armed Away":
+                cmd = "armedaway"
+                break
+            case "Disarmed":
+                cmd = "disarmed"
+                break
+            default:
+                log.debug "Invalid Alarm State: ${device.currentValue("alarmState")}"
+        }
+        if (cmd) {
+        	def unsec = URLEncoder.encode(device.currentValue("unsecure"), "UTF-8")
+        	cmd += "?alertstate=${device.currentValue("alertState")}&unsecure=${unsec}"
+            state.pollStatus = false
+            def path = "${getFullPath()}/${cmd}"
+            log.debug "Calling Alarm Service: ${path}"
+
+            def result = new physicalgraph.device.HubAction(
+                method: "GET",
+                path: "/${cmd}",
+                headers: [
+                    "HOST" : "${alarmServiceIP}:${alarmServicePort}"],
+                null,
+                [callback: updateServerHandler]
+            )
+            //    log.debug result.toString()
+            sendHubCommand(result)
+
+/*
+			try {
+                httpGet(path) { resp ->
+                    log.debug "    calling server..."
+
+                    if (resp.status == 200) {
+                        updateServerHandler("${resp.data}")
+                    } else {
+                        log.error "Error calling alarm service.  Status: ${resp.status}"
+                        updateServerErr()
+                    }
+                }
+                log.debug "After httpGet..."
+            } catch (err) {
+                log.debug "Error executing alarm service request: $err"
+            }
+*/            
+        } 
+    }
+    else {
+    	log.debug "Alarm Service Not Configured"
+    }
+}
+
+def updateServerHandler(sData) {
+	log.debug "updateServerHandler(status: ${sData.status} / body = ${sData.body})"
+    state.pollStatus = true    
+}
+
+def updateServerErr() {
+	log.debug "updateServerErr (checking for errors)"
+    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    if (!state.pollStatus) {
+    	log.debug "Polling timed out..."
+    }
+    else {
+    	log.debug "Polling success!"
+    }
 }
 
 def installed() {
@@ -309,6 +442,11 @@ private initialize() {
 	sendEvent(name: "healthStatus", value: "online")
 	sendEvent(name: "DeviceWatch-Enroll", value: [protocol: "cloud", scheme:"untracked"].encodeAsJson(), displayed: false)
     sendEvent(name: "unsecure", value: "None")
-    setDisarmed()
+
+//    setDisarmed() //Not sure I need to set this to Disarmed everytime an update is done.  Evaluating...
+    
+    if (alarmService) {
+        state.serverRefresh = true
+    }
 }
 
