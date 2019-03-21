@@ -85,7 +85,7 @@ def departLocation() {
     resp << [name: "Depart", value: command]
     if (pass) {
         switch(command) {
-            case "Home":
+            case "Dee":
                 log.debug "Departing Home"
                 sHome.off()
                 break
@@ -152,7 +152,7 @@ def arriveLocation() {
     resp << [name: "Arrive", value: command]
     if (pass) {
         switch(command) {
-            case "Home":
+            case "Dee":
                 log.debug "Arriving Home"
                 sHome.on()
                 break
