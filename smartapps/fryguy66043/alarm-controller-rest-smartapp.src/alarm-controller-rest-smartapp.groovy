@@ -74,6 +74,11 @@ def setDisarmed() {
     
     def resp = []
     if (pass) {
+    	if (!alarmSensor.currentValue("alertState").contains("silent")) {
+        	log.debug "Dismissing Alarm"
+            resp << [name: "Alert", value: "Dismissed"]
+            alarmSenor.dismissAlert()
+        }
     	if (!alarmSensor.currentValue("alarmState").contains("Disarmed")) {
             log.debug "Disarmed"
             resp << [name: "Alarm", value: "Disarmed"]
