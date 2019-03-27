@@ -395,6 +395,10 @@ def setAlarmDaysHandler(sData) {
 
 def alarmSkip() {
 	log.debug "alarmSkip"
+    if (!serverOn) {
+    	log.debug "Skipping Alarm Skip call.  Server not running."
+        return
+    }
     def tSkip = device.currentValue("alarm1Skip")
     def temp = ""
     if (tSkip == "true") {
@@ -486,6 +490,10 @@ def setPresence(nbr, val) {
 
 def changePresence() {
 	log.debug "changePresence"
+    if (!serverOn) {
+    	log.debug "Skipping Change Presence.  Server not on."
+        return
+    }
     state.changePresence = false
     def newPres = device.currentValue("alarm1CurrPres") == "true" ? "False" : "True"
     sendEvent(name: "substatus", value: "Requesting Smart Alarm Clock Change Presence...")
@@ -534,9 +542,16 @@ def getSettings() {
 
 def getSettingsErrCheck() {
 	log.debug "getSettingsErrCheck"
+    state.lastServerCall = state.lastServerCall ?: ""
 	if (state.getSettings == false) {
-    	sendEvent(name: "substatus", value: "Smart Alarm Clock call failed...")
+    	if (!state.lastServerCall) {
+        	state.lastServerCall = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+        }        
+    	sendEvent(name: "substatus", value: "Smart Alarm Clock call failed...\nFailing Since: ${state.lastServerCall}")
 //        sendEvent(name: "substatus", value: "Check server availabilty.")
+    }
+    else {
+    	state.lastServerCall = ""
     }
 }
 
@@ -737,10 +752,15 @@ def setAlarmSkip() {
 
 def refresh() {
 	log.debug "switch: request refresh()"
-    sendEvent(name: "substatus", value: "")
-    getSettings()
-//    getHealthStatus()
-    getLogData()
+    if (serverOn) {
+        sendEvent(name: "substatus", value: "")
+        getSettings()
+    //    getHealthStatus()
+        getLogData()
+    }
+    else {
+    	log.debug "Skipping refresh.  Server not running"
+    }
 }
 
 def installed() {
@@ -759,7 +779,16 @@ private initialize() {
 	sendEvent(name: "DeviceWatch-DeviceStatus", value: "online")
 	sendEvent(name: "healthStatus", value: "online")
 	sendEvent(name: "DeviceWatch-Enroll", value: [protocol: "cloud", scheme:"untracked"].encodeAsJson(), displayed: false)
-	refresh()
-    runEvery10Minutes(refresh)
-    runEvery10Minutes(getHealthStatus)
+    if(serverOn){
+        refresh()
+        runEvery10Minutes(refresh)
+        runEvery10Minutes(getHealthStatus)
+    }
+    else {
+    	unschedule()
+	    def date = new Date().format("MM/dd/yy hh:mm:ss a", location.timeZone)
+    	sendEvent(name:"substatus", value:"Server Off: ${date}")
+    	sendEvent(name:"alarm1", value:"off")
+    	sendEvent(name:"alarm1Presence", value:"noCheck")
+    }
 }
