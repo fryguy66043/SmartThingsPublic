@@ -21,6 +21,7 @@ metadata {
     	input "alarmService", "bool", title: "Turn calls to Alarm Service On?", default: false, required: false
     	input "alarmServiceIP", "text", title: "(Optional) Alarm Service IP", requried: false
         input "alarmServicePort", "text", title: "(Optional) Alarm Service Port", required: false
+        input "alarmServiceCode", "text", title: "(Optional) Enter Code for Alarm Panel Access", required: false
     }
 	definition (name: "FryGuy Alarm Controller", namespace: "FryGuy66043", author: "Jeffrey Fry") {
 		capability "Actuator"
@@ -317,6 +318,30 @@ def getFullPath() {
 	return "http://${PI_URL}:${PI_PORT}"
 }
 
+private updateServerCode() {
+	log.debug "updateServerCode()"
+
+	if (alarmServiceCode) {
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/updatecode?code=${alarmServiceCode}",
+            headers: [
+                "HOST" : "${alarmServiceIP}:${alarmServicePort}"],
+            null,
+            [callback: updateServerCodeHandler]
+        )
+        //    log.debug result.toString()
+        sendHubCommand(result)
+	}
+    else {
+    	log.debug "Alarm Service Code Not Configured"
+    }
+}
+
+def updateServerCodeHandler(sData) {
+	log.debug "updateServerCodeHandler(status: ${sData.status} / body = ${sData.body})"
+}
+
 private updateServerList(list, values) {
 	log.debug "updateServerList(${list}, ${values})"
 
@@ -447,6 +472,10 @@ private initialize() {
     
     if (alarmService) {
         state.serverRefresh = true
+    }
+    
+    if (alarmServiceCode) {
+    	updateServerCode()
     }
 }
 
