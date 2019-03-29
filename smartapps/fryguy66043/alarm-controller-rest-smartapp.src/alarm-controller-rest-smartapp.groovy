@@ -47,6 +47,11 @@ def initialize() {
 }
 
 mappings {
+  path("/initialize") {
+  	action: [
+    	GET: "initializeController"
+    ]
+  }
   path("/setdisarmed") {
     action: [
       GET: "setDisarmed"
@@ -57,6 +62,17 @@ mappings {
       GET: "setArmed"
     ]
   }
+}
+
+def initializeController() {
+	log.debug "initializeController"
+    def resp = []
+    resp << [name: "AlarmState", value: "${alarmSensor.currentValue("alarmState")}"]
+    resp << [name: "AlertState", value: "${alarmSensor.currentValue("alertState")}"]
+    resp << [name: "UnsecureList", value: "${alarmSensor.currentValue("unsecureList")}"]
+    log.debug "Reply: ${resp}"
+    alarmSensor.updateServer()
+    return resp
 }
 
 def setDisarmed() {
