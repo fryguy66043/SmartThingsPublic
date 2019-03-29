@@ -53,6 +53,7 @@ metadata {
         command "setUnsecureList"
         command "updateSummary"
         command "resetUserAlertCnt"
+        command "updateServer"
 	}
 
 	simulator {
@@ -370,7 +371,7 @@ def updateServerListHandler(sData) {
 	log.debug "updateServerListHandler(status: ${sData.status} / body = ${sData.body})"
 }
 
-private updateServer() {
+def updateServer() {
 	log.debug "updateServer: alarm = ${device.currentValue("alarmState")} / state = ${device.currentValue("alertState")}"
 
 	log.debug "Alarm Service: ${alarmService} / ${alarmServiceIP} / ${alarmServicePort}"
@@ -379,22 +380,29 @@ private updateServer() {
         def alert = device.currentValue("alertState")
         def cmd = ""
 
-        switch (alarm) {
-            case "Armed Home":
-                cmd = "armedhome"
-                break
-            case "Armed Away":
-                cmd = "armedaway"
-                break
-            case "Disarmed":
-                cmd = "disarmed"
-                break
-            default:
-                log.debug "Invalid Alarm State: ${device.currentValue("alarmState")}"
+		if (alert != "silent") {
+        	cmd = "alarm"
+        }
+        else {
+            switch (alarm) {
+                case "Armed Home":
+                    cmd = "armedhome"
+                    break
+                case "Armed Away":
+                    cmd = "armedaway"
+                    break
+                case "Disarmed":
+                    cmd = "disarmed"
+                    break
+                default:
+                    log.debug "Invalid Alarm State: ${device.currentValue("alarmState")}"
+            }
         }
         if (cmd) {
         	def unsec = URLEncoder.encode(device.currentValue("unsecure"), "UTF-8")
-        	cmd += "?alertstate=${device.currentValue("alertState")}&unsecure=${unsec}"
+            def alarmState = URLEncoder.encode(device.currentValue("alarmState"),"UTF-8")
+            def alertState = URLEncoder.encode(device.currentValue("alertState"), "UTF-8")
+        	cmd += "?alarmstate=${alarmState}&alertstate=${alertState}&unsecure=${unsec}"
             state.pollStatus = false
             def path = "${getFullPath()}/${cmd}"
             log.debug "Calling Alarm Service: ${path}"
@@ -409,24 +417,6 @@ private updateServer() {
             )
             //    log.debug result.toString()
             sendHubCommand(result)
-
-/*
-			try {
-                httpGet(path) { resp ->
-                    log.debug "    calling server..."
-
-                    if (resp.status == 200) {
-                        updateServerHandler("${resp.data}")
-                    } else {
-                        log.error "Error calling alarm service.  Status: ${resp.status}"
-                        updateServerErr()
-                    }
-                }
-                log.debug "After httpGet..."
-            } catch (err) {
-                log.debug "Error executing alarm service request: $err"
-            }
-*/            
         } 
     }
     else {
