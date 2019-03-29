@@ -1376,7 +1376,7 @@ private setDisarmed() {
         default:
         	break
     }
-    sendSms(alarmPhone2, "Calling alarmSensor.setDisarmed()")
+//    sendSms(alarmPhone2, "Calling alarmSensor.setDisarmed()")
     alarmSensor.setDisarmed()
 }
 
