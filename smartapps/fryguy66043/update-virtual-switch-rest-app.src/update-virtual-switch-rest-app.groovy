@@ -31,7 +31,7 @@ preferences {
     	input "sHome", "capability.switch", title: "Home"
     	input "sCurves", "capability.switch", title: "Curves"
     	input "sDoctor", "capability.switch", title: "Doctor"
-    	input "sHeartClinic", "capability.switch", title: "Heart Clinic"
+    	input "sHeart", "capability.switch", title: "Heart Clinic"
     	input "sHeritageCenter", "capability.switch", title: "Heritage Center"
     	input "sJeffAndCyndi", "capability.switch", title: "Jeff & Cyndi"
     	input "sNutritionCenter", "capability.switch", title: "Nutrition Center"
@@ -113,7 +113,7 @@ def departLocation() {
             	log.debug "Departing Nutrition Center"
                 sNutritionCenter.off()
                 break
-            case "Vet":
+            case "Pioneer Vet Clinic":
             	log.debug "Departing Vet"
                 sVet.off()
                 break
@@ -180,7 +180,7 @@ def arriveLocation() {
             	log.debug "Arriving Nutrition Center"
                 sNutritionCenter.on()
                 break
-            case "Vet":
+            case "Pioneer Vet Clinic":
             	log.debug "Arriving Vet"
                 sVet.on()
                 break

@@ -85,6 +85,7 @@ def initialize() {
     
     def jsonList = getMonitoredJsonString()
     areaSensor.setMonitoredDeviceList(jsonList)
+    log.debug "setting unsecured to none."
     areaSensor.setUnsecuredDeviceList("")
 }
 
@@ -203,6 +204,7 @@ private getUnsecuredJsonString() {
 def areaSensorReport(evt) {
 	log.debug "areaSensorReport(${evt.value})"
     areaSensor.setMonitoredDeviceList(getMonitoredJsonString())
+    log.debug "setting unsecured to none."
     areaSensor.setUnsecuredDeviceList("")
     virtualController()
     getStatus()
@@ -212,6 +214,7 @@ def areaSensorReport(evt) {
 def areaSensorHandler(evt) {
 	log.debug "areaSensorHandler: ${evt.value}"
     areaSensor.setMonitoredDeviceList(getMonitoredJsonString())
+    log.debug "setting unsecured to none."
     areaSensor.setUnsecuredDeviceList("")
     virtualController()
 }

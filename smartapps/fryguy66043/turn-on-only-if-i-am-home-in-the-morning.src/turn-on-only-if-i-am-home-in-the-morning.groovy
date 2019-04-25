@@ -242,9 +242,9 @@ def turnOn() {
         	capabilities = aSwitch.capabilities
             log.debug "Switch = ${aSwitch}: ${capabilities}"
             for (cap in capabilities) {
-            	log.debug "cap = ${cap.name}"
+//            	log.debug "cap = ${cap.name}"
             	if (cap.name == "Color Control") {
-                	log.debug "${aSwitch}: Hue = ${aSwitch.currentValue("hue")} / Sat = ${aSwitch.currentValue("saturation")} / Level = ${aSwitch.currentValue("level")}"
+//                	log.debug "${aSwitch}: Hue = ${aSwitch.currentValue("hue")} / Sat = ${aSwitch.currentValue("saturation")} / Level = ${aSwitch.currentValue("level")}"
 			        aSwitch?.setColor([hue: state.hue, saturation: state.saturation])
                     log.debug "Color Control Found: ${aSwitch}"
                 }
@@ -258,7 +258,7 @@ def turnOn() {
         	capabilities = aSwitch.capabilities
             log.debug "Switch = ${aSwitch}: ${capabilities}"
             for (cap in capabilities) {
-            	log.debug "cap = ${cap.name}"
+//            	log.debug "cap = ${cap.name}"
             	if (cap.name == "Switch Level") {
                     aSwitch?.setLevel(state.switchLevel)
                     log.debug "Switch Level Found: ${aSwitch}"
@@ -267,6 +267,11 @@ def turnOn() {
         }
     }
     switch1?.on()
+    if (!somethingOn()) {
+    	if (phone) {
+        	sendSms(phone, "Failed to turn on ${switch1}")
+        }
+    }
 }
 
 def sunriseHandler(sunriseString) {
@@ -310,6 +315,11 @@ def scheduleHandler() {
         }
         if (phone) {
         	sendSms(phone, message)
+        }
+    }
+    else {
+    	if (phone) {
+        	sendSms(phone, "${switch1} already off")
         }
     }
 }

@@ -86,6 +86,11 @@ def appHandler(evt) {
     getMonitoredDevices()
 }
 
+def updateServerDeviceListHandler(hData) {
+	log.debug "updateServerDeviceListHandler"
+}
+
+
 private getMonitoredJsonString() {
 	log.debug "getMonitoredJsonString"
 	def cList = ""
