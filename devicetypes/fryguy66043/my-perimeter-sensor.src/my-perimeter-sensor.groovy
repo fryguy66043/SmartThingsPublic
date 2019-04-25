@@ -39,6 +39,7 @@ metadata {
         command "setMonitoredDeviceList"
         command "setUnsecuredDeviceList"
         command "report"
+        command "updateServerDeviceList"
 	}
 
 	simulator {
@@ -81,6 +82,18 @@ def open() {
 
 def close() {
     sendEvent(name: "contact", value: "closed")
+}
+
+private cleanJsonString(jsonString) {
+	log.debug "cleanJsonString(${jsonString})"
+    def newString = jsonString
+    if (jsonString?.size() > 0) {
+    	if (jsonString.contains(",]")) {
+        	newString = jsonString.replace(",]", "]")
+        }
+    }
+    log.debug "cleanJsonString = ${newString}"
+    return newString
 }
 
 private getJsonDisplay(jsonString, showAll) {
@@ -152,20 +165,32 @@ private getJsonDisplay(jsonString, showAll) {
 }
 
 def setMonitoredDeviceList(deviceList) {
+	log.debug "setMonitoredDeviceList(${deviceList})"
+    def jsonValue = cleanJsonString(deviceList)
+    log.debug "json Display = ${jsonValue}"
+    def jsonDisplayValue = getJsonDisplay(jsonValue, true)
 	if (deviceList) {
     	sendEvent(name: "monitoredDeviceList", value: deviceList)
-        sendEvent(name: "monitoredDevices", value: "${getJsonDisplay(deviceList, true)}")
+        sendEvent(name: "monitoredDevices", value: "${jsonDisplayValue}")
     }
     else {
     	sendEvent(name: "monitoredDeviceList", value: "None")
         sendEvent(name: "monitoredDevices", value: "None")
     }
+    updateServerDeviceList("Perimeter", jsonValue)
 }
 
 def setUnsecuredDeviceList(deviceList) {
+	log.debug "setUnsecuredDeviceList(${deviceList})"
 	def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     def unsecDeviceList = "${device.currentValue("unsecuredDeviceList")}"
-    def unsecDeviceDisplay = getJsonDisplay(deviceList, false)
+    def jsonValue = deviceList
+    if (deviceList.size() > 0) {
+    	jsonValue = cleanJsonString(deviceList)
+    }
+    log.debug "json Display = ${jsonValue}"
+    def jsonDisplayValue = getJsonDisplay(jsonValue, false)
+    def unsecDeviceDisplay = jsonDisplayValue
 
     if (deviceList) {
         if (deviceList != device.currentValue("unsecuredDeviceList")) {
@@ -184,6 +209,7 @@ def setUnsecuredDeviceList(deviceList) {
         sendEvent(name: "unsecuredDevices", value: "${date}\nNone")
         sendEvent(name: "lastSecuredDateTime", value: date)
     }
+    updateServerDeviceList("PerimeterUnsec", jsonValue)
 }
 
 private anyMatches(list1, list2) {
@@ -241,6 +267,44 @@ private anyMatches(list1, list2) {
     
     log.debug "Return ${result}"
     return result
+}
+
+def getHost() {
+	def PI_IP = "192.168.1.189"
+	def PI_PORT = "5000"
+
+	return "${PI_IP}:${PI_PORT}"
+}
+
+def updateServerDeviceList(list, values) {
+	log.debug "updateServerList(${list}, ${values})"
+
+    
+//	if (alarmService && alarmServiceIP && alarmServicePort) {
+    	def listVals =  URLEncoder.encode(values, "UTF-8")
+        state.serverRefresh = false
+        
+        def cmd = "monitored/devices?list=${list}&listVals=${listVals}"
+        def host = getHost()
+        log.debug "cmd = ${cmd}\nhost = ${host}"
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/${cmd}",
+            headers: [
+                "HOST" : "${host}"],
+            null,
+            [callback: updateServerDeviceListHandler]
+        )
+//        log.debug "result = ${result.toString()}"
+        sendHubCommand(result)
+//	}
+//    else {
+//    	log.debug "Monitor Service Not Configured"
+//    }
+}
+
+def updateServerDeviceListHandler(sData) {
+	log.debug "updateServerDeviceListHandler(status: ${sData.status} / body = ${sData.body})"
 }
 
 def installed() {

@@ -20,6 +20,11 @@
 import groovy.json.JsonSlurper
 
 metadata {
+	preferences {
+    	input "portalService", "bool", title: "Turn calls to PyPortal Service On?", default: false, required: false
+    	input "portalServiceIP", "text", title: "(Optional) PyPortal Service IP", requried: false
+        input "portalServicePort", "text", title: "(Optional) PyPortal Service Port", required: false
+    }
 	definition (name: "My Area Sensor", namespace: "FryGuy66043", author: "Jeffrey Fry") {
 		capability "Actuator"
 //		capability "Switch"
@@ -104,6 +109,18 @@ def allOff() {
 def allOn() {
 	log.debug "switch: request allOn()"
 	sendEvent(name: "allOnOff", value: "ALL ON", isStateChange: true)
+}
+
+private cleanJsonString(jsonString) {
+	log.debug "cleanJsonString(${jsonString})"
+    def newString = jsonString
+    if (jsonString?.size() > 0) {
+    	if (jsonString.contains(",]")) {
+        	newString = jsonString.replace(",]", "]")
+        }
+    }
+    log.debug "cleanJsonString = ${newString}"
+    return newString
 }
 
 private getJsonDisplay(jsonString, showAll) {
@@ -191,6 +208,10 @@ private getJsonDisplay(jsonString, showAll) {
 }
 
 def setMonitoredDeviceList(deviceList) {
+	log.debug "setMonitoredDeviceList(${deviceList})"
+    def jsonValue = cleanJsonString(deviceList)
+    log.debug "json Display = ${jsonValue}"
+    def jsonDisplayValue = getJsonDisplay(jsonValue, true)
 	if (deviceList) {
     	sendEvent(name: "monitoredDeviceList", value: deviceList)
         sendEvent(name: "monitoredDevices", value: "${getJsonDisplay(deviceList, true)}")
@@ -199,14 +220,23 @@ def setMonitoredDeviceList(deviceList) {
     	sendEvent(name: "monitoredDeviceList", value: "None")
         sendEvent(name: "monitoredDevices", value: "None")
     }
+    updateServerDeviceList("Lights", jsonValue)
 }
 
 def setUnsecuredDeviceList(deviceList) {
+	log.debug "setUnsecuredDeviceList(${deviceList})"
 	def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     def unsecDeviceList = "${device.currentValue("unsecuredDeviceList")}"
-    def unsecDeviceDisplay = getJsonDisplay(deviceList, false)
     
-    if (deviceList) {
+    def jsonValue = deviceList
+    if (deviceList.size() > 0) {
+    	jsonValue = cleanJsonString(deviceList)
+    }
+    log.debug "json Display = ${jsonValue}"
+    def jsonDisplayValue = getJsonDisplay(jsonValue, false)
+    def unsecDeviceDisplay = getJsonDisplay(deviceList, false)
+
+	if (deviceList) {
         if (deviceList != device.currentValue("unsecuredDeviceList")) {
             sendEvent(name: "unsecuredDeviceList", value: deviceList)
             sendEvent(name: "unsecuredDevices", value: unsecDeviceDisplay)
@@ -223,6 +253,53 @@ def setUnsecuredDeviceList(deviceList) {
         sendEvent(name: "unsecuredDevices", value: "${date}\nNone")
         sendEvent(name: "lastSecuredDateTime", value: date)
     }
+    updateServerDeviceList("LightsUnsec", jsonValue)
+}
+
+def getHost() {
+	def PI_IP = "192.168.1.189"
+	def PI_PORT = "5000"
+
+	return "${PI_IP}:${PI_PORT}"
+}
+
+def updateServerDeviceList(list, values) {
+	log.debug "updateServerList(${list}, ${values})"
+	def date = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
+    date = URLEncoder.encode(date, "UTF-8")
+
+	if (portalService && portalServiceIP && portalServicePort) {    	
+        def listVals =  ''
+        if (values.size() > 0) {
+        	listVals = URLEncoder.encode(values, "UTF-8")
+        }
+        else {
+        	listVals = "None"
+        }
+        state.serverRefresh = false
+        
+        def cmd = "monitored/devices?list=${list}&listVals=${listVals}&asof=${date}"
+//        def cmd = "monitored/devices?list=Perimeter&listVals=Test"
+        def host = getHost()
+        log.debug "cmd = ${cmd}\nhost = ${host}"
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/${cmd}",
+            headers: [
+                "HOST" : "${host}"],
+            null,
+            [callback: updateServerDeviceListHandler]
+        )
+//        log.debug "result = ${result.toString()}"
+        sendHubCommand(result)
+	}
+    else {
+    	log.debug "PyPortal Service Not Configured"
+    }
+}
+
+def updateServerDeviceListHandler(sData) {
+	log.debug "updateServerDeviceListHandler(status: ${sData.status} / body = ${sData.body})"
 }
 
 private anyMatches(list1, list2) {
