@@ -151,20 +151,20 @@ def button2Handler(evt) {
                 if (button2_pushed.find{it.currentSwitch == "on"}) {
                     log.debug "Executing button2_pushed.off()"
                     button2_pushed?.off()
-                    msg = msg + "Turning off ${button2_pushed}"
+                    msg = msg + "Turning off ${button2_pushed}\n"
                 }
                 else {
                     log.debug "Executing button2_pushed.on()"
                     button2_pushed?.on()
-                    msg = msg + "Turning on ${button2_pushed}"
+                    msg = msg + "Turning on ${button2_pushed}\n"
                 }
             }
             else {
-            	msg = msg + "No switches defined for this event!"
+            	msg = msg + "No switches defined for this event!\n"
             }
             if (button2_feeder) {
             	button2_feeder.feed()
-                msg = msg + "Feed Request Sent!"
+                msg = msg + "Feed Request Sent!\n"
             }
             break
         case "double":
@@ -172,16 +172,16 @@ def button2Handler(evt) {
                 if (button2_double.find{it.currentSwitch == "on"}) {
                     log.debug "Executing button2_double.off()"
                     button2_double?.off()
-                    msg = msg + "Turning off ${button2_double}"
+                    msg = msg + "Turning off ${button2_double}\n"
                 }
                 else {
                     log.debug "Executing button2_double.on()"
                     button2_double?.on()
-                    msg = msg + "Turning on ${button2_double}"
+                    msg = msg + "Turning on ${button2_double}\n"
                 }
             }
             else {
-            	msg = msg + "No switches defined for this event!"
+            	msg = msg + "No switches defined for this event!\n"
             }
             break
         case "held":
@@ -189,25 +189,25 @@ def button2Handler(evt) {
                 if (button2_held.find{it.currentSwitch == "on"}) {
                     log.debug "Executing button2_held.off()"
                     button2_held?.off()
-                    msg = msg + "Turning off ${button2_held}"
+                    msg = msg + "Turning off ${button2_held}\n"
                 }
                 else {
                     log.debug "Executing button2_held.on()"
                     button2_held?.on()
-                    msg = msg + "Turning on ${button2_held}"
+                    msg = msg + "Turning on ${button2_held}\n"
                 }
             }
             else {
-            	msg = msg + "No switches defined for this event!"
+            	msg = msg + "No switches defined for this event!\n"
             }
             if (button2_feeder) {
             	button2_feeder.feed()
-                msg = msg + "Feed Request Sent!"
+                msg = msg + "Feed Request Sent!\n"
             }
             break
         default:
         	log.debug "Unknown button value"
-            msg = msg + "Unknown button event!"
+            msg = msg + "Unknown button event!\n"
     }
     if (sendPush) {
     	sendPush(msg)
