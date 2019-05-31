@@ -20,6 +20,11 @@
 import groovy.json.JsonSlurper
 
 metadata {
+	preferences {
+    	input "portalService", "bool", title: "Turn calls to PyPortal Service On?", default: false, required: false
+    	input "portalServiceIP", "text", title: "(Optional) PyPortal Service IP", requried: false
+        input "portalServicePort", "text", title: "(Optional) PyPortal Service Port", required: false
+    }
 	definition (name: "My Perimeter Sensor", namespace: "FryGuy66043", author: "Jeffrey Fry") {
 		capability "Actuator"
 		capability "Refresh"
@@ -278,15 +283,17 @@ def getHost() {
 
 def updateServerDeviceList(list, values) {
 	log.debug "updateServerList(${list}, ${values})"
+	def date = new Date().format("MM/dd/yyyy h:mm:ss a", location.timeZone)
+    date = URLEncoder.encode(date, "UTF-8")
 
-    
-//	if (alarmService && alarmServiceIP && alarmServicePort) {
+	if (portalService && portalServiceIP && portalServicePort) {    	
+    	log.debug "Calling PyPortal Service"
     	def listVals =  URLEncoder.encode(values, "UTF-8")
         state.serverRefresh = false
-        
-        def cmd = "monitored/devices?list=${list}&listVals=${listVals}"
+
+		def cmd = "monitored/devices?list=${list}&listVals=${listVals}&asof=${date}"        
+        log.debug "cmd = ${cmd}"
         def host = getHost()
-        log.debug "cmd = ${cmd}\nhost = ${host}"
         def result = new physicalgraph.device.HubAction(
             method: "GET",
             path: "/${cmd}",
@@ -297,10 +304,10 @@ def updateServerDeviceList(list, values) {
         )
 //        log.debug "result = ${result.toString()}"
         sendHubCommand(result)
-//	}
-//    else {
-//    	log.debug "Monitor Service Not Configured"
-//    }
+	}
+    else {
+    	log.debug "Monitor Service Not Configured"
+    }
 }
 
 def updateServerDeviceListHandler(sData) {

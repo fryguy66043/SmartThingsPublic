@@ -145,7 +145,7 @@ metadata {
 		}
         
 		standardTile("TWCwxIcon", "device.TWCwxIcon", decoration: "flat", width: 2, height: 2) {
-			state "chanceflurries", icon:"st.custom.wu1.chanceflurries", label: "", default: true
+			state "5", icon:"st.custom.wu1.chanceflurries", label: "", default: true
 			state "chancerain", icon:"st.custom.wu1.chancerain", label: ""
 			state "chancesleet", icon:"st.custom.wu1.chancesleet", label: ""
 			state "chancesnow", icon:"st.custom.wu1.chancesnow", label: ""
@@ -177,7 +177,7 @@ metadata {
 			state "31N", icon:"st.custom.wu1.nt_clear", label: ""
 			state "33N", icon:"st.custom.wu1.nt_clear", label: ""
 			state "26N", icon:"st.custom.wu1.nt_cloudy", label: ""
-			state "nt_flurries", icon:"st.custom.wu1.nt_flurries", label: ""
+			state "14N", icon:"st.custom.wu1.nt_flurries", label: ""
 			state "20N", icon:"st.custom.wu1.nt_fog", label: ""
 			state "nt_fog", icon:"st.custom.wu1.nt_fog", label: ""
 			state "nt_hazy", icon:"st.custom.wu1.nt_hazy", label: ""
@@ -186,10 +186,11 @@ metadata {
 			state "nt_partlycloudy", icon:"st.custom.wu1.nt_partlycloudy", label: ""
 			state "nt_partlysunny", icon:"st.custom.wu1.nt_partlysunny", label: ""
 			state "nt_sleet", icon:"st.custom.wu1.nt_sleet", label: ""
+			state "11N", icon:"st.custom.wu1.nt_rain", label: ""
 			state "12N", icon:"st.custom.wu1.nt_rain", label: ""
 			state "27N", icon:"st.custom.wu1.nt_rain", label: ""
 			state "nt_sleet", icon:"st.custom.wu1.nt_sleet", label: ""
-			state "nt_snow", icon:"st.custom.wu1.nt_snow", label: ""
+			state "16N", icon:"st.custom.wu1.nt_snow", label: ""
 			state "nt_sunny", icon:"st.custom.wu1.nt_sunny", label: ""
 			state "4N", icon:"st.custom.wu1.nt_tstorms", label: ""
 			state "nt_cloudy", icon:"st.custom.wu1.nt_cloudy", label: ""

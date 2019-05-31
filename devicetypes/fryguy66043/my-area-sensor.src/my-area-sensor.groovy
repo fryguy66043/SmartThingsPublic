@@ -269,6 +269,7 @@ def updateServerDeviceList(list, values) {
     date = URLEncoder.encode(date, "UTF-8")
 
 	if (portalService && portalServiceIP && portalServicePort) {    	
+    	log.debug "Calling PyPortal Service"
         def listVals =  ''
         if (values.size() > 0) {
         	listVals = URLEncoder.encode(values, "UTF-8")
@@ -279,9 +280,8 @@ def updateServerDeviceList(list, values) {
         state.serverRefresh = false
         
         def cmd = "monitored/devices?list=${list}&listVals=${listVals}&asof=${date}"
-//        def cmd = "monitored/devices?list=Perimeter&listVals=Test"
         def host = getHost()
-        log.debug "cmd = ${cmd}\nhost = ${host}"
+//        log.debug "cmd = ${cmd}\nhost = ${host}"
         def result = new physicalgraph.device.HubAction(
             method: "GET",
             path: "/${cmd}",
