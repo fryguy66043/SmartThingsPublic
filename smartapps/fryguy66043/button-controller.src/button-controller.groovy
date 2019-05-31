@@ -37,6 +37,7 @@ preferences {
         input "button2_pushed", "capability.switch", multiple: true, required: false, title: "What switches do you want to toggle when pressed?"
         input "button2_double", "capability.switch", multiple: true, required: false, title: "What switches do you want to toggle when double-pressed?"
         input "button2_held", "capability.switch", multiple: true, required: false, title: "What switches do you want to toggle when held?"
+        input "button2_feeder", "device.petfeeder", multiple: false, required: false, title: "Do you want to activate the pet feeder when pressed?"
     }
 	section("Send Push Notification?") {
         input "sendPush", "bool", required: false, title: "Send Push Notification when a button is pressed?"
@@ -161,6 +162,10 @@ def button2Handler(evt) {
             else {
             	msg = msg + "No switches defined for this event!"
             }
+            if (button2_feeder) {
+            	button2_feeder.feed()
+                msg = msg + "Feed Request Sent!"
+            }
             break
         case "double":
         	if (button2_double) {
@@ -194,6 +199,10 @@ def button2Handler(evt) {
             }
             else {
             	msg = msg + "No switches defined for this event!"
+            }
+            if (button2_feeder) {
+            	button2_feeder.feed()
+                msg = msg + "Feed Request Sent!"
             }
             break
         default:
