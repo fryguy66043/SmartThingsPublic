@@ -39,6 +39,13 @@ metadata {
 	}
 
 	tiles(scale: 2) {
+        standardTile("state", "device.state", decoration: "flat", width: 2, height: 2) {
+        	state "ok", label: 'OK', icon: "st.Entertainment.entertainment1", backgroundColor:"#00A0DC"
+            state "lowDiskSpace", label: 'Low Disk', icon: "st.Entertainment.entertainment1", backgroundColor:"#bc2323"
+            state "highCPUTemp", label: 'CPU Temp', icon: "st.Entertainment.entertainment1", backgroundColor:"#bc2323"
+            state "unavailable", label: 'Unavail', icon: "st.Entertainment.entertainment1", backgroundColor:"#bc2323"
+            state "error", label: '${name}', icon: "st.Entertainment.entertainment1", backgroundColor:"#bc2323"
+        }
         valueTile("status", "device.status", decoration: "flat", width: 6, height: 2) {
         	state "default", label: '${currentValue}' 
         }
@@ -68,7 +75,7 @@ metadata {
 
 
 		main "state"
-		details(["substatus", "diskSpace", "cpuTemp", "feed", "refresh"])}
+		details(["state", "substatus", "diskSpace", "cpuTemp", "feed", "refresh"])}
 }
 
 def getFullPath() {
@@ -129,6 +136,8 @@ def getHealthStatus() {
 
 	if(!serverOn) {
     	log.debug "Server disabled in preferences"
+        sendEvent(name: "state", value: "unavailable")
+	    sendEvent(name: "substatus", value: "Pet Feeder Disabled In Preferences")
         return
     }
     
@@ -142,6 +151,7 @@ def getHealthStatus() {
         [callback: getHealthStatusHandler]
     )
     //    log.debug result.toString()
+    sendEvent(name: "substatus", value: "Requesting Pet Feeder Status...")
     sendHubCommand(result)
 }
 
@@ -169,6 +179,7 @@ def getHealthStatusHandler(sData) {
             sendEvent(name: "cpuTemp", value: hBody)
         }
     }
+    sendEvent(name: "state", value: "ok")
 //    updateDisplay()
 }
 
@@ -222,6 +233,7 @@ def refresh() {
         getHealthStatus()
     }
     else {
+    	sendEvent(name: "state", value: "unavailable")
     	log.debug "Skipping refresh.  Server not running"
     }
 }
