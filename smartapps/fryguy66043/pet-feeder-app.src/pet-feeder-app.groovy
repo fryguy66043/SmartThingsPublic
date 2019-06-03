@@ -61,87 +61,48 @@ def initialize() {
     def aDate = ""
     def aTime = ""
     def cmd = ""
-    def cnt = 0
     if (sched1) {
     	aDate = new Date(timeToday(sched1).time)
     	aTime = aDate.format("HH:mm", location.timeZone)
     	cmd = "?one=${aTime}"
         cnt++
     }
+    else {
+    	cmd = "?one="
+    }
     if (sched2) {
     	aDate = new Date(timeToday(sched2).time)
     	aTime = aDate.format("HH:mm", location.timeZone)
-    	if (cnt == 1) {
-            cmd += "&two=${aTime}"
-        }
-        else {
-        	cmd = "?one=${aTime}"
-        }
-        cnt++
+        cmd += "&two=${aTime}"
+    }
+    else {
+    	cmd += "&two="
     }
     if (sched3) {
     	aDate = new Date(timeToday(sched3).time)
     	aTime = aDate.format("HH:mm", location.timeZone)
-    	if (cnt > 0) {
-        	switch (cnt) {
-            	case 1:
-                	cmd += "&two=${aTime}"
-                    break
-                case 2:
-                	cmd += "&three=${aTime}"
-                    break
-            }
-        }
-        else {
-        	cmd = "?one=${aTime}"
-        }
-        cnt++
+        cmd += "&three=${aTime}"
+    }
+    else {
+    	cmd += "&three="
     }
     if (sched4) {
     	aDate = new Date(timeToday(sched4).time)
     	aTime = aDate.format("HH:mm", location.timeZone)
-    	if (cnt > 0) {
-        	switch (cnt) {
-            	case 1:
-                	cmd += "&two=${aTime}"
-                    break
-                case 2:
-                	cmd += "&three=${aTime}"
-                    break
-                case 3:
-                	cmd += "&four=${aTime}"
-                    break
-            }
-        }
-        else {
-        	cmd = "?one=${aTime}"
-        }
-        cnt++
+        cmd += "&four=${aTime}"
     } 
+    else {
+    	cmd += "&four="
+    }
     if (sched5) {
     	aDate = new Date(timeToday(sched5).time)
     	aTime = aDate.format("HH:mm", location.timeZone)
-    	if (cnt > 0) {
-        	switch (cnt) {
-            	case 1:
-                	cmd += "&two=${aTime}"
-                    break
-                case 2:
-                	cmd += "&three=${aTime}"
-                    break
-                case 3:
-                	cmd += "&four=${aTime}"
-                    break
-                case 4:
-                	cmd += "&five=${aTime}"
-            }
-        }
-        else {
-        	cmd = "?one=${aTime}"
-        }
-        cnt++
+        cmd += "&five=${aTime}"
     }
-    log.debug "cnt = ${cnt} / cmd = ${cmd}"
+    else {
+    	cmd += "&five="
+    }
+    log.debug "cmd = ${cmd}"
     feeder.setSchedule(cmd)
 }
 
