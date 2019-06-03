@@ -32,6 +32,7 @@ metadata {
         
         command "getHealthStatus"
         command "feed"
+        command "setSchedule"
 	}
 
 	simulator {
@@ -104,6 +105,31 @@ def parse(String description) {
 	log.debug "headers = ${headerMap}"
     log.debug "body = ${body}"
     log.debug "data = ${data}"
+}
+
+def setSchedule(schedule) {
+	log.debug "setSchedule(${schedule})"
+    
+    if(!serverOn) {
+    	log.debug "Server disabled in preferences"
+        return
+    }
+    def result = new physicalgraph.device.HubAction(
+        method: "GET",
+        path: "/schedule${schedule}",
+        headers: [
+            "HOST" : "192.168.1.205:5000"],
+        null,
+        [callback: setScheduleHandler]
+    )
+    //    log.debug result.toString()
+    sendHubCommand(result)
+}
+
+def setScheduleHandler(sData) {
+	log.debug "setScheduleHandler"
+
+	getHealthStatus()
 }
 
 def feed() {
