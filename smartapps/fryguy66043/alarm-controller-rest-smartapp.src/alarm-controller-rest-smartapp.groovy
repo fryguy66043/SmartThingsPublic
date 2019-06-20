@@ -27,7 +27,10 @@ definition(
 preferences {
 	section ("Alarm Controller") {
     	input "alarmSensor", "device.fryguyAlarmController", required: true, title: "Select Alarm Controller."
-        input "lights", "capability.switch", required: false, multiple: true, title: "Select Lights."
+        input "lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches."
+        input "doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls."
+        input "locks", "capability.lock", required: false, multiple: true, title: "Select Locks."
+        input "contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contact Sensors."
     }
 }
 
@@ -45,6 +48,10 @@ def updated() {
 
 def initialize() {
 	log.debug "initialize()"
+    subscribe(lights, "switch", changeHandler)
+    subscribe(doors, "door", changeHandler)
+    subscribe(locks, "lock", changeHandler)
+    subscribe(contacts, "contact", changeHandler)
 }
 
 mappings {
@@ -68,11 +75,26 @@ mappings {
     	GET: "setSwitch"
     ]
   }
+  path("/setdoor/:command") {
+  	action: [
+    	GET: "setDoor"
+    ]
+  }
+  path("/setlock/:command") {
+  	action: [
+    	GET: "setLock"
+    ]
+  }
   path("/getstatus") {
   	action: [
     	GET: "getStatus"
     ]
   }
+}
+
+def changeHandler(evt) {
+	log.debug "changeHandler(${evt.value})"
+    alarmSensor.tickler()
 }
 
 def initializeController() {
@@ -176,6 +198,74 @@ def setArmed() {
     return resp
 }
 
+def setLock() {
+	log.debug "setLock(${params.command})"
+    
+    def resp = []
+    def command = params.command
+    def dn = ""
+    def sv = ""
+    def idx = command.indexOf("=")
+    log.debug "idx = ${idx}"
+    if (idx > -1) {
+    	sv = command.substring(idx+1).toUpperCase()
+    }
+    
+    locks.each {lock ->
+    	log.debug lock
+        dn = "${lock}"
+        if (command.contains(dn)) {
+        	log.debug "${lock} Found! / ${sv}"
+            switch (sv) {
+            	case "LOCK":
+                	lock.lock()
+                	break
+                case "UNLOCK":
+                	lock.unlock()
+                	break
+            }
+        }
+    }
+
+    resp << [name: "Command", value: command]
+    log.debug "resp: ${resp}"
+	return resp
+}
+
+def setDoor() {
+	log.debug "setDoor(${params.command})"
+    
+    def resp = []
+    def command = params.command
+    def dn = ""
+    def sv = ""
+    def idx = command.indexOf("=")
+    log.debug "idx = ${idx}"
+    if (idx > -1) {
+    	sv = command.substring(idx+1).toUpperCase()
+    }
+    
+    doors.each {door ->
+    	log.debug door
+        dn = "${door}"
+        if (command.contains(dn)) {
+        	log.debug "${door} Found! / ${sv}"
+            switch (sv) {
+            	case "OPEN":
+                	door.open()
+                	break
+                case "CLOSE":
+                	door.close()
+                	break
+            }
+        }
+    }
+
+    resp << [name: "Command", value: command]
+    log.debug "resp: ${resp}"
+	return resp
+}
+
 def setSwitch() {
 	log.debug "setSwitch(${params.command})"
     
@@ -188,8 +278,6 @@ def setSwitch() {
     if (idx > -1) {
     	sv = command.substring(idx+1).toUpperCase()
     }
-    
-    resp << [name: "Command", value: command]
     
     lights.each {dev ->
     	log.debug dev
@@ -206,8 +294,10 @@ def setSwitch() {
             }
         }
     }
-    
-   return resp
+
+    resp << [name: "Command", value: command]
+    log.debug "resp: ${resp}"
+	return resp
 }
 
 def getStatus() {
@@ -222,6 +312,30 @@ def getStatus() {
         log.debug "t_name: ${t_name}"
         log.debug "t_val: ${t_val}"
         resp << [name: "switch", value: t_name]
+        resp << [name: "val", value: t_val]
+    }
+    doors.each {door ->
+    	t_name = "${door}"
+        t_val = door.currentValue("door")
+        log.debug "t_name: ${t_name}"
+        log.debug "t_val: ${t_val}"
+        resp << [name: "door", value: t_name]
+        resp << [name: "val", value: t_val]
+    }
+    locks.each {lock ->
+    	t_name = "${lock}"
+        t_val = lock.currentValue("lock")
+        log.debug "t_name: ${t_name}"
+        log.debug "t_val: ${t_val}"
+        resp << [name: "lock", value: t_name]
+        resp << [name: "val", value: t_val]
+    }
+    contacts.each {contact ->
+    	t_name = "${contact}"
+        t_val = contact.currentValue("contact")
+        log.debug "t_name: ${t_name}"
+        log.debug "t_val: ${t_val}"
+        resp << [name: "contact", value: t_name]
         resp << [name: "val", value: t_val]
     }
     return resp
