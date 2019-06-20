@@ -27,6 +27,7 @@ definition(
 preferences {
 	section ("Alarm Controller") {
     	input "alarmSensor", "device.fryguyAlarmController", required: true, title: "Select Alarm Controller."
+        input "lights", "capability.switch", required: false, multiple: true, title: "Select Lights."
     }
 }
 
@@ -60,6 +61,16 @@ mappings {
   path("/setarmed/:command") {
     action: [
       GET: "setArmed"
+    ]
+  }
+  path("/setswitch/:command") {
+  	action: [
+    	GET: "setSwitch"
+    ]
+  }
+  path("/getstatus") {
+  	action: [
+    	GET: "getStatus"
     ]
   }
 }
@@ -161,6 +172,57 @@ def setArmed() {
     else {
     	log.debug "Skipping.  Executed too quickly."
         resp << [name: "Execution", value: "Too Soon!"]
+    }
+    return resp
+}
+
+def setSwitch() {
+	log.debug "setSwitch(${params.command})"
+    
+    def resp = []
+    def command = params.command
+    def dn = ""
+    def sv = ""
+    def idx = command.indexOf("=")
+    log.debug "idx = ${idx}"
+    if (idx > -1) {
+    	sv = command.substring(idx+1).toUpperCase()
+    }
+    
+    resp << [name: "Command", value: command]
+    
+    lights.each {dev ->
+    	log.debug dev
+        dn = "${dev}"
+        if (command.contains(dn)) {
+        	log.debug "${dev} Found! / ${sv}"
+            switch (sv) {
+            	case "ON":
+                	dev.on()
+                	break
+                case "OFF":
+                	dev.off()
+                	break
+            }
+        }
+    }
+    
+   return resp
+}
+
+def getStatus() {
+	log.debug "getStatus()"
+
+	def t_name = ""
+    def t_val = ""
+    def resp = []
+	lights.each {dev ->
+    	t_name = "${dev}"
+        t_val = dev.currentValue("switch")
+        log.debug "t_name: ${t_name}"
+        log.debug "t_val: ${t_val}"
+        resp << [name: "switch", value: t_name]
+        resp << [name: "val", value: t_val]
     }
     return resp
 }
