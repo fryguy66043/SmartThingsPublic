@@ -54,6 +54,7 @@ metadata {
         command "updateSummary"
         command "resetUserAlertCnt"
         command "updateServer"
+        command "tickler"
 	}
 
 	simulator {
@@ -369,6 +370,27 @@ private updateServerList(list, values) {
 
 def updateServerListHandler(sData) {
 	log.debug "updateServerListHandler(status: ${sData.status} / body = ${sData.body})"
+}
+
+def tickler() {
+	log.debug "tickler()"
+    
+    if (alarmServiceIP && alarmServicePort) {
+        def result = new physicalgraph.device.HubAction(
+            method: "GET",
+            path: "/tickle",
+            headers: [
+                "HOST" : "${alarmServiceIP}:${alarmServicePort}"],
+            null,
+            [callback: ticklerHandler]
+        )
+        //    log.debug result.toString()
+        sendHubCommand(result)
+    }
+}
+
+def ticklerHandler(sData) {
+	log.debug "ticklerHandler(status: ${sData.status})"
 }
 
 def updateServer() {
