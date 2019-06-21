@@ -52,6 +52,7 @@ def initialize() {
     subscribe(doors, "door", changeHandler)
     subscribe(locks, "lock", changeHandler)
     subscribe(contacts, "contact", changeHandler)
+    alarmSensor.tickler()
 }
 
 mappings {
