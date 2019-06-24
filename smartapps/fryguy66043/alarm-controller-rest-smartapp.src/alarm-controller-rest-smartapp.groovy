@@ -27,10 +27,13 @@ definition(
 preferences {
 	section ("Alarm Controller") {
     	input "alarmSensor", "device.fryguyAlarmController", required: true, title: "Select Alarm Controller."
+        input "thermostat", "capability.thermostat", required: false, title: "Select Thermostat."
         input "lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches."
         input "doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls."
         input "locks", "capability.lock", required: false, multiple: true, title: "Select Locks."
         input "contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contact Sensors."
+    	input "forecast", "device.mySmartweatherTile", required: false, title: "Select Forecast Provider."
+        input "wxDevice", "device.fryguypiWxDevice", required: false, title: "Select Weather Device."
     }
 }
 
@@ -52,6 +55,11 @@ def initialize() {
     subscribe(doors, "door", changeHandler)
     subscribe(locks, "lock", changeHandler)
     subscribe(contacts, "contact", changeHandler)
+    subscribe(alarmSensor, "alarmState", changeHandler)
+    subscribe(thermostat, "thermostat", changeHandler)
+    subscribe(forecast, "temperature", changeHandler)
+    subscribe(forecast, "shortForecast", changeHandler)
+    subscribe(wxDevice, "rainToday", changeHandler)
     alarmSensor.tickler()
 }
 
@@ -307,6 +315,28 @@ def getStatus() {
 	def t_name = ""
     def t_val = ""
     def resp = []
+    log.debug "Alarm State: ${alarmSensor.currentValue("alarmState")}"
+    resp << [name: "alarm", value: "Alarm Sensor"]
+    resp << [name: "val", value: alarmSensor.currentValue("alarmState")]
+    log.debug "Thermostat: ${thermostat?.displayName} / ${thermostat?.currentValue("temperature")} / ${thermostat?.currentValue("thermostatMode")}"
+    log.debug "heatingSetpoint: ${thermostat?.currentValue("heatingSetpoint")} / coolingSetpoint: ${thermostat?.currentValue("coolingSetpoint")}"
+    resp << [name: "thermostat", value: thermostat.displayName]
+    resp << [name: "val", value: thermostat.currentValue("thermostatMode")]
+    resp << [name: "temp", value: "current temp"]
+    resp << [name: "val", value: thermostat.currentValue("temperature")]
+    resp << [name: "heat", value: "heatingSetPoint"]
+    resp << [name: "val", value: thermostat.currentValue("heatingSetpoint")]
+    resp << [name: "cool", value: "coolingSetPoint"]
+    resp << [name: "val", value: thermostat.currentValue("coolingSetpoint")]
+    log.debug "Outside Temp: ${forecast.displayName}: ${forecast.currentValue("temperature")} / Forecast: ${forecast.currentValue("shortForecast")} / Long: ${forecast.currentValue("forecast")}"
+	resp << [name: "weather", value: forecast.displayName]
+    resp << [name: "val", value: forecast.currentValue("temperature")]
+    resp << [name: "forecast", value: forecast.currentValue("shortForecast")]
+    resp << [name: "val", value: forecast.currentValue("forecast")]
+    log.debug "Rain Today: ${wxDevice.currentValue("rainToday")}"
+    resp << [name: "wxDevice", value: "Rain Gauge"]
+    resp << [name: "val", value: wxDevice.currentValue("rainToday")]
+
 	lights.each {dev ->
     	t_name = "${dev}"
         t_val = dev.currentValue("switch")
