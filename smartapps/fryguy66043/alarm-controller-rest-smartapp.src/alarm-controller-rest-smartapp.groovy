@@ -34,6 +34,9 @@ preferences {
         input "contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contact Sensors."
     	input "forecast", "device.mySmartweatherTile", required: false, title: "Select Forecast Provider."
         input "wxDevice", "device.fryguypiWxDevice", required: false, title: "Select Weather Device."
+        input "jeff", "capability.presenceSensor", required: false, title: "Select Jeff's Phone."
+        input "cyndi", "capability.presenceSensor", required: false, title: "Select Cyndi's Phone."
+        input "dee", "device.myTrackingSensor", required: false, title: "Select Tracking Sensor."
     }
 }
 
@@ -60,6 +63,9 @@ def initialize() {
     subscribe(forecast, "temperature", changeHandler)
     subscribe(forecast, "shortForecast", changeHandler)
     subscribe(wxDevice, "rainToday", changeHandler)
+    subscribe(jeff, "presence", changeHandler)
+    subscribe(cyndi, "presence", changeHandler)
+    subscribe(dee, "currentLocation", changeHandler)
     alarmSensor.tickler()
 }
 
@@ -318,6 +324,8 @@ def getStatus() {
     log.debug "Alarm State: ${alarmSensor.currentValue("alarmState")}"
     resp << [name: "alarm", value: "Alarm Sensor"]
     resp << [name: "val", value: alarmSensor.currentValue("alarmState")]
+    resp << [name: "alert", value: "Alert State"]
+    resp << [name: "val", value: alarmSensor.currentValue("alertState")]
     log.debug "Thermostat: ${thermostat?.displayName} / ${thermostat?.currentValue("temperature")} / ${thermostat?.currentValue("thermostatMode")}"
     log.debug "heatingSetpoint: ${thermostat?.currentValue("heatingSetpoint")} / coolingSetpoint: ${thermostat?.currentValue("coolingSetpoint")}"
     resp << [name: "thermostat", value: thermostat.displayName]
@@ -337,6 +345,18 @@ def getStatus() {
     resp << [name: "wxDevice", value: "Rain Gauge"]
     resp << [name: "val", value: wxDevice.currentValue("rainToday")]
 
+	log.debug "Dee: ${dee.currentValue("currentLocation")}"
+    resp << [name: "dee", value: "Dee's Location"]
+    resp << [name: "val", value: dee.currentValue("currentLocation")]
+    
+    log.debug "Jeff: ${jeff.currentPresence}"
+    resp << [name: "jeff", value: "Jeff's Location"]
+    resp << [name: "val", value: jeff.currentPresence]
+    
+    log.debug "Cyndi: ${cyndi.currentPresence}"
+    resp << [name: "cyndi", value: "Cyndi's Location"]
+    resp << [name: "val", value: cyndi.currentPresence]
+    
 	lights.each {dev ->
     	t_name = "${dev}"
         t_val = dev.currentValue("switch")
@@ -369,5 +389,6 @@ def getStatus() {
         resp << [name: "contact", value: t_name]
         resp << [name: "val", value: t_val]
     }
+    log.debug resp
     return resp
 }
