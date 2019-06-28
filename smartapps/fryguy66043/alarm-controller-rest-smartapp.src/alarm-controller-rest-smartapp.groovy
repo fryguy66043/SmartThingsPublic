@@ -100,6 +100,11 @@ mappings {
     	GET: "setLock"
     ]
   }
+  path("/set_temp/:command") {
+  	action: [
+    	GET: "setTemp"
+    ]
+  }
   path("/getstatus") {
   	action: [
     	GET: "getStatus"
@@ -158,6 +163,40 @@ def setDisarmed() {
         resp << [name: "Execution", value: "Too Soon!"]
     }
     return resp
+}
+
+def setTemp() {
+    log.debug "setTemp(${params.command})"
+    def resp = []
+    def cmd = []
+    def mode = ""
+    def temp = ""
+    def command = params.command
+    resp << [name: "Command", value: command]
+    cmd = command.split('&')
+    for (String value : cmd) {
+        if (value.contains("temp")) {
+            def tCmd = [] 
+            tCmd = value.split('=')
+            log.debug "temp = ${tCmd[1]}"
+            temp = tCmd[1].trim()
+        }
+
+        else if (value.contains("mode")) {
+			def mCmd = []
+            mCmd = value.split('=')
+            log.debug "mode = ${mCmd[1]}"
+            mode = mCmd[1].trim()
+        }
+    }
+
+	if (mode == "cool") {
+    	thermostat.setCoolingSetpoint(temp.toInteger())
+    }
+    else if (mode == "heat") {
+    	thermostat.setHeatingSetpoint(temp.toInteger())
+    }
+	return resp
 }
 
 def setArmed() {
