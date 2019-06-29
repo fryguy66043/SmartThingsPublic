@@ -259,16 +259,21 @@ def setLock() {
     def command = params.command
     def dn = ""
     def sv = ""
+    def allLock = false
     def idx = command.indexOf("=")
     log.debug "idx = ${idx}"
     if (idx > -1) {
     	sv = command.substring(idx+1).toUpperCase()
     }
     
+    if (command.contains("all=lock")) {
+    	allLock = true
+    }
+    
     locks.each {lock ->
     	log.debug lock
         dn = "${lock}"
-        if (command.contains(dn)) {
+        if (command.contains(dn) || allLock) {
         	log.debug "${lock} Found! / ${sv}"
             switch (sv) {
             	case "LOCK":
@@ -293,16 +298,21 @@ def setDoor() {
     def command = params.command
     def dn = ""
     def sv = ""
+    def allClose = false
     def idx = command.indexOf("=")
     log.debug "idx = ${idx}"
     if (idx > -1) {
     	sv = command.substring(idx+1).toUpperCase()
     }
     
+    if (command.contains("all=close")) {
+    	allClose = true
+    }
+    
     doors.each {door ->
     	log.debug door
         dn = "${door}"
-        if (command.contains(dn)) {
+        if (command.contains(dn) || allClose) {
         	log.debug "${door} Found! / ${sv}"
             switch (sv) {
             	case "OPEN":
@@ -327,16 +337,20 @@ def setSwitch() {
     def command = params.command
     def dn = ""
     def sv = ""
+    def allOff = false
     def idx = command.indexOf("=")
     log.debug "idx = ${idx}"
     if (idx > -1) {
     	sv = command.substring(idx+1).toUpperCase()
     }
-    
+	if (command.contains("all=off")) {
+    	allOff = true
+    }
+
     lights.each {dev ->
     	log.debug dev
         dn = "${dev}"
-        if (command.contains(dn)) {
+        if (command.contains(dn) || allOff) {
         	log.debug "${dev} Found! / ${sv}"
             switch (sv) {
             	case "ON":
