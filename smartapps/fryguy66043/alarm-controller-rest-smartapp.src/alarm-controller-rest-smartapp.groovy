@@ -61,7 +61,11 @@ def initialize() {
     subscribe(alarmSensor, "alarmState", changeHandler)
     subscribe(thermostat, "thermostat", changeHandler)
     subscribe(forecast, "temperature", changeHandler)
-    subscribe(forecast, "shortForecast", changeHandler)
+    subscribe(forecast, "weather", changeHandler)
+    subscribe(forecast, "forecast", changeHandler)
+    subscribe(forecast, "feelsLike", changeHandler)
+    subscribe(forecast, "percentPrecip", changeHandler)
+    subscribe(forecast, "humidity", changeHandler)
     subscribe(wxDevice, "rainToday", changeHandler)
     subscribe(jeff, "presence", changeHandler)
     subscribe(cyndi, "presence", changeHandler)
@@ -379,6 +383,7 @@ def getStatus() {
     resp << [name: "val", value: alarmSensor.currentValue("alarmState")]
     resp << [name: "alert", value: "Alert State"]
     resp << [name: "val", value: alarmSensor.currentValue("alertState")]
+    
     log.debug "Thermostat: ${thermostat?.displayName} / ${thermostat?.currentValue("temperature")} / ${thermostat?.currentValue("thermostatMode")}"
     log.debug "heatingSetpoint: ${thermostat?.currentValue("heatingSetpoint")} / coolingSetpoint: ${thermostat?.currentValue("coolingSetpoint")}"
     resp << [name: "thermostat", value: thermostat.displayName]
@@ -389,14 +394,21 @@ def getStatus() {
     resp << [name: "val", value: thermostat.currentValue("heatingSetpoint")]
     resp << [name: "cool", value: "coolingSetPoint"]
     resp << [name: "val", value: thermostat.currentValue("coolingSetpoint")]
-    log.debug "Outside Temp: ${forecast.displayName}: ${forecast.currentValue("temperature")} / Forecast: ${forecast.currentValue("shortForecast")} / Long: ${forecast.currentValue("forecast")}"
+
+	log.debug "Outside Temp: ${forecast.displayName}: ${forecast.currentValue("temperature")} / Forecast: ${forecast.currentValue("shortForecast")} / Long: ${forecast.currentValue("forecast")}"
 	resp << [name: "weather", value: forecast.displayName]
     resp << [name: "val", value: forecast.currentValue("temperature")]
-    resp << [name: "forecast", value: forecast.currentValue("shortForecast")]
+    resp << [name: "forecast", value: forecast.currentValue("weather")]
     resp << [name: "val", value: forecast.currentValue("forecast")]
     log.debug "Rain Today: ${wxDevice.currentValue("rainToday")}"
     resp << [name: "wxDevice", value: "Rain Gauge"]
     resp << [name: "val", value: wxDevice.currentValue("rainToday")]
+    resp << [name: "feelsLike", value: "Feels Like"]
+    resp << [name: "val", value: forecast.currentValue("feelsLike")]
+    resp << [name: "percentPrecip", value: "Chance of Precip"]
+    resp << [name: "val", value: forecast.currentValue("percentPrecip")]
+    resp << [name: "humidity", value: "Humidity"]
+    resp << [name: "val", value: forecast.currentValue("humidity")]
 
 	log.debug "Dee: ${dee.currentValue("currentLocation")}"
     resp << [name: "dee", value: "Dee's Location"]
