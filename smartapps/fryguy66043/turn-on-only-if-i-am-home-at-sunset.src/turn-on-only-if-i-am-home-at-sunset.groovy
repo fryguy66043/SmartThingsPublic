@@ -73,6 +73,23 @@ def appHandler(evt) {
 	def sunTime = getSunriseAndSunset();
     def dark = (now >= sunTime.sunset)
 
+    def dn = ""
+    def hVal = ""
+    def sVal = ""
+    
+    log.debug "Checking for hsl..."
+    switch1.each {dev ->
+    	dn = "${dev}".trim()
+        if ("Bedroom Bulb" == dn) {
+        	log.debug "Found Bedroom Bulb"
+        	hVal = dev.currentValue("hue")
+            sVal = dev.currentValue("saturation")
+        	log.debug "hue: ${hVal}, saturation: ${sVal}"
+            log.debug "level: ${dev.currentValue("level")}"
+        }
+    }
+    log.debug "Ending"
+
 	turnOn()
 
 	def curState = switch1.currentState("switch")
