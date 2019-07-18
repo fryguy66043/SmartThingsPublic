@@ -54,12 +54,18 @@ def updated() {
 
 def initialize() {
 	log.debug "initialize()"
+    
+    state.colorBulbs = null
+    
     subscribe(lights, "switch", changeHandler)
+    subscribe(lights, "level", changeHandler)
+    subscribe(lights, "color", changeHandler)
     subscribe(doors, "door", changeHandler)
     subscribe(locks, "lock", changeHandler)
     subscribe(contacts, "contact", changeHandler)
     subscribe(alarmSensor, "alarmState", changeHandler)
     subscribe(thermostat, "thermostat", changeHandler)
+    subscribe(thermostat, "thermostatOperatingState", changeHandler)
     subscribe(forecast, "temperature", changeHandler)
     subscribe(forecast, "weather", changeHandler)
     subscribe(forecast, "forecast", changeHandler)
@@ -70,6 +76,7 @@ def initialize() {
     subscribe(jeff, "presence", changeHandler)
     subscribe(cyndi, "presence", changeHandler)
     subscribe(dee, "currentLocation", changeHandler)
+    subscribe(app, appHandler)
     alarmSensor.tickler()
 }
 
@@ -109,11 +116,31 @@ mappings {
     	GET: "setTemp"
     ]
   }
+  path("/set_color_bulb/:command") {
+  	action: [
+    	GET: "setColorBulb"
+    ]
+  }
   path("/getstatus") {
   	action: [
     	GET: "getStatus"
     ]
   }
+}
+
+def appHandler(evt) {
+	log.debug "appHandler"
+    def dn = ""
+    def hVal = ""
+    def sVal = ""
+    
+    lights.each {dev ->
+    	dn = "${dev}".trim()
+        if ("Bedroom Bulb" == dn) {
+        	hVal = dev.currentValue("hue")
+        	log.debug "hue: ${hVal}"
+        }
+    }
 }
 
 def changeHandler(evt) {
@@ -166,6 +193,110 @@ def setDisarmed() {
     	log.debug "Skipping.  Executed too quickly."
         resp << [name: "Execution", value: "Too Soon!"]
     }
+    return resp
+}
+
+def setColorBulb() {
+	log.debug "setColorBulb(${params.command})"
+    def resp = []
+    def command = params.command
+    def bulbFound = -1
+    def cmd = ""
+    def bulb = ""
+    def color = ""
+    def dim = ""
+    def dn = ""
+    def hue = ""
+    def saturation = ""
+    
+    cmd = command.split('&')
+    for (String value : cmd) {
+        if (value.contains("name")) {
+            def nCmd = [] 
+            nCmd = value.split('=')
+            log.debug "name = ${nCmd[1]}"
+            bulb = nCmd[1].trim()
+        }
+
+        else if (value.contains("color")) {
+			def cCmd = []
+            cCmd = value.split('=')
+            log.debug "color = ${cCmd[1]}"
+            color = cCmd[1].trim()
+            color.toLowerCase()
+    /* white: hue: 56, saturation: 2
+       red: hue: 2, saturation: 94
+       blue: hue: 67, saturation: 92
+       green: hue: 28, saturation: 98
+    */
+            switch (color) {
+            	case "white":
+                	hue = 56
+                    saturation = 2
+                	break
+                case "red":
+                	hue = 2
+                    saturation = 94
+                	break
+                case "blue":
+                	hue = 67
+                    saturation = 92
+                	break
+                case "green":
+                	hue = 28
+                    saturation = 98
+                	break
+            }
+        }
+
+        else if (value.contains("dim")) {
+			def dCmd = []
+            dCmd = value.split('=')
+            log.debug "dim = ${dCmd[1]}"
+            dim = dCmd[1].trim()
+        }
+    }
+    
+
+	log.debug "Searching for ${bulb}..."
+    if (!state.colorBulbs) {
+    	log.debug "state.colorBulbs not defined.  Initializing..."
+        state.colorBulbs = []
+    }
+    lights.each {dev ->
+        dn = "${dev}".trim()
+        if (bulb == dn) {
+        	log.debug "${bulb} Found!"
+            bulbFound = -1
+
+			for (int x = 0; x < state.colorBulbs.size(); x++) {
+            	if (state.colorBulbs[x].name == bulb) {
+                  bulbFound = x
+                  break
+                }
+            }
+            if (bulbFound == -1) {
+            	state.colorBulbs << [name: bulb, hue: hue, saturation: saturation, dim: dim]
+            }
+            else {
+              log.debug "Already exists!"
+              state.colorBulbs[bulbFound].hue = hue
+              state.colorBulbs[bulbFound].saturation = saturation
+              state.colorBulbs[bulbFound].dim = dim
+            }
+            
+            log.debug "colorBulbs: ${state.colorBulbs}"
+            def capabilities = dev.capabilities
+            for (cap in capabilities) {
+            	if (cap.name == "Color Control") {
+                	dev?.setColor([hue: hue, saturation: saturation])
+                    dev?.setLevel(dim.toInteger())
+                }
+            }
+        }
+    }
+
+    resp << [name: "Command", value: command]
     return resp
 }
 
@@ -377,7 +508,14 @@ def getStatus() {
 
 	def t_name = ""
     def t_val = ""
+    def t_hue = ""
+    def t_saturation = ""
+    def t_dim = ""
+    def cVal = ""
+    def dVal = ""
+    
     def resp = []
+    
     log.debug "Alarm State: ${alarmSensor.currentValue("alarmState")}"
     resp << [name: "alarm", value: "Alarm Sensor"]
     resp << [name: "val", value: alarmSensor.currentValue("alarmState")]
@@ -394,6 +532,8 @@ def getStatus() {
     resp << [name: "val", value: thermostat.currentValue("heatingSetpoint")]
     resp << [name: "cool", value: "coolingSetPoint"]
     resp << [name: "val", value: thermostat.currentValue("coolingSetpoint")]
+    resp << [name: "thermostatOperatingState", value: "operating state"]
+    resp << [name: "val", value: thermostat.currentValue("thermostatOperatingState")]
 
 	log.debug "Outside Temp: ${forecast.displayName}: ${forecast.currentValue("temperature")} / Forecast: ${forecast.currentValue("shortForecast")} / Long: ${forecast.currentValue("forecast")}"
 	resp << [name: "weather", value: forecast.displayName]
@@ -422,6 +562,10 @@ def getStatus() {
     resp << [name: "cyndi", value: "Cyndi's Location"]
     resp << [name: "val", value: cyndi.currentPresence]
     
+    if (!state.colorBulbs) {
+    	log.debug "state.colorBulbs not defined.  Initializing..."
+        state.colorBulbs = []
+    }
 	lights.each {dev ->
     	t_name = "${dev}"
         t_val = dev.currentValue("switch")
@@ -429,7 +573,69 @@ def getStatus() {
         log.debug "t_val: ${t_val}"
         resp << [name: "switch", value: t_name]
         resp << [name: "val", value: t_val]
+
+		def bulbFound = -1
+        def colorBulb = false
+        
+        t_hue = dev?.currentValue("hue")
+        if (t_hue) {
+        	log.debug "**** hue: ${dev?.currentValue("hue")}"
+        	colorBulb = true
+
+			bulbFound = -1
+            for (int x = 0; x < state?.colorBulbs?.size(); x++) {
+                if (state.colorBulbs[x].name == t_name) {
+                    bulbFound = x
+                    log.debug "Color Bulb Found!"
+                    break
+                }
+            }
+            if (bulbFound == -1) {
+            	log.debug "Bulb not found in state..."
+            	t_hue = dev?.currentValue("hue")
+                t_saturation = dev?.currentValue("saturation")
+                t_dim = dev?.currentValue("level")
+            	state.colorBulbs << [name: t_name, hue: t_hue, saturation: t_saturation, dim: t_dim]
+                log.debug "*** colorBulbs: ${state.colorBulbs}"
+            }
+            else {
+              	log.debug "Bulb found in state..."
+                t_hue = state.colorBulbs[bulbFound].hue
+                t_saturation = state.colorBulbs[bulbFound].saturation
+                t_dim = state.colorBulbs[bulbFound].dim
+                log.debug "switchLevel: ${t_dim}"
+                if (!t_dim) {
+                    t_dim = 37
+                }
+
+        /* white: hue: 56, saturation: 2
+           red: hue: 2, saturation: 94
+           blue: hue: 67, saturation: 92
+           green: hue: 28, saturation: 98
+        */
+                if (t_hue == 2 && t_saturation == 94) {
+                    cVal = "red"
+                }
+                else if (t_hue == 67 && t_saturation == 92) {
+                    cVal = "blue"
+                }
+                else if (t_hue == 28 && t_saturation == 98) {
+                    cVal = "green"
+                }
+                else {
+                    cVal = "white"
+                }
+                dVal = t_dim
+                if (!t_dim) {
+                	dVal = 37
+                }
+                log.debug "*** Adding color response..."
+                resp << [name: "switch_c", value: t_name]
+                resp << [name: cVal, value: dVal]
+            }
+        }
     }
+        
     doors.each {door ->
     	t_name = "${door}"
         t_val = door.currentValue("door")
