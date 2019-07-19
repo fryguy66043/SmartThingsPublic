@@ -490,6 +490,12 @@ def setSwitch() {
             switch (sv) {
             	case "ON":
                 	dev.on()
+                    for (int x = 0; x < state?.colorBulbs?.size(); x++) {
+                    	if (state.colorBulbs[x].name == dn) {
+                        	dev?.setColor([hue: state.colorBulbs[x].hue, saturation: state.colorBulbs[x].saturation])
+                            dev?.setLevel(state.colorBulbs[x].dim)
+                        }
+                    }
                 	break
                 case "OFF":
                 	dev.off()
