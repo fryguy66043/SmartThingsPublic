@@ -596,7 +596,6 @@ def getStatus() {
                 t_saturation = dev?.currentValue("saturation")
                 t_dim = dev?.currentValue("level")
             	state.colorBulbs << [name: t_name, hue: t_hue, saturation: t_saturation, dim: t_dim]
-                log.debug "*** colorBulbs: ${state.colorBulbs}"
             }
             else {
               	log.debug "Bulb found in state..."
@@ -607,34 +606,34 @@ def getStatus() {
                 if (!t_dim) {
                     t_dim = 37
                 }
-
+            }
         /* white: hue: 56, saturation: 2
            red: hue: 2, saturation: 94
            blue: hue: 67, saturation: 92
            green: hue: 28, saturation: 98
         */
-                if (t_hue == 2 && t_saturation == 94) {
-                    cVal = "red"
-                }
-                else if (t_hue == 67 && t_saturation == 92) {
-                    cVal = "blue"
-                }
-                else if (t_hue == 28 && t_saturation == 98) {
-                    cVal = "green"
-                }
-                else {
-                    cVal = "white"
-                }
-                dVal = t_dim
-                if (!t_dim) {
-                	dVal = 37
-                }
-                log.debug "*** Adding color response..."
-                resp << [name: "switch_c", value: t_name]
-                resp << [name: cVal, value: dVal]
+            if (t_hue == 2 && t_saturation == 94) {
+                cVal = "red"
             }
+            else if (t_hue == 67 && t_saturation == 92) {
+                cVal = "blue"
+            }
+            else if (t_hue == 28 && t_saturation == 98) {
+                cVal = "green"
+            }
+            else {
+                cVal = "white"
+            }
+            dVal = t_dim
+            if (!t_dim) {
+                dVal = 37
+            }
+            log.debug "*** Adding color response..."
+            resp << [name: "switch_c", value: t_name]
+            resp << [name: cVal, value: dVal]
         }
     }
+    
         
     doors.each {door ->
     	t_name = "${door}"
