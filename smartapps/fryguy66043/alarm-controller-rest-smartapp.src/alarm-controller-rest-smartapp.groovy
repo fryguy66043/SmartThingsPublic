@@ -106,6 +106,11 @@ mappings {
     	GET: "setDoor"
     ]
   }
+  path("/getdoor/:command") {
+  	action: [
+    	GET: "getDoor"
+    ]
+  }
   path("/setlock/:command") {
   	action: [
     	GET: "setLock"
@@ -424,6 +429,23 @@ def setLock() {
     resp << [name: "Command", value: command]
     log.debug "resp: ${resp}"
 	return resp
+}
+
+def getDoor() {
+	log.debug "getDoor(${params.command})"
+    def resp = []
+    def command = params.command
+
+	doors.each {door ->
+    	if (command.contains("${door}")) {
+        	resp << [name: "${door}", value: door.currentValue("door")]
+        }
+    }
+    if (resp.size() == 0) {
+    	resp << [name: "${door}", value: "UNK"]
+    }
+    log.debug "Door Status Resp: ${resp}"
+    return resp
 }
 
 def setDoor() {
