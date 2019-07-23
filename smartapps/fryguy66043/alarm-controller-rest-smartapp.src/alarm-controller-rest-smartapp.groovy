@@ -139,11 +139,14 @@ def appHandler(evt) {
     def hVal = ""
     def sVal = ""
     
+    def cnt = 0
     lights.each {dev ->
-    	dn = "${dev}".trim()
-        if ("Bedroom Bulb" == dn) {
-        	hVal = dev.currentValue("hue")
-        	log.debug "hue: ${hVal}"
+    	if ("${dev}" == "Basement Lamp") {
+            log.debug "${dev}: ${dev.getStatus()}"
+            def capabilities = dev.capabilities
+            for (cap in capabilities) {
+                log.debug "cap: ${cap}"
+            }
         }
     }
 }
@@ -596,7 +599,13 @@ def getStatus() {
     }
 	lights.each {dev ->
     	t_name = "${dev}"
-        t_val = dev.currentValue("switch")
+        if (dev.getStatus() != "OFFLINE") {
+	        t_val = dev.currentValue("switch")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+//        t_val = dev.currentValue("switch")
         log.debug "t_name: ${t_name}"
         log.debug "t_val: ${t_val}"
         resp << [name: "switch", value: t_name]
@@ -665,7 +674,13 @@ def getStatus() {
         
     doors.each {door ->
     	t_name = "${door}"
-        t_val = door.currentValue("door")
+        if (door.getStatus() != "OFFLINE") {
+	        t_val = door.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+//	    t_val = door.currentValue("door")
         log.debug "t_name: ${t_name}"
         log.debug "t_val: ${t_val}"
         resp << [name: "door", value: t_name]
@@ -673,7 +688,13 @@ def getStatus() {
     }
     locks.each {lock ->
     	t_name = "${lock}"
-        t_val = lock.currentValue("lock")
+        if (lock.getStatus() != "OFFLINE") {
+	        t_val = lock.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+//        t_val = lock.currentValue("lock")
         log.debug "t_name: ${t_name}"
         log.debug "t_val: ${t_val}"
         resp << [name: "lock", value: t_name]
@@ -681,7 +702,13 @@ def getStatus() {
     }
     contacts.each {contact ->
     	t_name = "${contact}"
-        t_val = contact.currentValue("contact")
+        if (contact.getStatus() != "OFFLINE") {
+	        t_val = contact.currentValue("contact")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+//        t_val = contact.currentValue("contact")
         log.debug "t_name: ${t_name}"
         log.debug "t_val: ${t_val}"
         resp << [name: "contact", value: t_name]
