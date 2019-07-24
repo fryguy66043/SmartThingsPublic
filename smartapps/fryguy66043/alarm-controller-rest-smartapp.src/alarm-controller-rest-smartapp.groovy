@@ -78,6 +78,7 @@ def initialize() {
     subscribe(dee, "currentLocation", changeHandler)
     subscribe(app, appHandler)
     alarmSensor.tickler()
+    runEvery5Minutes(changeHandler)
 }
 
 mappings {
@@ -152,7 +153,7 @@ def appHandler(evt) {
 }
 
 def changeHandler(evt) {
-	log.debug "changeHandler(${evt.value})"
+	log.debug "changeHandler()"
     alarmSensor.tickler()
 }
 
