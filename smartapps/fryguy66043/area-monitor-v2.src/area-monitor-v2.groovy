@@ -139,9 +139,21 @@ private getUnsecuredJsonString() {
     def dList = ""
     def lList = ""
     def json = ""
+    def oList = ""
     def result = ""
     
     if (switches) {
+    	switches.each {dev ->
+        	if (dev.getStatus() == "OFFLINE") {
+            	if (!oList) {
+                	oList = "\"Offline\": ["
+                }
+            	oList = oList + "\"${dev}\","
+            }
+            if (oList) {
+            	oList = "{ ${oList}]}"
+            }
+        }
         result = switches.findAll{it.currentValue("switch") == "on"}
         if (result.size() > 0) {
             sList = "\"Switches\": ["
@@ -154,6 +166,79 @@ private getUnsecuredJsonString() {
             json = "{ ${sList}"
         }
     }
+    
+    if (contacts) {
+        result = contacts.findAll{it.currentValue("contact") == "open"}
+        if (result.size() > 0) {
+            cList = "\"Contacts\": ["
+            contacts.each { 
+            	if (it.currentValue("contact") == "open") {
+                	cList = cList + "\"${it}\"," 
+                }
+            }
+            cList = cList + "]"
+            json = json ? json + ", ${clist}" : "{ ${cList}"
+        }
+    }
+    
+    if (doors) {
+        result = doors.findAll{it.currentValue("door") == "open"}
+        if (result.size() > 0) {
+            dList = "\"Doors\": ["
+            doors.each { 
+            	if (it.currentValue("door") == "open") {
+	                dList = dList + "\"${it}\"," 
+                }
+            }
+            dList = dList + "]"
+            json = json ? json + ", ${dList}" : "{ ${dList}"
+        }
+    }
+    
+    if (locks) {
+        result = locks.findAll{it.currentValue("lock") == "unlocked"}
+        if (result.size() > 0) {
+            lList = "\"Locks\": ["
+            locks.each {
+            	if (it.currentValue("lock") == "unlocked") {
+                	lList = lList + "\"${it}\"," 
+                }
+            }
+            lList = lList + "]"
+            json = json ? json + ", ${lList}" : "{ ${lList}"
+        }
+    }
+    json = json ? "${json} }" : ""
+    log.debug "Monitored json = ${json}"
+	return json
+}
+
+private getOfflineJsonString() {
+	log.debug "getOfflineJsonString"
+    def sList = ""
+	def cList = ""
+    def dList = ""
+    def lList = ""
+	def oList = ""
+	def json = ""
+    def result = ""
+    
+    if (switches) {
+    	switches.each {dev ->
+        	if (dev.getStatus() == "OFFLINE") {
+            	if (!oList) {
+                	oList = "\"Offline\": ["
+                }
+            	oList = oList + "\"${dev}\","
+            }
+        }
+        if (oList) {
+            oList = "{ ${oList}]}"
+            json = oList
+        }
+    }
+    log.debug "offline devices: ${json}"
+    return json
     
     if (contacts) {
         result = contacts.findAll{it.currentValue("contact") == "open"}
@@ -263,6 +348,10 @@ def virtualController(evt) {
 	def msg = "${location} ${date}\n${areaName} - Area Unsecure and/or Switches On:\n"
     def deviceList = ""
 
+	deviceList = ""
+    deviceList = getOfflineJsonString()
+	areaSensor.setOfflineDeviceList(deviceList)
+    
 	deviceList = getUnsecuredJsonString()
     areaSensor.setUnsecuredDeviceList(deviceList)
 
