@@ -13,6 +13,7 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  */
+ 
 definition(
     name: "When One Thing Comes On, Turn Something Else Off",
     namespace: "Fryguy66043",
@@ -85,6 +86,7 @@ def powerCheckHandler(evt) {
 	log.debug "powerCheckHandler: appliance.currentPower = ${appliance.currentPower} / appliance.currentSwitch = ${appliance.currentSwitch}"
     def date = new Date().format("MM/yy/dd h:mm:ss a", location.timeZone)
     def msg = ""
+    def status = appliance.getStatus()
     
     if (appliance.currentSwitch == "off") {
     	appliance.on()
@@ -105,18 +107,20 @@ def powerCheckHandler(evt) {
         state.powerCheckAlert = false    	
     }
     else {
-    	log.debug "Looks like power might be out..."
-        state.powerCheckTime = state.powerCheckTime ?: now()
-        if (!state.powerCheckAlert && state.powerCheckTime < now() + (60 * 5)) {
-            if (phone) {
-            	log.debug "Sending possible loss of power message"
-                state.powerCheckAlert = true
-                msg = "${location} ${date}: ${getAppName()}\n${appliance} has stopped reporting.  Possible power outage."
+    	if (status == "OFFLINE") {
+            log.debug "Looks like power might be out..."
+            state.powerCheckTime = state.powerCheckTime ?: now()
+            if (!state.powerCheckAlert && state.powerCheckTime < now() + (60 * 5)) {
                 if (phone) {
-	                sendSms(phone, msg)
-                }
-                if (sendPush) {
-                	sendPush(msg)
+                    log.debug "Sending possible loss of power message"
+                    state.powerCheckAlert = true
+                    msg = "${location} ${date}: ${getAppName()}\n${appliance} has stopped reporting.  Possible power outage."
+                    if (phone) {
+                        sendSms(phone, msg)
+                    }
+                    if (sendPush) {
+                        sendPush(msg)
+                    }
                 }
             }
         }
