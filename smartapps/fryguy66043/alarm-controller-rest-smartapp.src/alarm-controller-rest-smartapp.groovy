@@ -66,6 +66,7 @@ def initialize() {
     subscribe(alarmSensor, "alarmState", changeHandler)
     subscribe(thermostat, "thermostat", changeHandler)
     subscribe(thermostat, "thermostatOperatingState", changeHandler)
+    subscribe(thermostat, "temperature", changeHandler)
     subscribe(forecast, "temperature", changeHandler)
     subscribe(forecast, "weather", changeHandler)
     subscribe(forecast, "forecast", changeHandler)
@@ -314,7 +315,9 @@ def setTemp() {
     def resp = []
     def cmd = []
     def mode = ""
+    def currMode = ""
     def temp = ""
+    def currTemp = ""
     def command = params.command
     resp << [name: "Command", value: command]
     cmd = command.split('&')
@@ -334,11 +337,34 @@ def setTemp() {
         }
     }
 
+	currTemp = thermostat.currentValue("temperature")
+    currMode = thermostat.currentValue("thermostatMode")
+    log.debug "CurrMode: ${currMode}"
 	if (mode == "cool") {
-    	thermostat.setCoolingSetpoint(temp.toInteger())
+    	if (currMode != "cool") {
+        	log.debug "Changing mode to ${mode}"
+        	thermostat.setThermostatMode(mode)
+        }
+        if (currTemp != temp) {
+        	log.debug "Changing temp to ${temp}"
+	    	thermostat.setCoolingSetpoint(temp.toInteger())
+        }
     }
     else if (mode == "heat") {
-    	thermostat.setHeatingSetpoint(temp.toInteger())
+    	if (currMode != "heat") {
+        	log.debug "Changing mode to ${mode}"
+        	thermostat.setThermostatMode(mode)
+        }
+        if (currTemp != temp) {
+	    	thermostat.setHeatingSetpoint(temp.toInteger())
+        	log.debug "Changing temp to ${temp}"
+        }
+    }
+    else if (mode == "off") {
+    	if (currMode != "off") {
+        	log.debug "Changing mode to ${mode}"
+        	thermostat.setThermostatMode(mode)
+        }
     }
 	return resp
 }
