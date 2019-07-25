@@ -35,6 +35,7 @@ metadata {
         attribute "update", "string"
         attribute "report", "string"
         attribute "allOnOff", "enum", ["ALL OFF", "ALL ON"]
+        attribute "offlineDeviceList", "string"
         attribute "monitoredDeviceList", "string"
         attribute "unsecuredDeviceList", "string"
         attribute "lastUnsecuredDeviceList", "string"
@@ -45,6 +46,7 @@ metadata {
         command "on"
         command "allOff"
         command "allOn"
+        command "setOfflineDeviceList"
         command "setMonitoredDeviceList"
         command "setUnsecuredDeviceList"
         command "report"
@@ -58,6 +60,7 @@ metadata {
 		standardTile("state", "device.switch", width: 2, height: 2) {
 			state("off", label:'${name}', icon:"st.Lighting.light13", backgroundColor:"#00A0DC")
 			state("on", label:'${name}', icon:"st.Lighting.light11", backgroundColor:"#e86d13")
+            state("offline", label:'${name}', icon:"st.Lighting.light11", backgroundColor:"#f1d801")
 		}
         
 		standardTile("refresh", "device.refresh", decoration: "flat", width: 2, height: 2) {
@@ -81,9 +84,12 @@ metadata {
         valueTile("lastUnsecuredDevices", "device.lastUnsecuredDevices", decoration: "flat", width: 6, height: 2) {
         	state "default", label: 'Last Unsecured Devices:\n${currentValue}'
         }
+        valueTile("offlineDevices", "device.offlineDevices", decoration: "flat", width: 6, height: 2) {
+        	state "default", label: 'Offline Devices:\n${currentValue}'
+        }
 
 		main "state"
-		details(["state", "allOff", "allOn", "unsecuredDevices", "lastUnsecuredDevices", "monitoredDevices", "refresh", "report"])
+		details(["state", "allOff", "allOn", "unsecuredDevices", "lastUnsecuredDevices", "monitoredDevices", "offlineDevices", "refresh", "report"])
 	}
 }
 
@@ -98,7 +104,13 @@ def on() {
 
 def off() {
 	log.debug "switch: off()"
-    sendEvent(name: "switch", value: "off")
+    log.debug "offlineDeviceList: ${device.currentValue("offlineDeviceList")}"
+    if (device.currentValue("offlineDeviceList") != "None") {
+    	sendEvent(name: "switch", value: "offline")
+    }
+    else {
+        sendEvent(name: "switch", value: "off")
+    }
 }
 
 def allOff() {
@@ -134,6 +146,7 @@ private getJsonDisplay(jsonString, showAll) {
             newString = jsonString.replace(",]", "]")
         }
 	    def jObj = new JsonSlurper()?.parseText(newString)
+        
         if (jObj?.Switches?.size()) {
         	disp = disp ? disp + "\nSwitches: [" : "Switches: ["
             cnt = 0
@@ -254,6 +267,38 @@ def setUnsecuredDeviceList(deviceList) {
         sendEvent(name: "lastSecuredDateTime", value: date)
     }
     updateServerDeviceList("LightsUnsec", jsonValue)
+}
+
+def setOfflineDeviceList(deviceList) {
+	log.debug "setOfflineDeviceList(${deviceList})"
+	def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
+    def offlineDeviceList = "${device.currentValue("offlineDeviceList")}"
+    
+    def jsonValue = deviceList
+    if (deviceList.size() > 0) {
+    	jsonValue = cleanJsonString(deviceList)
+    }
+    log.debug "json Display = ${jsonValue}"
+    def jsonDisplayValue = getJsonDisplay(jsonValue, false)
+    def offlineDeviceDisplay = getJsonDisplay(jsonValue, false)
+    log.debug "*** jsonValue: ${jsonValue}\n*** jsonDisplayValue: ${jsonDisplayValue}"
+
+	offlineDeviceDisplay = jsonValue.replace("{ \"Offline\": ", "")
+	offlineDeviceDisplay = offlineDeviceDisplay.replace("}", "")
+	offlineDeviceDisplay = offlineDeviceDisplay.replace("\"", "")    
+
+	if (deviceList) {
+        if (true) { //(deviceList != device.currentValue("offlineDeviceList")) {
+            sendEvent(name: "offlineDeviceList", value: deviceList)
+            sendEvent(name: "offlineDevices", value: offlineDeviceDisplay)
+        }
+    }
+    else if (device.currentValue("offlineDeviceList") != "None") {
+    	log.debug "No offline devices..."
+    	sendEvent(name: "offlineDeviceList", value: "None")
+        sendEvent(name: "offlineDevices", value: "${date}\nNone")
+    }
+//    updateServerDeviceList("LightsUnsec", jsonValue)
 }
 
 def getHost() {

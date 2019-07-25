@@ -33,6 +33,7 @@ metadata {
 
 		attribute "update", "string"
         attribute "report", "string"
+        attribute "offlineDeviceList", "string"
         attribute "monitoredDeviceList", "string"
         attribute "unsecuredDeviceList", "string"
         attribute "lastUnsecuredDeviceList", "string"
@@ -41,6 +42,7 @@ metadata {
         
         command "close"
         command "open"
+        command "setOfflineDeviceList"
         command "setMonitoredDeviceList"
         command "setUnsecuredDeviceList"
         command "report"
@@ -55,6 +57,7 @@ metadata {
 		standardTile("state", "device.contact", width: 2, height: 2) {
 			state("closed", label:'SECURE', icon:"st.security.alarm.on", backgroundColor:"#00A0DC")
 			state("open", label:'UNSECURE', icon:"st.security.alarm.off", backgroundColor:"#e86d13")
+            state("offline", label:'${name}', icon:"st.Lighting.light11", backgroundColor:"#f1d801")
 		}
         valueTile("monitoredDevices", "device.monitoredDevices", decoration: "flat", width: 6, height: 3) {
         	state "default", label: 'Monitored Devices:\n${currentValue}'
@@ -71,9 +74,12 @@ metadata {
         standardTile("report", "device.report", decoration: "flat", width: 2, height: 2) {
         	state "default", label: '', action: "report", icon: "st.Office.office19"
         }
+        valueTile("offlineDevices", "device.offlineDevices", decoration: "flat", width: 6, height: 2) {
+        	state "default", label: 'Offline Devices:\n${currentValue}'
+        }
         
 		main "state"
-		details(["state", "refresh", "report", "unsecuredDevices", "lastUnsecuredDevices", "monitoredDevices"])
+		details(["state", "refresh", "report", "unsecuredDevices", "lastUnsecuredDevices", "monitoredDevices", "offlineDevices"])
 	}
 }
 
@@ -82,11 +88,19 @@ def parse(String description) {
 }
 
 def open() {
+	log.debug "contact: open()"
 	sendEvent(name: "contact", value: "open")
 }
 
 def close() {
-    sendEvent(name: "contact", value: "closed")
+	log.debug "contact: close()"
+    log.debug "offlineDeviceList: ${device.currentValue("offlineDeviceList")}"
+    if (device.currentValue("offlineDeviceList") != "None") {
+    	sendEvent(name: "contact", value: "offline")
+    }
+    else {
+	    sendEvent(name: "contact", value: "closed")
+    }
 }
 
 private cleanJsonString(jsonString) {
@@ -215,6 +229,38 @@ def setUnsecuredDeviceList(deviceList) {
         sendEvent(name: "lastSecuredDateTime", value: date)
     }
     updateServerDeviceList("PerimeterUnsec", jsonValue)
+}
+
+def setOfflineDeviceList(deviceList) {
+	log.debug "setOfflineDeviceList(${deviceList})"
+	def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
+    def offlineDeviceList = "${device.currentValue("offlineDeviceList")}"
+    
+    def jsonValue = deviceList
+    if (deviceList.size() > 0) {
+    	jsonValue = cleanJsonString(deviceList)
+    }
+    log.debug "json Display = ${jsonValue}"
+    def jsonDisplayValue = getJsonDisplay(jsonValue, false)
+    def offlineDeviceDisplay = getJsonDisplay(jsonValue, false)
+    log.debug "*** jsonValue: ${jsonValue}\n*** jsonDisplayValue: ${jsonDisplayValue}"
+
+	offlineDeviceDisplay = jsonValue.replace("{ \"Offline\": ", "")
+	offlineDeviceDisplay = offlineDeviceDisplay.replace("}", "")
+	offlineDeviceDisplay = offlineDeviceDisplay.replace("\"", "")    
+
+	if (deviceList) {
+        if (true) { //(deviceList != device.currentValue("offlineDeviceList")) {
+            sendEvent(name: "offlineDeviceList", value: deviceList)
+            sendEvent(name: "offlineDevices", value: offlineDeviceDisplay)
+        }
+    }
+    else if (device.currentValue("offlineDeviceList") != "None") {
+    	log.debug "No offline devices..."
+    	sendEvent(name: "offlineDeviceList", value: "None")
+        sendEvent(name: "offlineDevices", value: "${date}\nNone")
+    }
+//    updateServerDeviceList("LightsUnsec", jsonValue)
 }
 
 private anyMatches(list1, list2) {
