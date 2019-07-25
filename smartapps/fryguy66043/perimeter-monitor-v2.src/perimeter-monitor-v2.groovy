@@ -175,6 +175,69 @@ private getUnsecuredJsonString() {
 	return json
 }
 
+private getOfflineJsonString() {
+	log.debug "getOfflineJsonString"
+    def sList = ""
+	def cList = ""
+    def dList = ""
+    def lList = ""
+	def oList = ""
+	def json = ""
+    def result = ""
+    
+    if (switches) {
+    	switches.each {dev ->
+        	if (dev.getStatus() == "OFFLINE") {
+            	if (!oList) {
+                	oList = "\"Offline\": ["
+                }
+            	oList = oList + "\"${dev}\","
+            }
+        }
+    }
+    
+    if (contacts) {
+    	contacts.each {dev ->
+        	if (dev.getStatus() == "OFFLINE") {
+            	if (!oList) {
+                	oList = "\"Offline\": ["
+                }
+            	oList = oList + "\"${dev}\","
+            }
+        }
+    }
+    
+    if (doors) {
+    	doors.each {dev ->
+        	if (dev.getStatus() == "OFFLINE") {
+            	if (!oList) {
+                	oList = "\"Offline\": ["
+                }
+            	oList = oList + "\"${dev}\","
+            }
+        }
+    }
+    
+    if (locks) {
+    	locks.each {dev ->
+        	if (dev.getStatus() == "OFFLINE") {
+            	if (!oList) {
+                	oList = "\"Offline\": ["
+                }
+            	oList = oList + "\"${dev}\","
+            }
+        }
+    }
+    
+    if (oList) {
+        oList = "${oList}]"
+        json = "{ ${oList} }"
+    }
+    
+    log.debug "Offline json = ${json}"
+	return json
+}
+
 def perimeterSensorReport(evt) {
 	log.debug "perimeterSensorReport(${evt.value})"
     perimeterSensor.setMonitoredDeviceList(getMonitoredJsonString())
@@ -216,6 +279,9 @@ def virtualController(evt) {
     def msg = "${location} ${date}\nPerimeter Unsecure: "
     def deviceList = ""
 
+	deviceList = getOfflineJsonString()
+    perimeterSensor.setOfflineDeviceList(deviceList)
+    
 	deviceList = getUnsecuredJsonString()
     perimeterSensor.setUnsecuredDeviceList(deviceList)
 

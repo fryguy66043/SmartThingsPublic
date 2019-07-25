@@ -139,21 +139,9 @@ private getUnsecuredJsonString() {
     def dList = ""
     def lList = ""
     def json = ""
-    def oList = ""
     def result = ""
     
     if (switches) {
-    	switches.each {dev ->
-        	if (dev.getStatus() == "OFFLINE") {
-            	if (!oList) {
-                	oList = "\"Offline\": ["
-                }
-            	oList = oList + "\"${dev}\","
-            }
-            if (oList) {
-            	oList = "{ ${oList}]}"
-            }
-        }
         result = switches.findAll{it.currentValue("switch") == "on"}
         if (result.size() > 0) {
             sList = "\"Switches\": ["
@@ -232,57 +220,47 @@ private getOfflineJsonString() {
             	oList = oList + "\"${dev}\","
             }
         }
-        if (oList) {
-            oList = "{ ${oList}]}"
-            json = oList
-        }
     }
-    log.debug "offline devices: ${json}"
-    return json
     
     if (contacts) {
-        result = contacts.findAll{it.currentValue("contact") == "open"}
-        if (result.size() > 0) {
-            cList = "\"Contacts\": ["
-            contacts.each { 
-            	if (it.currentValue("contact") == "open") {
-                	cList = cList + "\"${it}\"," 
+    	contacts.each {dev ->
+        	if (dev.getStatus() == "OFFLINE") {
+            	if (!oList) {
+                	oList = "\"Offline\": ["
                 }
+            	oList = oList + "\"${dev}\","
             }
-            cList = cList + "]"
-            json = json ? json + ", ${clist}" : "{ ${cList}"
         }
     }
     
     if (doors) {
-        result = doors.findAll{it.currentValue("door") == "open"}
-        if (result.size() > 0) {
-            dList = "\"Doors\": ["
-            doors.each { 
-            	if (it.currentValue("door") == "open") {
-	                dList = dList + "\"${it}\"," 
+    	doors.each {dev ->
+        	if (dev.getStatus() == "OFFLINE") {
+            	if (!oList) {
+                	oList = "\"Offline\": ["
                 }
+            	oList = oList + "\"${dev}\","
             }
-            dList = dList + "]"
-            json = json ? json + ", ${dList}" : "{ ${dList}"
         }
     }
     
     if (locks) {
-        result = locks.findAll{it.currentValue("lock") == "unlocked"}
-        if (result.size() > 0) {
-            lList = "\"Locks\": ["
-            locks.each {
-            	if (it.currentValue("lock") == "unlocked") {
-                	lList = lList + "\"${it}\"," 
+    	locks.each {dev ->
+        	if (dev.getStatus() == "OFFLINE") {
+            	if (!oList) {
+                	oList = "\"Offline\": ["
                 }
+            	oList = oList + "\"${dev}\","
             }
-            lList = lList + "]"
-            json = json ? json + ", ${lList}" : "{ ${lList}"
         }
     }
-    json = json ? "${json} }" : ""
-    log.debug "Monitored json = ${json}"
+    
+    if (oList) {
+        oList = "${oList}]"
+        json = "{ ${oList} }"
+    }
+    
+    log.debug "Offline json = ${json}"
 	return json
 }
 
