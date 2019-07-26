@@ -317,7 +317,8 @@ def setTemp() {
     def mode = ""
     def currMode = ""
     def temp = ""
-    def currTemp = ""
+    def currCoolingSetpoint = ""
+    def currHeatingSetpoint = ""
     def command = params.command
     resp << [name: "Command", value: command]
     cmd = command.split('&')
@@ -337,7 +338,8 @@ def setTemp() {
         }
     }
 
-	currTemp = thermostat.currentValue("temperature")
+	currCoolingSetpoint = thermostat.currentValue("coolingSetpoint")
+	currHeatingSetpoint = thermostat.currentValue("heatingSetpoint")
     currMode = thermostat.currentValue("thermostatMode")
     log.debug "CurrMode: ${currMode}"
 	if (mode == "cool") {
@@ -345,9 +347,9 @@ def setTemp() {
         	log.debug "Changing mode to ${mode}"
         	thermostat.setThermostatMode(mode)
         }
-        if (currTemp != temp) {
-        	log.debug "Changing temp to ${temp}"
-	    	thermostat.setCoolingSetpoint(temp.toInteger())
+        else if (currCoolingSetpoint.toInteger() != temp.toInteger()) {
+            log.debug "CurrTemp: ${currCoolingSetpoint} / Changing temp to ${temp}"
+            thermostat.setCoolingSetpoint(temp.toInteger())
         }
     }
     else if (mode == "heat") {
@@ -355,7 +357,7 @@ def setTemp() {
         	log.debug "Changing mode to ${mode}"
         	thermostat.setThermostatMode(mode)
         }
-        if (currTemp != temp) {
+        else if (currHeatingSetpoint.toInteger() != temp.toInteger()) {
 	    	thermostat.setHeatingSetpoint(temp.toInteger())
         	log.debug "Changing temp to ${temp}"
         }
