@@ -573,17 +573,19 @@ def getStatus() {
     def t_dim = ""
     def cVal = ""
     def dVal = ""
-    
+
+	def respLights = []
+    def lightsVals = []
+    def respDoors = []
+    def respLocks = []
+    def respContacts = []
     def resp = []
     
-    log.debug "Alarm State: ${alarmSensor.currentValue("alarmState")}"
     resp << [name: "alarm", value: "Alarm Sensor"]
     resp << [name: "val", value: alarmSensor.currentValue("alarmState")]
     resp << [name: "alert", value: "Alert State"]
     resp << [name: "val", value: alarmSensor.currentValue("alertState")]
     
-    log.debug "Thermostat: ${thermostat?.displayName} / ${thermostat?.currentValue("temperature")} / ${thermostat?.currentValue("thermostatMode")}"
-    log.debug "heatingSetpoint: ${thermostat?.currentValue("heatingSetpoint")} / coolingSetpoint: ${thermostat?.currentValue("coolingSetpoint")}"
     resp << [name: "thermostat", value: thermostat.displayName]
     resp << [name: "val", value: thermostat.currentValue("thermostatMode")]
     resp << [name: "temp", value: "current temp"]
@@ -595,12 +597,10 @@ def getStatus() {
     resp << [name: "thermostatOperatingState", value: "operating state"]
     resp << [name: "val", value: thermostat.currentValue("thermostatOperatingState")]
 
-	log.debug "Outside Temp: ${forecast.displayName}: ${forecast.currentValue("temperature")} / Forecast: ${forecast.currentValue("shortForecast")} / Long: ${forecast.currentValue("forecast")}"
 	resp << [name: "weather", value: forecast.displayName]
     resp << [name: "val", value: forecast.currentValue("temperature")]
     resp << [name: "forecast", value: forecast.currentValue("weather")]
     resp << [name: "val", value: forecast.currentValue("forecast")]
-    log.debug "Rain Today: ${wxDevice.currentValue("rainToday")}"
     resp << [name: "wxDevice", value: "Rain Gauge"]
     resp << [name: "val", value: wxDevice.currentValue("rainToday")]
     resp << [name: "feelsLike", value: "Feels Like"]
@@ -610,15 +610,12 @@ def getStatus() {
     resp << [name: "humidity", value: "Humidity"]
     resp << [name: "val", value: forecast.currentValue("humidity")]
 
-	log.debug "Dee: ${dee.currentValue("currentLocation")}"
     resp << [name: "dee", value: "Dee's Location"]
     resp << [name: "val", value: dee.currentValue("currentLocation")]
     
-    log.debug "Jeff: ${jeff.currentPresence}"
     resp << [name: "jeff", value: "Jeff's Location"]
     resp << [name: "val", value: jeff.currentPresence]
     
-    log.debug "Cyndi: ${cyndi.currentPresence}"
     resp << [name: "cyndi", value: "Cyndi's Location"]
     resp << [name: "val", value: cyndi.currentPresence]
     
@@ -634,41 +631,35 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
-//        t_val = dev.currentValue("switch")
-        log.debug "t_name: ${t_name}"
-        log.debug "t_val: ${t_val}"
-        resp << [name: "switch", value: t_name]
-        resp << [name: "val", value: t_val]
+//**        resp << [name: "switch", value: t_name]
+//**        resp << [name: "val", value: t_val]
+
+		respLights << [name: t_name, value: t_val]
 
 		def bulbFound = -1
         def colorBulb = false
         
         t_hue = dev?.currentValue("hue")
         if (t_hue) {
-        	log.debug "**** hue: ${dev?.currentValue("hue")}"
         	colorBulb = true
 
 			bulbFound = -1
             for (int x = 0; x < state?.colorBulbs?.size(); x++) {
                 if (state.colorBulbs[x].name == t_name) {
                     bulbFound = x
-                    log.debug "Color Bulb Found!"
                     break
                 }
             }
             if (bulbFound == -1) {
-            	log.debug "Bulb not found in state..."
             	t_hue = dev?.currentValue("hue")
                 t_saturation = dev?.currentValue("saturation")
                 t_dim = dev?.currentValue("level")
             	state.colorBulbs << [name: t_name, hue: t_hue, saturation: t_saturation, dim: t_dim]
             }
             else {
-              	log.debug "Bulb found in state..."
                 t_hue = state.colorBulbs[bulbFound].hue
                 t_saturation = state.colorBulbs[bulbFound].saturation
                 t_dim = state.colorBulbs[bulbFound].dim
-                log.debug "switchLevel: ${t_dim}"
                 if (!t_dim) {
                     t_dim = 37
                 }
@@ -694,14 +685,24 @@ def getStatus() {
             if (!t_dim) {
                 dVal = 37
             }
-            log.debug "*** Adding color response..."
-            resp << [name: "switch_c", value: t_name]
-            resp << [name: cVal, value: dVal]
+            lightsVals << [name: t_name, color: cVal, dim: dVal]
+//**            resp << [name: "switch_c", value: t_name]
+//**            resp << [name: cVal, value: dVal]
         }
     }
-    
-        
-    doors.each {door ->
+	respLights.sort{it.name}
+    respLights.each {rl ->
+    	resp << [name: "switch", value: rl.name]
+        resp << [name: "val", value: rl.value]
+        if (lightsVals.name == rl.name) {
+        	lv = lightsValue[rl.name]
+        	resp << [name: "switch_c", value: rl.name]
+            resp << [name: lv.color, value: lv.dim]
+        }
+    }
+
+
+	doors.each {door ->
     	t_name = "${door}"
         if (door.getStatus() != "OFFLINE") {
 	        t_val = door.currentValue("door")
@@ -709,12 +710,16 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
-//	    t_val = door.currentValue("door")
-        log.debug "t_name: ${t_name}"
-        log.debug "t_val: ${t_val}"
-        resp << [name: "door", value: t_name]
-        resp << [name: "val", value: t_val]
+//**        resp << [name: "door", value: t_name]
+//**        resp << [name: "val", value: t_val]
+		respDoors << [name: t_name, value: t_val]
+    }    
+    respDoors.sort{it.name}
+    respDoors.each {rd ->
+    	resp << [name: "door", value: rd.name]
+        resp << [name: "val", value: rd.value]
     }
+    
     locks.each {lock ->
     	t_name = "${lock}"
         if (lock.getStatus() != "OFFLINE") {
@@ -723,12 +728,16 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
-//        t_val = lock.currentValue("lock")
-        log.debug "t_name: ${t_name}"
-        log.debug "t_val: ${t_val}"
-        resp << [name: "lock", value: t_name]
-        resp << [name: "val", value: t_val]
+//**        resp << [name: "lock", value: t_name]
+//**        resp << [name: "val", value: t_val]
+		respLocks << [name: t_name, value: t_val]
     }
+    respLocks.sort{it.name}
+    respLocks.each {rl ->
+    	resp << [name: "lock", value: rl.name]
+        resp << [name: "val", value: rl.value]
+    }
+    
     contacts.each {contact ->
     	t_name = "${contact}"
         if (contact.getStatus() != "OFFLINE") {
@@ -737,12 +746,16 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
-//        t_val = contact.currentValue("contact")
-        log.debug "t_name: ${t_name}"
-        log.debug "t_val: ${t_val}"
-        resp << [name: "contact", value: t_name]
-        resp << [name: "val", value: t_val]
+//**        resp << [name: "contact", value: t_name]
+//**        resp << [name: "val", value: t_val]
+		respContacts << [name: t_name, value: t_val]
     }
+    respContacts.sort{it.name}
+    respContacts.each { rc ->
+    	resp << [name: "contact", value: rc.name]
+        resp << [name: "val", value: rc.value]
+    }
+    
     log.debug resp
     return resp
 }
