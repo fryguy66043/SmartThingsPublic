@@ -694,10 +694,12 @@ def getStatus() {
     respLights.each {rl ->
     	resp << [name: "switch", value: rl.name]
         resp << [name: "val", value: rl.value]
-        if (lightsVals.name == rl.name) {
-        	lv = lightsValue[rl.name]
-        	resp << [name: "switch_c", value: rl.name]
-            resp << [name: lv.color, value: lv.dim]
+        lightsVals.each { lv ->
+            if (lv.name == rl.name) {
+                log.debug "Found color bulb! ${lv.name} / ${lv.color} / ${lv.dim}"
+                resp << [name: "switch_c", value: rl.name]
+                resp << [name: lv.color, value: lv.dim]
+            }
         }
     }
 
