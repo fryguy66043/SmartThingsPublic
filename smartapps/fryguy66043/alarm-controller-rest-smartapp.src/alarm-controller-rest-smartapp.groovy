@@ -41,6 +41,12 @@ preferences {
         input "disableWhenAway", "bool", required: true, title: "Disable Monitor When Everyone Is Away?"
         input "awayList", "capability.presenceSensor", required: false, multiple: true, title: "Disable When Who Is Away?"
     }
+	section("Send Push Notification?") {
+        input "sendPush", "bool", required: false, title: "Send a Push Notification When Things Happen?"
+    }
+    section("Send a text message to this number") {
+        input "phone", "phone", required: false, title: "Send a Text Message When Things Happen?"
+    }
 }
 
 def installed() {
@@ -212,6 +218,13 @@ def setDisarmed() {
     	log.debug "Skipping.  Executed too quickly."
         resp << [name: "Execution", value: "Too Soon!"]
     }
+    def msg = "HA Notification: ${curDate.format("MM/dd/yy h:mm:ss a", location.timeZone)}\n\nDisarm Alarm:\n${resp}"
+    if (sendPush) {
+    	sendPush(msg)
+    }
+    if (phone) {
+    	sendSms(phone, msg)
+    }
     return resp
 }
 
@@ -227,6 +240,7 @@ def setColorBulb() {
     def dn = ""
     def hue = ""
     def saturation = ""
+    def curDate = new Date()
     
     cmd = command.split('&')
     for (String value : cmd) {
@@ -314,8 +328,16 @@ def setColorBulb() {
             }
         }
     }
-
     resp << [name: "Command", value: command]
+
+	def msg = "HA Notification: ${curDate.format("MM/dd/yy h:mm:ss a", location.timeZone)}\n\nSetColorBulb: ${command}\n${resp}"
+    if (sendPush) {
+    	sendPush(msg)
+    }
+    if (phone) {
+    	sendSms(phone, msg)
+    }
+
     return resp
 }
 
@@ -329,6 +351,7 @@ def setTemp() {
     def currCoolingSetpoint = ""
     def currHeatingSetpoint = ""
     def command = params.command
+    def curDate = new Date()
     resp << [name: "Command", value: command]
     cmd = command.split('&')
     for (String value : cmd) {
@@ -376,6 +399,13 @@ def setTemp() {
         	log.debug "Changing mode to ${mode}"
         	thermostat.setThermostatMode(mode)
         }
+    }
+	def msg = "HA Notification: ${curDate.format("MM/dd/yy h:mm:ss a", location.timeZone)}\n\nSetTemp: ${command}\n${resp}"
+    if (sendPush) {
+    	sendPush(msg)
+    }
+    if (phone) {
+    	sendSms(phone, msg)
     }
 	return resp
 }
@@ -430,6 +460,13 @@ def setArmed() {
     	log.debug "Skipping.  Executed too quickly."
         resp << [name: "Execution", value: "Too Soon!"]
     }
+	def msg = "HA Notification: ${curDate.format("MM/dd/yy h:mm:ss a", location.timeZone)}\n\nSetArmed: ${command}\n${resp}"
+    if (sendPush) {
+    	sendPush(msg)
+    }
+    if (phone) {
+    	sendSms(phone, msg)
+    }
     return resp
 }
 
@@ -442,6 +479,7 @@ def setLock() {
     def sv = ""
     def allLock = false
     def idx = command.indexOf("=")
+    def curDate = new Date()
     log.debug "idx = ${idx}"
     if (idx > -1) {
     	sv = command.substring(idx+1).toUpperCase()
@@ -469,6 +507,13 @@ def setLock() {
 
     resp << [name: "Command", value: command]
     log.debug "resp: ${resp}"
+	def msg = "HA Notification: ${curDate.format("MM/dd/yy h:mm:ss a", location.timeZone)}\n\nSetLock: ${command}\n${resp}"
+    if (sendPush) {
+    	sendPush(msg)
+    }
+    if (phone) {
+    	sendSms(phone, msg)
+    }
 	return resp
 }
 
@@ -498,6 +543,7 @@ def setDoor() {
     def sv = ""
     def allClose = false
     def idx = command.indexOf("=")
+    def curDate = new Date()
     log.debug "idx = ${idx}"
     if (idx > -1) {
     	sv = command.substring(idx+1).toUpperCase()
@@ -525,6 +571,13 @@ def setDoor() {
 
     resp << [name: "Command", value: command]
     log.debug "resp: ${resp}"
+	def msg = "HA Notification: ${curDate.format("MM/dd/yy h:mm:ss a", location.timeZone)}\n\nSetDoor: ${command}\n${resp}"
+    if (sendPush) {
+    	sendPush(msg)
+    }
+    if (phone) {
+    	sendSms(phone, msg)
+    }
 	return resp
 }
 
@@ -537,6 +590,7 @@ def setSwitch() {
     def sv = ""
     def allOff = false
     def idx = command.indexOf("=")
+    def curDate = new Date()
     log.debug "idx = ${idx}"
     if (idx > -1) {
     	sv = command.substring(idx+1).toUpperCase()
@@ -569,6 +623,13 @@ def setSwitch() {
 
     resp << [name: "Command", value: command]
     log.debug "resp: ${resp}"
+	def msg = "HA Notification: ${curDate.format("MM/dd/yy h:mm:ss a", location.timeZone)}\n\nSetSwitch: ${command}\n${resp}"
+    if (sendPush) {
+    	sendPush(msg)
+    }
+    if (phone) {
+    	sendSms(phone, msg)
+    }
 	return resp
 }
 
