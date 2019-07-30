@@ -29,6 +29,7 @@ preferences {
     	input "alarmSensor", "device.fryguyAlarmController", required: true, title: "Select Alarm Controller."
         input "thermostat", "capability.thermostat", required: false, title: "Select Thermostat."
         input "lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches."
+        input "lightsIgnore", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches to Ignore OFFLINE Status."
         input "doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls."
         input "locks", "capability.lock", required: false, multiple: true, title: "Select Locks."
         input "contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contact Sensors."
@@ -37,6 +38,8 @@ preferences {
         input "jeff", "capability.presenceSensor", required: false, title: "Select Jeff's Phone."
         input "cyndi", "capability.presenceSensor", required: false, title: "Select Cyndi's Phone."
         input "dee", "device.myTrackingSensor", required: false, title: "Select Tracking Sensor."
+        input "disableWhenAway", "bool", required: true, title: "Disable Monitor When Everyone Is Away?"
+        input "awayList", "capability.presenceSensor", required: false, multiple: true, title: "Disable When Who Is Away?"
     }
 }
 
@@ -143,8 +146,14 @@ def appHandler(evt) {
     
     def cnt = 0
     lights.each {dev ->
-    	if ("${dev}" == "Basement Lamp") {
+    	if ("${dev}" == "Basement Shop Light") {
+            if (dev.getStatus() == "OFFLINE") {
+            	log.debug "Current State: ${dev.currentValue("switch")}"
+            }
             log.debug "${dev}: ${dev.getStatus()}"
+            log.debug "Location: ${dev.getExecLocation()}"
+            log.debug "Events: ${dev.events(max:10)}"
+            log.debug "Cmds: ${dev.getSupportedCommands()}"
             def capabilities = dev.capabilities
             for (cap in capabilities) {
                 log.debug "cap: ${cap}"
@@ -618,22 +627,53 @@ def getStatus() {
     
     resp << [name: "cyndi", value: "Cyndi's Location"]
     resp << [name: "val", value: cyndi.currentPresence]
+
+	resp << [name: "disable", value: "Disable When Away"]
+    resp << [name: "val", value: disableWhenAway]
     
+    def strAwayList = ""
+    awayList.each { al ->
+    	if (strAwayList) {
+        	strAwayList = strAwayList + ", "
+        }
+    	strAwayList = strAwayList + "${al}"
+    }
+    resp << [name: "awayList", value: "Disable When Away List"]
+    resp << [name: "val", value: strAwayList]
+
     if (!state.colorBulbs) {
     	log.debug "state.colorBulbs not defined.  Initializing..."
         state.colorBulbs = []
     }
+
+	def ignore = false
 	lights.each {dev ->
+    	ignore = false
     	t_name = "${dev}"
         if (dev.getStatus() != "OFFLINE") {
 	        t_val = dev.currentValue("switch")
         }
         else {
-        	t_val = "OFFLINE"
+        	if (lightsIgnore) {
+            	lightsIgnore.each { li ->
+                	log.debug "li: ${li} / dev: ${dev}"
+                	if ("${li}" == "${dev}") {
+                    	ignore = true
+                        log.debug "Ignoring ${li}"
+                    }
+                }
+            }
+            if (ignore) {
+            	t_val = dev.currentValue("switch")
+            }
+            else {
+                t_val = "OFFLINE"
+                dev.ping()
+                if (dev.getStatus() != "OFFLINE") {
+                    t_val = dev.currentValue("switch")
+                }
+            }
         }
-//**        resp << [name: "switch", value: t_name]
-//**        resp << [name: "val", value: t_val]
-
 		respLights << [name: t_name, value: t_val]
 
 		def bulbFound = -1
@@ -686,8 +726,6 @@ def getStatus() {
                 dVal = 37
             }
             lightsVals << [name: t_name, color: cVal, dim: dVal]
-//**            resp << [name: "switch_c", value: t_name]
-//**            resp << [name: cVal, value: dVal]
         }
     }
 	respLights.sort{it.name}
@@ -712,8 +750,6 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
-//**        resp << [name: "door", value: t_name]
-//**        resp << [name: "val", value: t_val]
 		respDoors << [name: t_name, value: t_val]
     }    
     respDoors.sort{it.name}
@@ -730,8 +766,6 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
-//**        resp << [name: "lock", value: t_name]
-//**        resp << [name: "val", value: t_val]
 		respLocks << [name: t_name, value: t_val]
     }
     respLocks.sort{it.name}
@@ -748,8 +782,6 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
-//**        resp << [name: "contact", value: t_name]
-//**        resp << [name: "val", value: t_val]
 		respContacts << [name: t_name, value: t_val]
     }
     respContacts.sort{it.name}
