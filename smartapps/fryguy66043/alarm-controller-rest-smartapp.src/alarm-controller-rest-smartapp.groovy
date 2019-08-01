@@ -151,13 +151,13 @@ def appHandler(evt) {
     def sVal = ""
     
     def cnt = 0
+    log.debug "Humidity: ${thermostat.currentValue("humidity")}"
     lights.each {dev ->
     	if ("${dev}" == "Basement Shop Light") {
             if (dev.getStatus() == "OFFLINE") {
             	log.debug "Current State: ${dev.currentValue("switch")}"
             }
             log.debug "${dev}: ${dev.getStatus()}"
-            log.debug "Location: ${dev.getExecLocation()}"
             log.debug "Events: ${dev.events(max:10)}"
             log.debug "Cmds: ${dev.getSupportedCommands()}"
             def capabilities = dev.capabilities
@@ -666,6 +666,8 @@ def getStatus() {
     resp << [name: "val", value: thermostat.currentValue("coolingSetpoint")]
     resp << [name: "thermostatOperatingState", value: "operating state"]
     resp << [name: "val", value: thermostat.currentValue("thermostatOperatingState")]
+    resp << [name: "insideHumidity", value: "Inside Humidity"]
+    resp << [name: "val", value: thermostat.currentValue("humidity")]
 
 	resp << [name: "weather", value: forecast.displayName]
     resp << [name: "val", value: forecast.currentValue("temperature")]
