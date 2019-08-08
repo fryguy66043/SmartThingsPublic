@@ -26,6 +26,7 @@ definition(
 
 preferences {
 	section ("Alarm Controller") {
+    	input "siren", "capability.alarm", required: false, title: "Select Alarm Siren/Strobe."
     	input "alarmSensor", "device.fryguyAlarmController", required: true, title: "Select Alarm Controller."
         input "thermostat", "capability.thermostat", required: false, title: "Select Thermostat."
         input "lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches."
@@ -146,25 +147,18 @@ mappings {
 
 def appHandler(evt) {
 	log.debug "appHandler"
-    def dn = ""
-    def hVal = ""
-    def sVal = ""
     
-    def cnt = 0
-    log.debug "Humidity: ${thermostat.currentValue("humidity")}"
-    lights.each {dev ->
-    	if ("${dev}" == "Basement Shop Light") {
-            if (dev.getStatus() == "OFFLINE") {
-            	log.debug "Current State: ${dev.currentValue("switch")}"
-            }
-            log.debug "${dev}: ${dev.getStatus()}"
-            log.debug "Events: ${dev.events(max:10)}"
-            log.debug "Cmds: ${dev.getSupportedCommands()}"
-            def capabilities = dev.capabilities
-            for (cap in capabilities) {
-                log.debug "cap: ${cap}"
-            }
-        }
+    log.debug "Siren Cmds: ${siren.getSupportedCommands()}"
+    def capabilities = siren.capabilities
+    for (cap in capabilities) {
+        log.debug "cap: ${cap}"
+    }
+    log.debug "Status: ${siren.currentValue("alarm")}"
+    if (siren.currentValue("alarm") == "off") {
+    	siren.strobe()
+    }
+    else {
+    	siren.off()
     }
 }
 
