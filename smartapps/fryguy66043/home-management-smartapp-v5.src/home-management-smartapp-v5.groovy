@@ -54,7 +54,7 @@ def alarmPage() {
         	input "homeIndicatorLight", "capability.colorControl", required: false, multiple: true, title: "Which Lights do you want to turn on to indicate the alarm is armed?"
             input "homeIndicatorLightColor", "enum", options: ["OFF", "RED", "GREEN", "BLUE", "WHITE"], title: "Which color do you want to set your indicator light?"
         	input "homeAlarm", "capability.alarm", required: false, multiple: true, title: "Which Alarm Sensors do you want to activate during an alert?"
-            input "homeAlarmLightsSirens", "enum", options: ["Off", "Strobe", "Siren", "Both"], title: "Do you want Alarm Lights, Siren, or both?"
+            input "homeAlarmLightsSirens", "enum", options: ["Off", "Strobe", "Siren", "Both", "Beep"], title: "Do you want Alarm Lights, Siren, Both, or Beep/Strobe?"
 			input "homeAlertSwitches", "capability.switch", required: false, multiple: true, title: "Which lights/switchs do you want to turn on during an alert?"
             input "homeAlertLightColor", "enum", options: ["OFF", "RED", "GREEN", "BLUE", "WHITE"], title: "What color do you want to set your color-capable lights during an alert?"
             input "homeAlertSwitchesDarkOnly", "bool", required: true, title: "Do you want to alert with lights only after dark?"
@@ -67,7 +67,7 @@ def alarmPage() {
         	input "awayIndicatorLight", "capability.colorControl", required: false, multiple: true, title: "Which Lights do you want to turn indicate the alarm is armed?"
             input "awayIndicatorLightColor", "enum", options: ["OFF", "RED", "GREEN", "BLUE", "WHITE"], title: "Which color do you want to set your indicator light?"
         	input "awayAlarm", "capability.alarm", required: false, multiple: true, title: "Which Alarm Sensors do you want to activate during an alert?"
-            input "awayAlarmLightsSirens", "enum", options: ["Off", "Strobe", "Siren", "Both"], title: "Do you want Alarm Lights, Siren, or both?"
+            input "awayAlarmLightsSirens", "enum", options: ["Off", "Strobe", "Siren", "Both", "Beep"], title: "Do you want Alarm Lights, Siren, Both, or Beep/Strobe?"
 			input "awayAlertSwitches", "capability.switch", required: false, multiple: true, title: "Which lights/switchs do you want to turn on?"
             input "awayAlertLightColor", "enum", options: ["OFF", "RED", "GREEN", "BLUE", "WHITE"], title: "What color do you want to set your color-capable lights during an alert?"
             input "awayAlertSwitchesDarkOnly", "bool", required: true, title: "Do you want to alert with lights only after dark?"
@@ -1450,6 +1450,12 @@ private setAlertTimer() {
 	log.debug "setAlertTimer"
     def timer = (alarmSensor.currentValue("alarmState") == "Armed Away") ? awayAlertDelay : homeAlertDelay
     log.debug "Alert Timer = ${timer} seconds"
+    if (alarmSensor.currentValue("alarmState") == "Armed Away") {
+	    awayAlarm.strobe()
+    }
+    else {
+	    homeAlarm.strobe()
+    }
     runIn(timer, checkAlert)
 }
 
@@ -1481,6 +1487,11 @@ def checkAlert() {
     state.change = false
 }
 
+def alarmStrobeOn() {
+	log.debug "alarmStrobeOn"
+    homeAlarm.strobe()
+}
+
 private triggerLights() {
 	log.debug "triggerLights"
     def daylight = getSunriseAndSunset()
@@ -1505,6 +1516,10 @@ private triggerLights() {
                     case "Strobe":
                     	homeAlarm.strobe()
                     	break
+                    case "Beep":
+                    	homeAlarm.beep()
+                        runIn(5, alarmStrobeOn)
+                        break
                     default:
                     	homeAlarm.off()
                     	break
@@ -1587,6 +1602,10 @@ private triggerLights() {
                     case "Strobe":
                     	awayAlarm.strobe()
                     	break
+                    case "Beep":
+                    	awayAlarm.beep()
+                        runIn(5, alarmStrobeOn)
+                        break
                     default:
                     	awayAlarm.off()
                     	break
