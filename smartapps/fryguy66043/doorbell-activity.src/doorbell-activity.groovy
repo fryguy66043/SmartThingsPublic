@@ -68,7 +68,7 @@ def appHandler(evt) {
     def msg = "${location} ${date} <${getAppName()}>: "
     
 	if (dark) {
-    	msg = msg + "Currently After Dark. "
+    	msg = msg + "Currently Dark. "
     }
     else {
     	msg = msg + "Currently Before Dark. "
@@ -135,7 +135,9 @@ private darkNow() {
 	log.debug "darkNow"
 	def now = new Date()
 	def sunTime = getSunriseAndSunset();
-    def dark = (now >= sunTime.sunset)
-    
+    def dark = false
+    if ((now >= sunTime.sunset) || (now <= sunTime.sunrise)) {
+    	dark = true
+    }    
     return dark
 }
