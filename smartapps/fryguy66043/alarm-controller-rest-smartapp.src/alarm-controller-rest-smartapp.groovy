@@ -131,7 +131,7 @@ def initialize() {
     subscribe(forecast, "feelsLike", changeHandler)
     subscribe(forecast, "percentPrecip", changeHandler)
     subscribe(forecast, "humidity", changeHandler)
-    subscribe(wxDevice, "rainToday", changeHandler)
+    subscribe(forecast, "rainToday", changeHandler)
     subscribe(jeff, "presence", changeHandler)
     subscribe(cyndi, "presence", changeHandler)
     subscribe(dee, "currentLocation", changeHandler)
@@ -791,7 +791,7 @@ def getStatus() {
     resp << [name: "forecast", value: forecast.currentValue("weather")]
     resp << [name: "val", value: forecast.currentValue("forecast")]
     resp << [name: "wxDevice", value: "Rain Gauge"]
-    resp << [name: "val", value: wxDevice.currentValue("rainToday")]
+    resp << [name: "val", value: forecast.currentValue("rainToday")]
     resp << [name: "feelsLike", value: "Feels Like"]
     resp << [name: "val", value: forecast.currentValue("feelsLike")]
     resp << [name: "percentPrecip", value: "Chance of Precip"]
@@ -836,7 +836,7 @@ def getStatus() {
 	garage_lights.each {gl ->
     	t_name = "${gl}"
         if (gl.getStatus() != "OFFLINE") {
-	        t_val = dev.currentValue("switch")
+	        t_val = gl.currentValue("switch")
         }
         else {
 	        t_val = "OFFLINE"
@@ -851,7 +851,12 @@ def getStatus() {
     
     garage_doors.each {gd ->
     	t_name = "${gd}"
-        t_val = gd.currentValue("door")
+        if (gd.getStatus() != "OFFLINE") {
+	        t_val = gd.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         garageDoors << [name: t_name, value: t_val]
     }
     garageDoors.sort{it.name}
@@ -862,7 +867,12 @@ def getStatus() {
 
     garage_locks.each {gl ->
     	t_name = "${gl}"
-        t_val = gl.currentValue("lock")
+        if (gl.getStatus() != "OFFLINE") {
+	        t_val = gl.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         garageLocks << [name: t_name, value: t_val]
     }
     garageLocks.sort{it.name}
@@ -923,7 +933,12 @@ def getStatus() {
     
     lr_doors.each {lr ->
     	t_name = "${lr}"
-        t_val = lr.currentValue("door")
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         lrDoors << [name: t_name, value: t_val]
     }
     lrDoors.sort{it.name}
@@ -934,7 +949,12 @@ def getStatus() {
 
     lr_locks.each {lr ->
     	t_name = "${lr}"
-        t_val = lr.currentValue("lock")
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         lrLocks << [name: t_name, value: t_val]
     }
     lrLocks.sort{it.name}
@@ -995,7 +1015,12 @@ def getStatus() {
     
     outside_doors.each {lr ->
     	t_name = "${lr}"
-        t_val = lr.currentValue("door")
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("door")
+        }
+        else {
+            t_val = "OFFLINE"
+        }
         outsideDoors << [name: t_name, value: t_val]
     }
     outsideDoors.sort{it.name}
@@ -1006,7 +1031,12 @@ def getStatus() {
 
     outside_locks.each {lr ->
     	t_name = "${lr}"
-        t_val = lr.currentValue("lock")
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         outsideLocks << [name: t_name, value: t_val]
     }
     outsideLocks.sort{it.name}
@@ -1067,7 +1097,12 @@ def getStatus() {
     
     basement_doors.each {lr ->
     	t_name = "${lr}"
-        t_val = lr.currentValue("door")
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         basementDoors << [name: t_name, value: t_val]
     }
     basementDoors.sort{it.name}
@@ -1078,7 +1113,12 @@ def getStatus() {
 
     basement_locks.each {lr ->
     	t_name = "${lr}"
-        t_val = lr.currentValue("lock")
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         basementLocks << [name: t_name, value: t_val]
     }
     basementLocks.sort{it.name}
@@ -1139,7 +1179,12 @@ def getStatus() {
     
     master_doors.each {lr ->
     	t_name = "${lr}"
-        t_val = lr.currentValue("door")
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         masterDoors << [name: t_name, value: t_val]
     }
     masterDoors.sort{it.name}
@@ -1150,7 +1195,12 @@ def getStatus() {
 
     master_locks.each {lr ->
     	t_name = "${lr}"
-        t_val = lr.currentValue("lock")
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         masterLocks << [name: t_name, value: t_val]
     }
     masterLocks.sort{it.name}
@@ -1212,7 +1262,12 @@ def getStatus() {
     
     br1_doors.each {lr ->
     	t_name = "${lr}"
-        t_val = lr.currentValue("door")
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         br1Doors << [name: t_name, value: t_val]
     }
     br1Doors.sort{it.name}
@@ -1223,7 +1278,12 @@ def getStatus() {
 
     br1_locks.each {lr ->
     	t_name = "${lr}"
-        t_val = lr.currentValue("lock")
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
         masterLocks << [name: t_name, value: t_val]
     }
     br1Locks.sort{it.name}
