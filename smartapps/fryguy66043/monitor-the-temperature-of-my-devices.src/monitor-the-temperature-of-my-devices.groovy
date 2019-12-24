@@ -35,6 +35,7 @@ preferences {
 //    }
 	section("Monitor These Devices That Report Temperature:"){
     	input "tempDevices", "capability.temperatureMeasurement", required: true, multiple: true
+        input "humidDevices", "capability.relativeHumidityMeasurement", required: false, multiple: true
     }
     section("Alert Me When Any Reach This High Temperature:") {
     	input "highTemp", "number", required: true, title: "High Temperature"
@@ -43,6 +44,14 @@ preferences {
     section("Alert Me When Any Reach This Low Temperature:") {
     	input "lowTemp", "number", required: true, title: "Low Temperature"
         input "lowCritical", "number", required: true, title: "Critical Low Temperature"
+    }
+    section("Alert Me When Any Reach This High Humidity:") {
+    	input "highHumid", "number", required: false, title: "High Humidity"
+        input "criticalHighHumid", "number", required: false, title: "Critical High Humidity"
+    }
+    section("Alert Me When Any Reach This Low Humidity:") {
+    	input "lowHumid", "number", required: false, title: "Low Humidity"
+        input "criticalLowHumid", "number", required: false, title: "Critical Low Humidity"
     }
 	section("Send Push Notification?") {
         input "sendPush", "bool", required: false,
@@ -69,17 +78,93 @@ def updated() {
 def initialize() {
 	log.debug "Initializing..."
 	subscribe(tempDevices, "temperature", tempHandler)
-//    subscribe(batteryTile, "update", batteryTileUpdateHandler)
-//    subscribe(batteryTile, "batteryAlertLevel", batteryAlertLevelHandler)
+    subscribe(humidDevices, "humidity", humidHandler)
     subscribe(app, appHandler)
 
-//	state.batteryAlertLevel = percentage
 	def dmap = [:]
 	for (device in tempDevices) {
     	dmap << ["${device.displayName}":device.currentTemperature]
     }
     
 	state.temps = dmap
+
+	dmap = [:]
+	for (device in humidDevices) {
+    	dmap << ["${device.displayName}":device.currentHumidity]
+    }
+    
+	state.humids = dmap
+}
+
+def humidHandler(evt) {
+	log.debug "humidHandler(${evt?.value})"
+    def msg = "humidHandler(${evt?.value})"
+    def normalList = ""
+    def lowList = ""
+    def highList = ""
+    def criticalList = ""
+    def tCnt = 0
+    def critical = false
+
+    def val = evt?.value ? evt?.value as Integer : -99
+    if (val >= criticalHighHumid || val <= criticalLowHumid) {
+    	critical = true
+        log.debug "Critical Humidity Reached: ${evt.name} = ${evt.value}"
+    }
+
+	log.debug "state.humids = ${state.humids}"
+
+	for (device in humidDevices) {
+    	if (device.currentHumidity <= lowHumid) { 
+            if (state.humids["${device.displayName}"] > lowHumid) {
+	            tCnt ++
+            }
+            if (device.currentHumidity <= criticalLowHumid) {
+            	criticalList += "${device.displayName} = ${device.currentHumidity}\n"
+            }
+            else {
+            	lowList += "${device.displayName} = ${device.currentHumidity}\n"
+            }
+        }
+        else if (device.currentHumidity >= highHumid) {
+            if (state.temps["${device.displayName}"] < highHumid) {
+            	tCnt ++
+            }
+            if (device.currentHumidity >= criticalHighHumid) {
+            	criticalList += "${device.displayName} = ${device.currentHumidity}\n"
+            }
+            else {
+            	highList += "${device.displayName} = ${device.currentHumidity}\n"
+            }
+        }
+        else {
+	        normalList += "${device.displayName} = ${device.currentHumidity}\n"
+        }
+        state.humids["${device.displayName}"] = device.currentHumidity
+    }
+    log.debug "New state.humids = ${state.humids}"
+    if (criticalList) {
+    	msg += "The following have exceeded critical levels (${lowCritical}/${highCritical}):\n${criticalList}\n"
+    }
+    if (lowList) {
+    	msg += "The following are at/below threshold of ${lowHumid}:\n${lowList}\n"
+    }
+    if (highList) {
+		msg += "The following are at/above threshold of ${highHumid}:\n${highList}\n"
+    }
+    if (normalList) {
+    	msg += "The following are in the normal range:\n${normalList}"
+    }
+    
+	if (tCnt > 0 || critical) {
+	    log.debug msg
+        if (sendPush) {
+            sendPush(msg)
+        }
+        if (phone) {
+            sendSms(phone, msg)
+        }	
+    }
 }
 
 def tempHandler(evt) {
@@ -167,9 +252,19 @@ def appHandler(evt) {
     	message = message + "${device.displayName} = ${device.currentTemperature} F"
         cnt++
     }
+    
+    for (device in humidDevices) {
+    	if (cnt > 0) {
+        	message = message + "\n"
+        }
+        message = message + "${device.displayName} = ${device.currentHumidity} %"
+    }
 
 	log.debug "message == $message"
-    if (sendPush) {
+	log.debug "state.temps = ${state.temps}"
+	log.debug "state.humids = ${state.humids}"
+
+	if (sendPush) {
         sendPush(message)
     }
     if (phone) {
