@@ -935,6 +935,7 @@ def getStatus() {
     	t_val = garage_display
     }
     resp << [name: "garage_display", value: t_val]
+    resp << [name: "val", value: t_val]
 
 	garage_lights.each {gl ->
     	t_name = "${gl}"
@@ -1017,6 +1018,7 @@ def getStatus() {
     	t_val = lr_display
     }
     resp << [name: "lr_display", value: t_val]
+    resp << [name: "val", value: t_val]
     
     lr_lights.each {lr ->
     	t_name = "${lr}"
@@ -1099,6 +1101,7 @@ def getStatus() {
     	t_val = kitchen_display
     }
     resp << [name: "kitchen_display", value: t_val]
+    resp << [name: "val", value: t_val]
     
     kitchen_lights.each {lr ->
     	t_name = "${lr}"
@@ -1181,6 +1184,7 @@ def getStatus() {
     	t_val = outside_display
     }
     resp << [name: "outside_display", value: t_val]
+    resp << [name: "val", value: t_val]
     
     outside_lights.each {lr ->
     	t_name = "${lr}"
@@ -1263,6 +1267,7 @@ def getStatus() {
     	t_val = basement_display
     }
     resp << [name: "basement_display", value: t_val]
+    resp << [name: "val", value: t_val]
     
     basement_lights.each {lr ->
     	t_name = "${lr}"
@@ -1345,6 +1350,7 @@ def getStatus() {
     	t_val = fr_display
     }
     resp << [name: "fr_display", value: t_val]
+    resp << [name: "val", value: t_val]
     
     fr_lights.each {lr ->
     	t_name = "${lr}"
@@ -1427,6 +1433,7 @@ def getStatus() {
     	t_val = master_display
     }
     resp << [name: "master_display", value: t_val]
+    resp << [name: "val", value: t_val]
     
     master_lights.each {lr ->
     	t_name = "${lr}"
@@ -1510,6 +1517,7 @@ def getStatus() {
     	t_val = mb_display
     }
     resp << [name: "mb_display", value: t_val]
+    resp << [name: "val", value: t_val]
     
     mb_lights.each {lr ->
     	t_name = "${lr}"
@@ -1604,6 +1612,7 @@ def getStatus() {
     	t_val = br1_display
     }
     resp << [name: "br1_display", value: t_val]
+    resp << [name: "val", value: t_val]
     
     br1_lights.each {lr ->
     	t_name = "${lr}"
@@ -1687,6 +1696,7 @@ def getStatus() {
     	t_val = br2_display
     }
     resp << [name: "br2_display", value: t_val]
+    resp << [name: "val", value: t_val]
     
     br2_lights.each {lr ->
     	t_name = "${lr}"
@@ -1770,6 +1780,7 @@ def getStatus() {
     	t_val = br3_display
     }
     resp << [name: "br3_display", value: t_val]
+    resp << [name: "val", value: t_val]
     
     br3_lights.each {lr ->
     	t_name = "${lr}"
