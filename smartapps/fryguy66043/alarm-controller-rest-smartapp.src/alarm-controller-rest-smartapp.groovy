@@ -58,6 +58,14 @@ preferences {
         input "lr_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Living Room."
         input "lr_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Living Room."
     }
+    section ("Kitchen") {
+    	input "kitchen_display", "text", required: false, title: "Enter Display Name for Kitchen."
+    	input "kitchen_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Kitchen."
+        input "kitchen_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Kitchen."
+        input "kitchen_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Kitchen."
+        input "kitchen_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Kitchen."
+        input "kitchen_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Kitchen."
+    }
     section ("Outside") {
     	input "outside_display", "text", required: false, title: "Enter Display Name for Outside."
     	input "outside_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Outside."
@@ -74,6 +82,14 @@ preferences {
         input "basement_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Basement."
         input "basement_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Basement."
     }
+    section ("Family Room") {
+    	input "fr_display", "text", required: false, title: "Enter Display Name for Family Room."
+    	input "fr_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Family Room."
+        input "fr_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Family Room."
+        input "fr_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Family Room."
+        input "fr_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Family Room."
+        input "fr_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Family Room."
+    }
     section ("Master") {
     	input "master_display", "text", required: false, title: "Enter Display Name for Master."
     	input "master_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Master."
@@ -82,6 +98,15 @@ preferences {
         input "master_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Master."
         input "master_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Master."
     }
+    section ("Master Bath") {
+    	input "mb_display", "text", required: false, title: "Enter Display Name for Master Bath."
+    	input "mb_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Master Bath."
+        input "mb_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Master Bath."
+        input "mb_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Master Bath."
+        input "mb_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Master Bath."
+        input "mb_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Master Bath."
+        input "mb_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Master Bath."
+    }
     section ("Bedroom1") {
     	input "br1_display", "text", required: false, title: "Enter Display Name for Bedroom1."
     	input "br1_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Bedroom1."
@@ -89,6 +114,22 @@ preferences {
         input "br1_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Bedroom1."
         input "br1_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Bedroom1."
         input "br1_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Bedroom1."
+    }
+    section ("Bedroom2") {
+    	input "br2_display", "text", required: false, title: "Enter Display Name for Bedroom1."
+    	input "br2_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Bedroom2."
+        input "br2_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Bedroom2."
+        input "br2_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Bedroom2."
+        input "br2_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Bedroom2."
+        input "br2_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Bedroom2."
+    }
+    section ("Bedroom3") {
+    	input "br3_display", "text", required: false, title: "Enter Display Name for Bedroom3."
+    	input "br3_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Bedroom3."
+        input "br3_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Bedroom3."
+        input "br3_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Bedroom3."
+        input "br3_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Bedroom3."
+        input "br3_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Bedroom3."
     }
 	section("Send Push Notification?") {
         input "sendPush", "bool", required: false, title: "Send a Push Notification When Things Happen?"
@@ -149,6 +190,12 @@ def initialize() {
     subscribe(lr_contacts, "contact", changeHandler)
     subscribe(lr_temps, "temperature", changeHandler)
 
+	subscribe(kitchen_lights, "switch", changeHandler)
+    subscribe(kitchen_doors, "door", changeHandler)
+    subscribe(kitchen_locks, "lock", changeHandler)
+    subscribe(kitchen_contacts, "contact", changeHandler)
+    subscribe(kitchen_temps, "temperature", changeHandler)
+
 	subscribe(outside_lights, "switch", changeHandler)
     subscribe(outside_doors, "door", changeHandler)
     subscribe(outside_locks, "lock", changeHandler)
@@ -161,17 +208,42 @@ def initialize() {
     subscribe(basement_contacts, "contact", changeHandler)
     subscribe(basement_temps, "temperature", changeHandler)
 
+	subscribe(fr_lights, "switch", changeHandler)
+    subscribe(fr_doors, "door", changeHandler)
+    subscribe(fr_locks, "lock", changeHandler)
+    subscribe(fr_contacts, "contact", changeHandler)
+    subscribe(fr_temps, "temperature", changeHandler)
+
 	subscribe(master_lights, "switch", changeHandler)
     subscribe(master_doors, "door", changeHandler)
     subscribe(master_locks, "lock", changeHandler)
     subscribe(master_contacts, "contact", changeHandler)
     subscribe(master_temps, "temperature", changeHandler)
 
+	subscribe(mb_lights, "switch", changeHandler)
+    subscribe(mb_doors, "door", changeHandler)
+    subscribe(mb_locks, "lock", changeHandler)
+    subscribe(mb_contacts, "contact", changeHandler)
+    subscribe(mb_temps, "temperature", changeHandler)
+    subscribe(mb_humid, "humidity", changeHandler)
+
 	subscribe(br1_lights, "switch", changeHandler)
     subscribe(br1_doors, "door", changeHandler)
     subscribe(br1_locks, "lock", changeHandler)
     subscribe(br1_contacts, "contact", changeHandler)
     subscribe(br1_temps, "temperature", changeHandler)
+
+	subscribe(br2_lights, "switch", changeHandler)
+    subscribe(br2_doors, "door", changeHandler)
+    subscribe(br2_locks, "lock", changeHandler)
+    subscribe(br2_contacts, "contact", changeHandler)
+    subscribe(br2_temps, "temperature", changeHandler)
+
+	subscribe(br3_lights, "switch", changeHandler)
+    subscribe(br3_doors, "door", changeHandler)
+    subscribe(br3_locks, "lock", changeHandler)
+    subscribe(br3_contacts, "contact", changeHandler)
+    subscribe(br3_temps, "temperature", changeHandler)
 
 	alarmSensor.tickler()
     runEvery5Minutes(changeHandler)
@@ -742,6 +814,12 @@ def getStatus() {
     def lrContacts = []
     def lrTemps = []
 
+	def kitchenLights = []
+    def kitchenDoors = []
+    def kitchenLocks = []
+    def kitchenContacts = []
+    def kitchenTemps = []
+
 	def outsideLights = []
     def outsideDoors = []
     def outsideLocks = []
@@ -754,17 +832,42 @@ def getStatus() {
     def basementContacts = []
     def basementTemps = []
 
+	def frLights = []
+    def frDoors = []
+    def frLocks = []
+    def frContacts = []
+    def frTemps = []
+
 	def masterLights = []
     def masterDoors = []
     def masterLocks = []
     def masterContacts = []
     def masterTemps = []
 
+	def mbLights = []
+    def mbDoors = []
+    def mbLocks = []
+    def mbContacts = []
+    def mbTemps = []
+    def mbHumid = []
+
 	def br1Lights = []
     def br1Doors = []
     def br1Locks = []
     def br1Contacts = []
     def br1Temps = []
+
+	def br2Lights = []
+    def br2Doors = []
+    def br2Locks = []
+    def br2Contacts = []
+    def br2Temps = []
+
+	def br3Lights = []
+    def br3Doors = []
+    def br3Locks = []
+    def br3Contacts = []
+    def br3Temps = []
 
     resp << [name: "alarm", value: "Alarm Sensor"]
     resp << [name: "val", value: alarmSensor.currentValue("alarmState")]
@@ -990,6 +1093,88 @@ def getStatus() {
         resp << [name: "val", value: lr.value]
     }
 
+/* Kitchen */
+  	t_val = "Kitchen"
+	if (kitchen_display?.size() > 0) {
+    	t_val = kitchen_display
+    }
+    resp << [name: "kitchen_display", value: t_val]
+    
+    kitchen_lights.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("switch")
+        }
+        else {
+	        t_val = "OFFLINE"
+        }
+		kitchenLights << [name: t_name, value: t_val]
+    }
+	kitchenLights.sort{it.name}
+    kitchenLights.each {lr ->
+    	resp << [name: "kitchen_switch", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+    
+    kitchen_doors.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+        kitchenDoors << [name: t_name, value: t_val]
+    }
+    kitchenDoors.sort{it.name}
+    kitchenDoors.each {lr ->
+    	resp << [name: "kitchen_door", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    kitchen_locks.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+        kitchenLocks << [name: t_name, value: t_val]
+    }
+    kitchenLocks.sort{it.name}
+    kitchenLocks.each {lr ->
+    	resp << [name: "kitchen_lock", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    kitchen_contacts.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("contact")
+        }
+        else {
+          t_val = "OFFLINE"
+        }
+        kitchenContacts << [name: t_name, value: t_val]
+    }
+    kitchenContacts.sort{it.name}
+    kitchenContacts.each {lr ->
+    	resp << [name: "kitchen_contact", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    kitchen_temps.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("temperature")
+        lrTemps << [name: t_name, value: t_val]
+    }
+    kitchenTemps.sort{it.name}
+    kitchenTemps.each {lr ->
+    	resp << [name: "kitchen_temp", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
 /* Outside */
 	t_val = "Outside"
 	if (outside_display?.size() > 0) {
@@ -1154,6 +1339,88 @@ def getStatus() {
         resp << [name: "val", value: lr.value]
     }
 
+/* Family Room */
+  	t_val = "Family Room"
+	if (fr_display?.size() > 0) {
+    	t_val = fr_display
+    }
+    resp << [name: "fr_display", value: t_val]
+    
+    fr_lights.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("switch")
+        }
+        else {
+	        t_val = "OFFLINE"
+        }
+		frLights << [name: t_name, value: t_val]
+    }
+	frLights.sort{it.name}
+    frLights.each {lr ->
+    	resp << [name: "fr_switch", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+    
+    fr_doors.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+        frDoors << [name: t_name, value: t_val]
+    }
+    frDoors.sort{it.name}
+    frDoors.each {lr ->
+    	resp << [name: "fr_door", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    fr_locks.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+        frLocks << [name: t_name, value: t_val]
+    }
+    frLocks.sort{it.name}
+    frLocks.each {lr ->
+    	resp << [name: "fr_lock", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    fr_contacts.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("contact")
+        }
+        else {
+          t_val = "OFFLINE"
+        }
+        frContacts << [name: t_name, value: t_val]
+    }
+    frContacts.sort{it.name}
+    frContacts.each {lr ->
+    	resp << [name: "fr_contact", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    fr_temps.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("temperature")
+        lrTemps << [name: t_name, value: t_val]
+    }
+    frTemps.sort{it.name}
+    frTemps.each {lr ->
+    	resp << [name: "fr_temp", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
 /* Master */
 	t_val = "Master"
 	if (master_display?.size() > 0) {
@@ -1237,6 +1504,100 @@ def getStatus() {
     }
 
 
+/* Master Bath */
+	t_val = "Master Bath"
+	if (mb_display?.size() > 0) {
+    	t_val = mb_display
+    }
+    resp << [name: "mb_display", value: t_val]
+    
+    mb_lights.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("switch")
+        }
+        else {
+	        t_val = "OFFLINE"
+        }
+		mbLights << [name: t_name, value: t_val]
+    }
+	mbLights.sort{it.name}
+    mbLights.each {lr ->
+    	resp << [name: "mb_switch", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+    
+    mb_doors.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+        mbDoors << [name: t_name, value: t_val]
+    }
+    mbDoors.sort{it.name}
+    mbDoors.each {lr ->
+    	resp << [name: "mb_door", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    mb_locks.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+        mbLocks << [name: t_name, value: t_val]
+    }
+    mbLocks.sort{it.name}
+    mbLocks.each {lr ->
+    	resp << [name: "mb_lock", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    mb_contacts.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("contact")
+        }
+        else {
+          t_val = "OFFLINE"
+        }
+        mbContacts << [name: t_name, value: t_val]
+    }
+    mbContacts.sort{it.name}
+    mbContacts.each {lr ->
+    	resp << [name: "mb_contact", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    mb_temps.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("temperature")
+        masterTemps << [name: t_name, value: t_val]
+    }
+    mbTemps.sort{it.name}
+    mbTemps.each {lr ->
+    	resp << [name: "mb_temp", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    mb_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        mbHumid << [name: t_name, value: t_val]
+    }
+    mbHumid.sort{it.name}
+    mbHumid.each {lr ->
+    	resp << [name: "mb_humid", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+
 /* Bedroom 1 */
 	t_val = "Bedroom 1"
 	if (br1_display?.size() > 0) {
@@ -1284,7 +1645,7 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
-        masterLocks << [name: t_name, value: t_val]
+        br1Locks << [name: t_name, value: t_val]
     }
     br1Locks.sort{it.name}
     br1Locks.each {lr ->
@@ -1316,6 +1677,172 @@ def getStatus() {
     br1Temps.sort{it.name}
     br1Temps.each {lr ->
     	resp << [name: "br1_temp", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+
+/* Bedroom 2 */
+	t_val = "Bedroom 2"
+	if (br2_display?.size() > 0) {
+    	t_val = br2_display
+    }
+    resp << [name: "br2_display", value: t_val]
+    
+    br2_lights.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("switch")
+        }
+        else {
+	        t_val = "OFFLINE"
+        }
+		br2Lights << [name: t_name, value: t_val]
+    }
+	br2Lights.sort{it.name}
+    br2Lights.each {lr ->
+    	resp << [name: "br2_switch", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+    
+    br2_doors.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+        br2Doors << [name: t_name, value: t_val]
+    }
+    br2Doors.sort{it.name}
+    br2Doors.each {lr ->
+    	resp << [name: "br2_door", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    br2_locks.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+        br2Locks << [name: t_name, value: t_val]
+    }
+    br2Locks.sort{it.name}
+    br2Locks.each {lr ->
+    	resp << [name: "br2_lock", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    br2_contacts.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("contact")
+        }
+        else {
+          t_val = "OFFLINE"
+        }
+        br2Contacts << [name: t_name, value: t_val]
+    }
+    br2Contacts.sort{it.name}
+    br2Contacts.each {lr ->
+    	resp << [name: "br2_contact", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    br2_temps.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("temperature")
+        br2Temps << [name: t_name, value: t_val]
+    }
+    br2Temps.sort{it.name}
+    br2Temps.each {lr ->
+    	resp << [name: "br2_temp", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+
+/* Bedroom 3 */
+	t_val = "Bedroom 3"
+	if (br3_display?.size() > 0) {
+    	t_val = br3_display
+    }
+    resp << [name: "br3_display", value: t_val]
+    
+    br3_lights.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("switch")
+        }
+        else {
+	        t_val = "OFFLINE"
+        }
+		br3Lights << [name: t_name, value: t_val]
+    }
+	br3Lights.sort{it.name}
+    br3Lights.each {lr ->
+    	resp << [name: "br3_switch", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+    
+    br3_doors.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("door")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+        br3Doors << [name: t_name, value: t_val]
+    }
+    br3Doors.sort{it.name}
+    br3Doors.each {lr ->
+    	resp << [name: "br3_door", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    br3_locks.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("lock")
+        }
+        else {
+        	t_val = "OFFLINE"
+        }
+        br3Locks << [name: t_name, value: t_val]
+    }
+    br3Locks.sort{it.name}
+    br3Locks.each {lr ->
+    	resp << [name: "br3_lock", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    br3_contacts.each {lr ->
+    	t_name = "${lr}"
+        if (lr.getStatus() != "OFFLINE") {
+	        t_val = lr.currentValue("contact")
+        }
+        else {
+          t_val = "OFFLINE"
+        }
+        br3Contacts << [name: t_name, value: t_val]
+    }
+    br3Contacts.sort{it.name}
+    br3Contacts.each {lr ->
+    	resp << [name: "br3_contact", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    br3_temps.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("temperature")
+        br3Temps << [name: t_name, value: t_val]
+    }
+    br3Temps.sort{it.name}
+    br3Temps.each {lr ->
+    	resp << [name: "br3_temp", value: lr.name]
         resp << [name: "val", value: lr.value]
     }
 
