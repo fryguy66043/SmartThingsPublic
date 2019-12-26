@@ -97,6 +97,7 @@ preferences {
         input "master_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Master."
         input "master_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Master."
         input "master_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Master."
+        input "master_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Master."
     }
     section ("Master Bath") {
     	input "mb_display", "text", required: false, title: "Enter Display Name for Master Bath."
@@ -219,6 +220,7 @@ def initialize() {
     subscribe(master_locks, "lock", changeHandler)
     subscribe(master_contacts, "contact", changeHandler)
     subscribe(master_temps, "temperature", changeHandler)
+    subscribe(master_humid, "humidity", changeHandler)
 
 	subscribe(mb_lights, "switch", changeHandler)
     subscribe(mb_doors, "door", changeHandler)
@@ -843,6 +845,7 @@ def getStatus() {
     def masterLocks = []
     def masterContacts = []
     def masterTemps = []
+    def masterHumid = []
 
 	def mbLights = []
     def mbDoors = []
@@ -1507,6 +1510,17 @@ def getStatus() {
     masterTemps.sort{it.name}
     masterTemps.each {lr ->
     	resp << [name: "master_temp", value: lr.name]
+        resp << [name: "val", value: lr.value]
+    }
+
+    master_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        masterHumid << [name: t_name, value: t_val]
+    }
+    masterHumid.sort{it.name}
+    masterHumid.each {lr ->
+    	resp << [name: "master_humid", value: lr.name]
         resp << [name: "val", value: lr.value]
     }
 
