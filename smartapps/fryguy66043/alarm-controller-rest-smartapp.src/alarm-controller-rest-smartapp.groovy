@@ -1600,7 +1600,7 @@ def getStatus() {
     mb_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
-        masterTemps << [name: t_name, value: t_val]
+        mbTemps << [name: t_name, value: t_val]
     }
     mbTemps.sort{it.name}
     mbTemps.each {lr ->
