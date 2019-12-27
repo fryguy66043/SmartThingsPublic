@@ -904,10 +904,10 @@ def getStatus() {
     resp << [name: "val", value: forecast.currentValue("percentPrecip")]
     resp << [name: "humidity", value: "Humidity"]
     resp << [name: "val", value: forecast.currentValue("humidity")]
-
+/*
     resp << [name: "dee", value: "Dee's Location"]
     resp << [name: "val", value: dee.currentValue("currentLocation")]
-    
+*/    
     resp << [name: "jeff", value: "Jeff's Location"]
     resp << [name: "val", value: jeff.currentPresence]
     
