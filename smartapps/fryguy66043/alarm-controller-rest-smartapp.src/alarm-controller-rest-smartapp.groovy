@@ -841,6 +841,7 @@ def getStatus() {
     def frTemps = []
 
 	def masterLights = []
+    def masterColorLights = []
     def masterDoors = []
     def masterLocks = []
     def masterContacts = []
@@ -933,12 +934,7 @@ def getStatus() {
     }
 
 /* Garage */
-  	t_val = "Garage"
-	if (garage_display?.size() > 0) {
-    	t_val = garage_display
-    }
-    resp << [name: "garage_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	def itemCnt = 0
 
 	garage_lights.each {gl ->
     	t_name = "${gl}"
@@ -948,12 +944,8 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		garageLights << [name: t_name, value: t_val]
-    }
-	garageLights.sort{it.name}
-    garageLights.each {gl ->
-    	resp << [name: "garage_switch", value: gl.name]
-        resp << [name: "val", value: gl.value]
     }
     
     garage_doors.each {gd ->
@@ -964,12 +956,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         garageDoors << [name: t_name, value: t_val]
-    }
-    garageDoors.sort{it.name}
-    garageDoors.each {gd ->
-    	resp << [name: "garage_door", value: gd.name]
-        resp << [name: "val", value: gd.value]
     }
 
     garage_locks.each {gl ->
@@ -980,12 +968,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         garageLocks << [name: t_name, value: t_val]
-    }
-    garageLocks.sort{it.name}
-    garageLocks.each {gl ->
-    	resp << [name: "garage_lock", value: gl.name]
-        resp << [name: "val", value: gl.value]
     }
 
     garage_contacts.each {gc ->
@@ -996,32 +980,58 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         garageContacts << [name: t_name, value: t_val]
-    }
-    garageContacts.sort{it.name}
-    garageContacts.each {gc ->
-    	resp << [name: "garage_contact", value: gc.name]
-        resp << [name: "val", value: gc.value]
     }
 
     garage_temps.each {gt ->
     	t_name = "${gt}"
         t_val = gt.currentValue("temperature")
+        itemCnt++
         garageTemps << [name: t_name, value: t_val]
     }
-    garageTemps.sort{it.name}
-    garageTemps.each {gt ->
-    	resp << [name: "garage_temp", value: gt.name]
-        resp << [name: "val", value: gt.value]
+    
+    if (itemCnt > 0) {
+        t_val = "Garage"
+        if (garage_display?.size() > 0) {
+            t_val = garage_display
+        }
+        resp << [name: "garage_display", value: t_val]
+        resp << [name: "val", value: t_val]
+
+        garageLights.sort{it.name}
+        garageLights.each {gl ->
+            resp << [name: "garage_switch", value: gl.name]
+            resp << [name: "val", value: gl.value]
+        }
+
+        garageDoors.sort{it.name}
+        garageDoors.each {gd ->
+            resp << [name: "garage_door", value: gd.name]
+            resp << [name: "val", value: gd.value]
+        }
+
+        garageLocks.sort{it.name}
+        garageLocks.each {gl ->
+            resp << [name: "garage_lock", value: gl.name]
+            resp << [name: "val", value: gl.value]
+        }
+
+        garageContacts.sort{it.name}
+        garageContacts.each {gc ->
+            resp << [name: "garage_contact", value: gc.name]
+            resp << [name: "val", value: gc.value]
+        }
+
+        garageTemps.sort{it.name}
+        garageTemps.each {gt ->
+            resp << [name: "garage_temp", value: gt.name]
+            resp << [name: "val", value: gt.value]
+        }
     }
 
 /* Living Room */
-  	t_val = "Living Room"
-	if (lr_display?.size() > 0) {
-    	t_val = lr_display
-    }
-    resp << [name: "lr_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	itemCnt = 0
     
     lr_lights.each {lr ->
     	t_name = "${lr}"
@@ -1031,12 +1041,8 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		lrLights << [name: t_name, value: t_val]
-    }
-	lrLights.sort{it.name}
-    lrLights.each {lr ->
-    	resp << [name: "lr_switch", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
     
     lr_doors.each {lr ->
@@ -1047,12 +1053,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         lrDoors << [name: t_name, value: t_val]
-    }
-    lrDoors.sort{it.name}
-    lrDoors.each {lr ->
-    	resp << [name: "lr_door", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     lr_locks.each {lr ->
@@ -1063,12 +1065,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         lrLocks << [name: t_name, value: t_val]
-    }
-    lrLocks.sort{it.name}
-    lrLocks.each {lr ->
-    	resp << [name: "lr_lock", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     lr_contacts.each {lr ->
@@ -1079,32 +1077,58 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         lrContacts << [name: t_name, value: t_val]
-    }
-    lrContacts.sort{it.name}
-    lrContacts.each {lr ->
-    	resp << [name: "lr_contact", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     lr_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
+        itemCnt++
         lrTemps << [name: t_name, value: t_val]
     }
-    lrTemps.sort{it.name}
-    lrTemps.each {lr ->
-    	resp << [name: "lr_temp", value: lr.name]
-        resp << [name: "val", value: lr.value]
+
+	if (itemCnt > 0) {
+        t_val = "Living Room"
+        if (lr_display?.size() > 0) {
+            t_val = lr_display
+        }
+        resp << [name: "lr_display", value: t_val]
+        resp << [name: "val", value: t_val]
+
+        lrLights.sort{it.name}
+        lrLights.each {lr ->
+            resp << [name: "lr_switch", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        lrDoors.sort{it.name}
+        lrDoors.each {lr ->
+            resp << [name: "lr_door", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        lrLocks.sort{it.name}
+        lrLocks.each {lr ->
+            resp << [name: "lr_lock", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        lrContacts.sort{it.name}
+        lrContacts.each {lr ->
+            resp << [name: "lr_contact", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        lrTemps.sort{it.name}
+        lrTemps.each {lr ->
+            resp << [name: "lr_temp", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
     }
 
 /* Kitchen */
-  	t_val = "Kitchen"
-	if (kitchen_display?.size() > 0) {
-    	t_val = kitchen_display
-    }
-    resp << [name: "kitchen_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	itemCnt = 0
     
     kitchen_lights.each {lr ->
     	t_name = "${lr}"
@@ -1114,12 +1138,8 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		kitchenLights << [name: t_name, value: t_val]
-    }
-	kitchenLights.sort{it.name}
-    kitchenLights.each {lr ->
-    	resp << [name: "kitchen_switch", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
     
     kitchen_doors.each {lr ->
@@ -1130,12 +1150,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         kitchenDoors << [name: t_name, value: t_val]
-    }
-    kitchenDoors.sort{it.name}
-    kitchenDoors.each {lr ->
-    	resp << [name: "kitchen_door", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     kitchen_locks.each {lr ->
@@ -1146,12 +1162,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         kitchenLocks << [name: t_name, value: t_val]
-    }
-    kitchenLocks.sort{it.name}
-    kitchenLocks.each {lr ->
-    	resp << [name: "kitchen_lock", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     kitchen_contacts.each {lr ->
@@ -1162,32 +1174,58 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         kitchenContacts << [name: t_name, value: t_val]
-    }
-    kitchenContacts.sort{it.name}
-    kitchenContacts.each {lr ->
-    	resp << [name: "kitchen_contact", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     kitchen_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
+        itemCnt++
         lrTemps << [name: t_name, value: t_val]
     }
-    kitchenTemps.sort{it.name}
-    kitchenTemps.each {lr ->
-    	resp << [name: "kitchen_temp", value: lr.name]
-        resp << [name: "val", value: lr.value]
+
+    if (itemCnt > 0) {
+        t_val = "Kitchen"
+        if (kitchen_display?.size() > 0) {
+            t_val = kitchen_display
+        }
+        resp << [name: "kitchen_display", value: t_val]
+        resp << [name: "val", value: t_val]
+
+        kitchenLights.sort{it.name}
+        kitchenLights.each {lr ->
+            resp << [name: "kitchen_switch", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        kitchenDoors.sort{it.name}
+        kitchenDoors.each {lr ->
+            resp << [name: "kitchen_door", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        kitchenLocks.sort{it.name}
+        kitchenLocks.each {lr ->
+            resp << [name: "kitchen_lock", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        kitchenContacts.sort{it.name}
+        kitchenContacts.each {lr ->
+            resp << [name: "kitchen_contact", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        kitchenTemps.sort{it.name}
+        kitchenTemps.each {lr ->
+            resp << [name: "kitchen_temp", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
     }
 
 /* Outside */
-	t_val = "Outside"
-	if (outside_display?.size() > 0) {
-    	t_val = outside_display
-    }
-    resp << [name: "outside_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	itemCnt = 0
     
     outside_lights.each {lr ->
     	t_name = "${lr}"
@@ -1197,12 +1235,8 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		outsideLights << [name: t_name, value: t_val]
-    }
-	outsideLights.sort{it.name}
-    outsideLights.each {lr ->
-    	resp << [name: "outside_switch", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
     
     outside_doors.each {lr ->
@@ -1213,12 +1247,8 @@ def getStatus() {
         else {
             t_val = "OFFLINE"
         }
+        itemCnt++
         outsideDoors << [name: t_name, value: t_val]
-    }
-    outsideDoors.sort{it.name}
-    outsideDoors.each {lr ->
-    	resp << [name: "outside_door", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     outside_locks.each {lr ->
@@ -1229,12 +1259,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         outsideLocks << [name: t_name, value: t_val]
-    }
-    outsideLocks.sort{it.name}
-    outsideLocks.each {lr ->
-    	resp << [name: "outside_lock", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     outside_contacts.each {lr ->
@@ -1245,32 +1271,58 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         outsideContacts << [name: t_name, value: t_val]
-    }
-    outsideContacts.sort{it.name}
-    outsideContacts.each {lr ->
-    	resp << [name: "outside_contact", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     outside_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
+        itemCnt++
         outsideTemps << [name: t_name, value: t_val]
     }
-    outsideTemps.sort{it.name}
-    outsideTemps.each {lr ->
-    	resp << [name: "outside_temp", value: lr.name]
-        resp << [name: "val", value: lr.value]
+
+    if (itemCnt > 0) {
+        t_val = "Outside"
+        if (outside_display?.size() > 0) {
+            t_val = outside_display
+        }
+        resp << [name: "outside_display", value: t_val]
+        resp << [name: "val", value: t_val]
+
+        outsideLights.sort{it.name}
+        outsideLights.each {lr ->
+            resp << [name: "outside_switch", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        outsideDoors.sort{it.name}
+        outsideDoors.each {lr ->
+            resp << [name: "outside_door", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        outsideLocks.sort{it.name}
+        outsideLocks.each {lr ->
+            resp << [name: "outside_lock", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        outsideContacts.sort{it.name}
+        outsideContacts.each {lr ->
+            resp << [name: "outside_contact", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        outsideTemps.sort{it.name}
+        outsideTemps.each {lr ->
+            resp << [name: "outside_temp", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
     }
 
 /* Basement */
-	t_val = "Basement"
-	if (basement_display?.size() > 0) {
-    	t_val = basement_display
-    }
-    resp << [name: "basement_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	itemCnt = 0
     
     basement_lights.each {lr ->
     	t_name = "${lr}"
@@ -1280,12 +1332,8 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		basementLights << [name: t_name, value: t_val]
-    }
-	basementLights.sort{it.name}
-    basementLights.each {lr ->
-    	resp << [name: "basement_switch", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
     
     basement_doors.each {lr ->
@@ -1296,12 +1344,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         basementDoors << [name: t_name, value: t_val]
-    }
-    basementDoors.sort{it.name}
-    basementDoors.each {lr ->
-    	resp << [name: "basement_door", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     basement_locks.each {lr ->
@@ -1312,12 +1356,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         basementLocks << [name: t_name, value: t_val]
-    }
-    basementLocks.sort{it.name}
-    basementLocks.each {lr ->
-    	resp << [name: "basement_lock", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     basement_contacts.each {lr ->
@@ -1328,32 +1368,58 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         basementContacts << [name: t_name, value: t_val]
-    }
-    basementContacts.sort{it.name}
-    basementContacts.each {lr ->
-    	resp << [name: "basement_contact", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     basement_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
+        itemCnt++
         basementTemps << [name: t_name, value: t_val]
     }
-    basementTemps.sort{it.name}
-    basementTemps.each {lr ->
-    	resp << [name: "basement_temp", value: lr.name]
-        resp << [name: "val", value: lr.value]
+    
+    if (itemCnt > 0) {
+        t_val = "Basement"
+        if (basement_display?.size() > 0) {
+            t_val = basement_display
+        }
+        resp << [name: "basement_display", value: t_val]
+        resp << [name: "val", value: t_val]
+
+        basementLights.sort{it.name}
+        basementLights.each {lr ->
+            resp << [name: "basement_switch", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        basementDoors.sort{it.name}
+        basementDoors.each {lr ->
+            resp << [name: "basement_door", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        basementLocks.sort{it.name}
+        basementLocks.each {lr ->
+            resp << [name: "basement_lock", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        basementContacts.sort{it.name}
+        basementContacts.each {lr ->
+            resp << [name: "basement_contact", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        basementTemps.sort{it.name}
+        basementTemps.each {lr ->
+            resp << [name: "basement_temp", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
     }
 
 /* Family Room */
-  	t_val = "Family Room"
-	if (fr_display?.size() > 0) {
-    	t_val = fr_display
-    }
-    resp << [name: "fr_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	itemCnt = 0
     
     fr_lights.each {lr ->
     	t_name = "${lr}"
@@ -1363,12 +1429,8 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		frLights << [name: t_name, value: t_val]
-    }
-	frLights.sort{it.name}
-    frLights.each {lr ->
-    	resp << [name: "fr_switch", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
     
     fr_doors.each {lr ->
@@ -1379,12 +1441,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         frDoors << [name: t_name, value: t_val]
-    }
-    frDoors.sort{it.name}
-    frDoors.each {lr ->
-    	resp << [name: "fr_door", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     fr_locks.each {lr ->
@@ -1395,12 +1453,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         frLocks << [name: t_name, value: t_val]
-    }
-    frLocks.sort{it.name}
-    frLocks.each {lr ->
-    	resp << [name: "fr_lock", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     fr_contacts.each {lr ->
@@ -1411,32 +1465,58 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         frContacts << [name: t_name, value: t_val]
-    }
-    frContacts.sort{it.name}
-    frContacts.each {lr ->
-    	resp << [name: "fr_contact", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     fr_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
+        itemCnt++
         lrTemps << [name: t_name, value: t_val]
     }
-    frTemps.sort{it.name}
-    frTemps.each {lr ->
-    	resp << [name: "fr_temp", value: lr.name]
-        resp << [name: "val", value: lr.value]
+    
+    if (itemCnt > 0) {
+        t_val = "Family Room"
+        if (fr_display?.size() > 0) {
+            t_val = fr_display
+        }
+        resp << [name: "fr_display", value: t_val]
+        resp << [name: "val", value: t_val]
+
+        frLights.sort{it.name}
+        frLights.each {lr ->
+            resp << [name: "fr_switch", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        frDoors.sort{it.name}
+        frDoors.each {lr ->
+            resp << [name: "fr_door", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        frLocks.sort{it.name}
+        frLocks.each {lr ->
+            resp << [name: "fr_lock", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        frContacts.sort{it.name}
+        frContacts.each {lr ->
+            resp << [name: "fr_contact", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        frTemps.sort{it.name}
+        frTemps.each {lr ->
+            resp << [name: "fr_temp", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
     }
 
 /* Master */
-	t_val = "Master"
-	if (master_display?.size() > 0) {
-    	t_val = master_display
-    }
-    resp << [name: "master_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	itemCnt = 0
     
     master_lights.each {lr ->
     	t_name = "${lr}"
@@ -1446,14 +1526,64 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		masterLights << [name: t_name, value: t_val]
+
+		def bulbFound = -1
+        def colorBulb = false
+        
+        t_hue = lr?.currentValue("hue")
+        if (t_hue) {
+        	colorBulb = true
+
+			bulbFound = -1
+            for (int x = 0; x < state?.colorBulbs?.size(); x++) {
+                if (state.colorBulbs[x].name == t_name) {
+                    bulbFound = x
+                    break
+                }
+            }
+            if (bulbFound == -1) {
+            	t_hue = lr?.currentValue("hue")
+                t_saturation = lr?.currentValue("saturation")
+                t_dim = lr?.currentValue("level")
+            	state.colorBulbs << [name: t_name, hue: t_hue, saturation: t_saturation, dim: t_dim]
+            }
+            else {
+                t_hue = state.colorBulbs[bulbFound].hue
+                t_saturation = state.colorBulbs[bulbFound].saturation
+                t_dim = state.colorBulbs[bulbFound].dim
+                if (!t_dim) {
+                    t_dim = 37
+                }
+            }
+        /* white: hue: 56, saturation: 2
+           red: hue: 2, saturation: 94
+           blue: hue: 67, saturation: 92
+           green: hue: 28, saturation: 98
+        */
+            if (t_hue == 2 && t_saturation == 94) {
+                cVal = "red"
+            }
+            else if (t_hue == 67 && t_saturation == 92) {
+                cVal = "blue"
+            }
+            else if (t_hue == 28 && t_saturation == 98) {
+                cVal = "green"
+            }
+            else {
+                cVal = "white"
+            }
+            dVal = t_dim
+            if (!t_dim) {
+                dVal = 37
+            }
+            masterColorLights << [name: t_name, color: cVal, dim: dVal]
+        }
     }
-	masterLights.sort{it.name}
-    masterLights.each {lr ->
-    	resp << [name: "master_switch", value: lr.name]
-        resp << [name: "val", value: lr.value]
-    }
-    
+
+
+
     master_doors.each {lr ->
     	t_name = "${lr}"
         if (lr.getStatus() != "OFFLINE") {
@@ -1462,12 +1592,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         masterDoors << [name: t_name, value: t_val]
-    }
-    masterDoors.sort{it.name}
-    masterDoors.each {lr ->
-    	resp << [name: "master_door", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     master_locks.each {lr ->
@@ -1478,12 +1604,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         masterLocks << [name: t_name, value: t_val]
-    }
-    masterLocks.sort{it.name}
-    masterLocks.each {lr ->
-    	resp << [name: "master_lock", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     master_contacts.each {lr ->
@@ -1494,44 +1616,78 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         masterContacts << [name: t_name, value: t_val]
-    }
-    masterContacts.sort{it.name}
-    masterContacts.each {lr ->
-    	resp << [name: "master_contact", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     master_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
+        itemCnt++
         masterTemps << [name: t_name, value: t_val]
-    }
-    masterTemps.sort{it.name}
-    masterTemps.each {lr ->
-    	resp << [name: "master_temp", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     master_humid.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("humidity")
+        itemCnt++
         masterHumid << [name: t_name, value: t_val]
     }
-    masterHumid.sort{it.name}
-    masterHumid.each {lr ->
-    	resp << [name: "master_humid", value: lr.name]
-        resp << [name: "val", value: lr.value]
-    }
 
+    if (itemCnt > 0) {
+        t_val = "Master"
+        if (master_display?.size() > 0) {
+            t_val = master_display
+        }
+        resp << [name: "master_display", value: t_val]
+        resp << [name: "val", value: t_val]
+
+        masterLights.sort{it.name}
+        masterLights.each {lr ->
+            resp << [name: "master_switch", value: lr.name]
+            resp << [name: "val", value: lr.value]
+            masterColorLights.each { lv ->
+                if (lv.name == lr.name) {
+                    log.debug "Found color bulb! ${lv.name} / ${lv.color} / ${lv.dim}"
+                    resp << [name: "switch_c", value: lv.name]
+                    resp << [name: lv.color, value: lv.dim]
+                }
+            }
+        }
+
+        masterDoors.sort{it.name}
+        masterDoors.each {lr ->
+            resp << [name: "master_door", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        masterLocks.sort{it.name}
+        masterLocks.each {lr ->
+            resp << [name: "master_lock", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        masterContacts.sort{it.name}
+        masterContacts.each {lr ->
+            resp << [name: "master_contact", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        masterTemps.sort{it.name}
+        masterTemps.each {lr ->
+            resp << [name: "master_temp", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        masterHumid.sort{it.name}
+        masterHumid.each {lr ->
+            resp << [name: "master_humid", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+    }
 
 /* Master Bath */
-	t_val = "Master Bath"
-	if (mb_display?.size() > 0) {
-    	t_val = mb_display
-    }
-    resp << [name: "mb_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	itemCnt = 0
     
     mb_lights.each {lr ->
     	t_name = "${lr}"
@@ -1541,12 +1697,8 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		mbLights << [name: t_name, value: t_val]
-    }
-	mbLights.sort{it.name}
-    mbLights.each {lr ->
-    	resp << [name: "mb_switch", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
     
     mb_doors.each {lr ->
@@ -1557,12 +1709,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         mbDoors << [name: t_name, value: t_val]
-    }
-    mbDoors.sort{it.name}
-    mbDoors.each {lr ->
-    	resp << [name: "mb_door", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     mb_locks.each {lr ->
@@ -1573,6 +1721,7 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         mbLocks << [name: t_name, value: t_val]
     }
     mbLocks.sort{it.name}
@@ -1589,44 +1738,72 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         mbContacts << [name: t_name, value: t_val]
-    }
-    mbContacts.sort{it.name}
-    mbContacts.each {lr ->
-    	resp << [name: "mb_contact", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     mb_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
+        itemCnt++
         mbTemps << [name: t_name, value: t_val]
-    }
-    mbTemps.sort{it.name}
-    mbTemps.each {lr ->
-    	resp << [name: "mb_temp", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     mb_humid.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("humidity")
+        itemCnt++
         mbHumid << [name: t_name, value: t_val]
     }
-    mbHumid.sort{it.name}
-    mbHumid.each {lr ->
-    	resp << [name: "mb_humid", value: lr.name]
-        resp << [name: "val", value: lr.value]
+
+    if (itemCnt > 0) {
+        t_val = "Master Bath"
+        if (mb_display?.size() > 0) {
+            t_val = mb_display
+        }
+        resp << [name: "mb_display", value: t_val]
+        resp << [name: "val", value: t_val]
+
+        mbLights.sort{it.name}
+        mbLights.each {lr ->
+            resp << [name: "mb_switch", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        mbDoors.sort{it.name}
+        mbDoors.each {lr ->
+            resp << [name: "mb_door", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        mbLocks.sort{it.name}
+        mbLocks.each {lr ->
+            resp << [name: "mb_lock", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        mbContacts.sort{it.name}
+        mbContacts.each {lr ->
+            resp << [name: "mb_contact", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        mbTemps.sort{it.name}
+        mbTemps.sort{it.name}
+        mbTemps.each {lr ->
+            resp << [name: "mb_temp", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        mbHumid.each {lr ->
+            resp << [name: "mb_humid", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
     }
 
 
 /* Bedroom 1 */
-	t_val = "Bedroom 1"
-	if (br1_display?.size() > 0) {
-    	t_val = br1_display
-    }
-    resp << [name: "br1_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	itemCnt = 0
     
     br1_lights.each {lr ->
     	t_name = "${lr}"
@@ -1636,12 +1813,8 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		br1Lights << [name: t_name, value: t_val]
-    }
-	br1Lights.sort{it.name}
-    br1Lights.each {lr ->
-    	resp << [name: "br1_switch", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
     
     br1_doors.each {lr ->
@@ -1652,12 +1825,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         br1Doors << [name: t_name, value: t_val]
-    }
-    br1Doors.sort{it.name}
-    br1Doors.each {lr ->
-    	resp << [name: "br1_door", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     br1_locks.each {lr ->
@@ -1668,12 +1837,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         br1Locks << [name: t_name, value: t_val]
-    }
-    br1Locks.sort{it.name}
-    br1Locks.each {lr ->
-    	resp << [name: "br1_lock", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     br1_contacts.each {lr ->
@@ -1684,33 +1849,58 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         br1Contacts << [name: t_name, value: t_val]
-    }
-    br1Contacts.sort{it.name}
-    br1Contacts.each {lr ->
-    	resp << [name: "br1_contact", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     br1_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
+        itemCnt++
         br1Temps << [name: t_name, value: t_val]
     }
-    br1Temps.sort{it.name}
-    br1Temps.each {lr ->
-    	resp << [name: "br1_temp", value: lr.name]
-        resp << [name: "val", value: lr.value]
-    }
 
+    if (itemCnt > 0) {
+        t_val = "Bedroom 1"
+        if (br1_display?.size() > 0) {
+            t_val = br1_display
+        }
+        resp << [name: "br1_display", value: t_val]
+        resp << [name: "val", value: t_val]
+
+        br1Lights.sort{it.name}
+        br1Lights.each {lr ->
+            resp << [name: "br1_switch", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br1Doors.sort{it.name}
+        br1Doors.each {lr ->
+            resp << [name: "br1_door", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br1Locks.sort{it.name}
+        br1Locks.each {lr ->
+            resp << [name: "br1_lock", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br1Contacts.sort{it.name}
+        br1Contacts.each {lr ->
+            resp << [name: "br1_contact", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br1Temps.sort{it.name}
+        br1Temps.each {lr ->
+            resp << [name: "br1_temp", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+    }
 
 /* Bedroom 2 */
-	t_val = "Bedroom 2"
-	if (br2_display?.size() > 0) {
-    	t_val = br2_display
-    }
-    resp << [name: "br2_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	itemCnt = 0
     
     br2_lights.each {lr ->
     	t_name = "${lr}"
@@ -1720,12 +1910,8 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		br2Lights << [name: t_name, value: t_val]
-    }
-	br2Lights.sort{it.name}
-    br2Lights.each {lr ->
-    	resp << [name: "br2_switch", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
     
     br2_doors.each {lr ->
@@ -1736,12 +1922,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         br2Doors << [name: t_name, value: t_val]
-    }
-    br2Doors.sort{it.name}
-    br2Doors.each {lr ->
-    	resp << [name: "br2_door", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     br2_locks.each {lr ->
@@ -1752,12 +1934,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         br2Locks << [name: t_name, value: t_val]
-    }
-    br2Locks.sort{it.name}
-    br2Locks.each {lr ->
-    	resp << [name: "br2_lock", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     br2_contacts.each {lr ->
@@ -1768,33 +1946,58 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         br2Contacts << [name: t_name, value: t_val]
-    }
-    br2Contacts.sort{it.name}
-    br2Contacts.each {lr ->
-    	resp << [name: "br2_contact", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     br2_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
+        itemCnt++
         br2Temps << [name: t_name, value: t_val]
     }
-    br2Temps.sort{it.name}
-    br2Temps.each {lr ->
-    	resp << [name: "br2_temp", value: lr.name]
-        resp << [name: "val", value: lr.value]
-    }
+    
+    if (itemCnt > 0) {
+        t_val = "Bedroom 2"
+        if (br2_display?.size() > 0) {
+            t_val = br2_display
+        }
+        resp << [name: "br2_display", value: t_val]
+        resp << [name: "val", value: t_val]
 
+        br2Lights.sort{it.name}
+        br2Lights.each {lr ->
+            resp << [name: "br2_switch", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br2Doors.sort{it.name}
+        br2Doors.each {lr ->
+            resp << [name: "br2_door", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br2Locks.sort{it.name}
+        br2Locks.each {lr ->
+            resp << [name: "br2_lock", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br2Contacts.sort{it.name}
+        br2Contacts.each {lr ->
+            resp << [name: "br2_contact", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br2Temps.sort{it.name}
+        br2Temps.each {lr ->
+            resp << [name: "br2_temp", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+    }
 
 /* Bedroom 3 */
-	t_val = "Bedroom 3"
-	if (br3_display?.size() > 0) {
-    	t_val = br3_display
-    }
-    resp << [name: "br3_display", value: t_val]
-    resp << [name: "val", value: t_val]
+	itemCnt = 0
     
     br3_lights.each {lr ->
     	t_name = "${lr}"
@@ -1804,12 +2007,8 @@ def getStatus() {
         else {
 	        t_val = "OFFLINE"
         }
+        itemCnt++
 		br3Lights << [name: t_name, value: t_val]
-    }
-	br3Lights.sort{it.name}
-    br3Lights.each {lr ->
-    	resp << [name: "br3_switch", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
     
     br3_doors.each {lr ->
@@ -1820,12 +2019,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         br3Doors << [name: t_name, value: t_val]
-    }
-    br3Doors.sort{it.name}
-    br3Doors.each {lr ->
-    	resp << [name: "br3_door", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     br3_locks.each {lr ->
@@ -1836,12 +2031,8 @@ def getStatus() {
         else {
         	t_val = "OFFLINE"
         }
+        itemCnt++
         br3Locks << [name: t_name, value: t_val]
-    }
-    br3Locks.sort{it.name}
-    br3Locks.each {lr ->
-    	resp << [name: "br3_lock", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     br3_contacts.each {lr ->
@@ -1852,25 +2043,55 @@ def getStatus() {
         else {
           t_val = "OFFLINE"
         }
+        itemCnt++
         br3Contacts << [name: t_name, value: t_val]
-    }
-    br3Contacts.sort{it.name}
-    br3Contacts.each {lr ->
-    	resp << [name: "br3_contact", value: lr.name]
-        resp << [name: "val", value: lr.value]
     }
 
     br3_temps.each {lr ->
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
+        itemCnt++
         br3Temps << [name: t_name, value: t_val]
     }
-    br3Temps.sort{it.name}
-    br3Temps.each {lr ->
-    	resp << [name: "br3_temp", value: lr.name]
-        resp << [name: "val", value: lr.value]
-    }
 
+    if (itemCnt > 0) {
+        t_val = "Bedroom 3"
+        if (br3_display?.size() > 0) {
+            t_val = br3_display
+        }
+        resp << [name: "br3_display", value: t_val]
+        resp << [name: "val", value: t_val]
+
+        br3Lights.sort{it.name}
+        br3Lights.each {lr ->
+            resp << [name: "br3_switch", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br3Doors.sort{it.name}
+        br3Doors.each {lr ->
+            resp << [name: "br3_door", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br3Locks.sort{it.name}
+        br3Locks.each {lr ->
+            resp << [name: "br3_lock", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br3Contacts.sort{it.name}
+        br3Contacts.each {lr ->
+            resp << [name: "br3_contact", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+
+        br3Temps.sort{it.name}
+        br3Temps.each {lr ->
+            resp << [name: "br3_temp", value: lr.name]
+            resp << [name: "val", value: lr.value]
+        }
+    }
 
 	def ignore = false
 	lights.each {dev ->
@@ -2016,6 +2237,6 @@ def getStatus() {
         resp << [name: "val", value: rc.value]
     }
     
-    log.debug resp
+//    log.debug resp
     return resp
 }
