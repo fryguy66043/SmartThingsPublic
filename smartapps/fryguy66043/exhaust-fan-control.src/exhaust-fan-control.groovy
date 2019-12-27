@@ -61,20 +61,28 @@ def updated()
 private getAppName() { return "Exhaust Fan Control" }
 
 def fanHandler(evt) {
-    log.debug "fanHandler (${evt.value})"
+    log.debug "fanHandler (${evt?.value})"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
-    def msg = ""
+    def msg = "${getAppName()}: ${date}\n"
 
-    if (evt.value == "on") {
+    if (evt?.value == "on") {
         state.rh = rh.currentValue("humidity")
+        msg += "Turning fan on.  Current RH: ${state.rh}%  Target RH: ${rhMin}%"
         state.rhTime = now()
         runIn(rhMinTime * 60, delayHandler)
         if (rhMaxTime > rhMinTime) {
         	runIn (rhMaxTime * 60, maxDelayHandler)
         }
+        if (sendPush) {
+            sendPush(msg)
+        }
+        if (phone) {
+            sendSms(phone, msg)
+        }
     }
-    else if (evt.value == "off") {
+    else if (evt?.value == "off") {
         state.minTime = false
+        unschedule()
     }
 }
 
@@ -118,7 +126,7 @@ def delayHandler(evt)
             state.minTime = false
             fan.off()
             log.debug "Minimum Time Reached.  RH value at/below minumum.  Turning fan off..."
-            msg += "Minimum Time of ${rhTime} minutes Reached.  RH value at/below minumum of ${rhMin}%.  Turning fan off..."
+            msg += "Minimum Time of ${rhMinTime} minutes Reached.  RH value at/below minumum of ${rhMin}%.  Turning fan off..."
             if (sendPush) {
                 sendPush(msg)
             }
@@ -131,13 +139,14 @@ def delayHandler(evt)
 
 def rhHandler(evt)
 {
-    log.debug "rhHandler(${evt.value})"
+    log.debug "rhHandler(${evt?.value})"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     def msg = "${getAppName()}: ${date}\n"
-
+	def currVal = evt?.value.toInteger()
+    
     if (state.minTime) {
         log.debug "state.minTime"
-        if (evt.value <= rhMin) {
+        if (currVal <= rhMin) {
             log.debug "rhMin value reached.  Turning off fan..."
             msg += "rhMin value ${rhMin}% reached.  Turning off fan..."
             fan.off()
@@ -148,7 +157,8 @@ def rhHandler(evt)
                 sendSms(phone, msg)
             }
         }
-        else if (evt.value <= state.rh && evt.value < rhMax) {
+/*
+		else if (currVal <= state.rh && currVal < rhMax) {
             log.debug "rh has reached it's starting value.  Turning off fan..."
             msg += "rh has reached it's starting value of ${state.rh}%.  Turning off fan..."
             fan.off()
@@ -159,8 +169,9 @@ def rhHandler(evt)
                 sendSms(phone, msg)
             }
         }
+*/
     }
-    else if (evt.value >= rhMax) {
+    else if (currVal >= rhMax && fan.currentValue("switch") == "off") {
         fan.on()
         log.debug "rhMax value reached.  Turning on fan..."
         msg += "rhMax value of ${rhMax}% reached.  Turning on fan..."
