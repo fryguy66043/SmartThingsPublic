@@ -382,6 +382,8 @@ def setDisarmed() {
 }
 
 def setColorBulb() {
+	/* JDF - Needs updated with new command params!*/
+
 	log.debug "setColorBulb(${params.command})"
     def resp = []
     def command = params.command
@@ -634,6 +636,52 @@ def setLock() {
     def idx = command.indexOf("=")
     def curDate = new Date()
     log.debug "idx = ${idx}"
+    
+	def dl = garage_locks
+    def roomIdx = command.indexOf("_")
+	def room = ""
+
+	if (roomIdx > -1) {
+    	room = command.substring(0, roomIdx)
+        log.debug "room: [${room}]"
+        def newcommand = command.substring(roomIdx+1)
+        log.debug "newcommand: [${newcommand}]"
+	}
+
+	if (room == garage_display) {
+    	dl = garage_locks
+    }
+    else if (room == lr_display) {
+    	dl = lr_locks
+    }
+    else if (room == kitchen_display) {
+    	dl = kitchen_locks
+    }
+    else if (room == outside_display) {
+    	dl = outside_locks
+    }
+    else if (room == basement_display) {
+    	dl = basement_locks
+    }
+    else if (room == fr_display) {
+    	dl = fr_locks
+    }
+    else if (room == master_display) {
+    	dl = master_locks
+    }
+    else if (room == mb_display) {
+    	dl = mb_locks
+    }
+    else if (room == br1_display) {
+    	dl = br1_locks
+    }
+    else if (room == br2_display) {
+    	dl = br2_locks
+    }
+    else if (room == br3_display) {
+    	dl = br3_locks
+    }
+        
     if (idx > -1) {
     	sv = command.substring(idx+1).toUpperCase()
     }
@@ -642,7 +690,7 @@ def setLock() {
     	allLock = true
     }
     
-    locks.each {lock ->
+    dl.each {lock ->
     	log.debug lock
         dn = "${lock}"
         if (command.contains(dn) || allLock) {
@@ -670,6 +718,7 @@ def setLock() {
 	return resp
 }
 
+/* JDF - Can this be removed?
 def getDoor() {
 	log.debug "getDoor(${params.command})"
     def resp = []
@@ -686,6 +735,7 @@ def getDoor() {
     log.debug "Door Status Resp: ${resp}"
     return resp
 }
+*/
 
 def setDoor() {
 	log.debug "setDoor(${params.command})"
@@ -698,7 +748,53 @@ def setDoor() {
     def idx = command.indexOf("=")
     def curDate = new Date()
     log.debug "idx = ${idx}"
-    if (idx > -1) {
+
+	def dl = garage_doors
+    def roomIdx = command.indexOf("_")
+	def room = ""
+
+	if (roomIdx > -1) {
+    	room = command.substring(0, roomIdx)
+        log.debug "room: [${room}]"
+        def newcommand = command.substring(roomIdx+1)
+        log.debug "newcommand: [${newcommand}]"
+	}
+
+	if (room == garage_display) {
+    	dl = garage_doors
+    }
+    else if (room == lr_display) {
+    	dl = lr_doors
+    }
+    else if (room == kitchen_display) {
+    	dl = kitchen_doors
+    }
+    else if (room == outside_display) {
+    	dl = outside_doors
+    }
+    else if (room == basement_display) {
+    	dl = basement_doors
+    }
+    else if (room == fr_display) {
+    	dl = fr_doors
+    }
+    else if (room == master_display) {
+    	dl = master_doors
+    }
+    else if (room == mb_display) {
+    	dl = mb_doors
+    }
+    else if (room == br1_display) {
+    	dl = br1_doors
+    }
+    else if (room == br2_display) {
+    	dl = br2_doors
+    }
+    else if (room == br3_display) {
+    	dl = br3_doors
+    }
+        
+	if (idx > -1) {
     	sv = command.substring(idx+1).toUpperCase()
     }
     
@@ -706,8 +802,8 @@ def setDoor() {
     	allClose = true
     }
     
-    doors.each {door ->
-    	log.debug door
+    dl.each {door ->
+    	log.debug dl
         dn = "${door}"
         if (command.contains(dn) || allClose) {
         	log.debug "${door} Found! / ${sv}"
@@ -745,14 +841,62 @@ def setSwitch() {
     def idx = command.indexOf("=")
     def curDate = new Date()
     log.debug "idx = ${idx}"
-    if (idx > -1) {
+    
+	def dl = garage_lights
+    def roomIdx = command.indexOf("_")
+	def room = ""
+
+	if (roomIdx > -1) {
+    	room = command.substring(0, roomIdx)
+        log.debug "room: [${room}]"
+        def newcommand = command.substring(roomIdx+1)
+        log.debug "newcommand: [${newcommand}]"
+	}
+
+	if (room == garage_display) {
+    	dl = garage_lights
+    }
+    else if (room == lr_display) {
+    	dl = lr_lights
+    }
+    else if (room == kitchen_display) {
+    	dl = kitchen_lights
+    }
+    else if (room == outside_display) {
+    	dl = outside_lights
+    }
+    else if (room == basement_display) {
+    	dl = basement_lights
+    }
+    else if (room == fr_display) {
+    	dl = fr_lights
+    }
+    else if (room == master_display) {
+    	dl = master_lights
+    }
+    else if (room == mb_display) {
+    	dl = mb_lights
+    }
+    else if (room == br1_display) {
+    	dl = br1_lights
+    }
+    else if (room == br2_display) {
+    	dl = br2_lights
+    }
+    else if (room == br3_display) {
+    	dl = br3_lights
+    }
+        
+
+	if (idx > -1) {
     	sv = command.substring(idx+1).toUpperCase()
     }
 	if (command.contains("all=off")) {
     	allOff = true
     }
 
-    lights.each {dev ->
+
+    dl.each {dev ->
     	log.debug dev
         dn = "${dev}"
         if (command.contains(dn) || allOff) {
