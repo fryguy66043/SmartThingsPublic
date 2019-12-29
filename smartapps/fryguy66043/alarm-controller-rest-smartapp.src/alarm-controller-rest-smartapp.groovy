@@ -1017,6 +1017,15 @@ def getStatus() {
     def br3Contacts = []
     def br3Temps = []
 
+	def sunrise = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",location.currentValue("sunriseTime")).format("EEE h:mm a", location.timeZone)
+    def sunset = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",location.currentValue("sunsetTime")).format("EEE h:mm a", location.timeZone)
+	log.debug "Sunset: ${sunset} / Sunrise: ${sunrise}"
+
+	resp << [name: "sunrise", value: "Sunrise"]
+    resp << [name: "val", value: sunrise]
+    resp << [name: "sunset", value: "Sunset"]
+    resp << [name: "val", value: sunset]
+
     resp << [name: "alarm", value: "Alarm Sensor"]
     resp << [name: "val", value: alarmSensor.currentValue("alarmState")]
     resp << [name: "alert", value: "Alert State"]
@@ -1617,7 +1626,7 @@ def getStatus() {
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
         itemCnt++
-        lrTemps << [name: t_name, value: t_val]
+        frTemps << [name: t_name, value: t_val]
     }
     
     if (itemCnt > 0) {
@@ -1792,7 +1801,7 @@ def getStatus() {
             resp << [name: "val", value: lr.value]
             masterColorLights.each { lv ->
                 if (lv.name == lr.name) {
-                    log.debug "Found color bulb! ${lv.name} / ${lv.color} / ${lv.dim}"
+//                    log.debug "Found color bulb! ${lv.name} / ${lv.color} / ${lv.dim}"
                     resp << [name: "switch_c", value: lv.name]
                     resp << [name: lv.color, value: lv.dim]
                 }
@@ -2325,7 +2334,7 @@ def getStatus() {
         resp << [name: "val", value: rl.value]
         lightsVals.each { lv ->
             if (lv.name == rl.name) {
-                log.debug "Found color bulb! ${lv.name} / ${lv.color} / ${lv.dim}"
+//                log.debug "Found color bulb! ${lv.name} / ${lv.color} / ${lv.dim}"
                 resp << [name: "switch_c", value: rl.name]
                 resp << [name: lv.color, value: lv.dim]
             }
