@@ -73,10 +73,16 @@ def appHandler(evt) {
 	def sunTime = getSunriseAndSunset();
     def dark = (now >= sunTime.sunset)
 
+	def sunrise = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",location.currentValue("sunriseTime")).format("MM/dd/yy h:mm:ss a", location.timeZone)
+    def sunset = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",location.currentValue("sunsetTime")).format("MM/dd/yy h:mm:ss a", location.timeZone)
+	log.debug "Sunset: ${sunTime.sunset.format("MM/dd/yy h:mm:ss a", location.timeZone)} / Sunrise: ${sunTime.sunrise.format("MM/dd/yy h:mm:ss a", location.timeZone)}"
+	log.debug "Sunset2: ${sunset} / Sunrise2: ${sunrise}"
+    
     def dn = ""
     def hVal = ""
     def sVal = ""
-    
+
+/*
     log.debug "Checking for hsl..."
     switch1.each {dev ->
     	dn = "${dev}".trim()
@@ -91,6 +97,7 @@ def appHandler(evt) {
     log.debug "Ending"
 
 	turnOn()
+*/
 
 	def curState = switch1.currentState("switch")
     def curPresence = presence1.currentValue("presence")

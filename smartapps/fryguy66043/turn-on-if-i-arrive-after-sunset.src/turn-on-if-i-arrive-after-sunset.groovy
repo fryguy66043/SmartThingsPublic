@@ -65,7 +65,7 @@ def appHandler(evt) {
     def msg = "${location} ${date} <${getAppName()}>: "
 	def presenceValue = presence1.find{it.currentPresence == "present"}
 
-	log.debug "${app.name}"
+	log.debug "${app.name} Sunrise: ${suntime.sunrise} / Sunset: ${suntime.sunset}"
 
 	if (presenceValue) {
     	if (dark) {
