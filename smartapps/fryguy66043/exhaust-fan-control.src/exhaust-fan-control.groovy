@@ -88,7 +88,6 @@ def fanHandler(evt) {
     }
     else if (currVal == "off") {
         state.minTime = false
-        unschedule()
     }
 }
 
@@ -144,9 +143,10 @@ def delayHandler(evt)
     log.debug "delayHandler"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     def msg = "${getAppName()}: ${date}\n"
+    def currRH = rh.currentValue("humidity")
 
     if (fan.currentValue("switch") == "on") {
-        if (rh.currentValue("humidity") > rhMin) {
+        if (currRH > rhMin || currRH > state.rh) {
             state.minTime = true
             log.debug "Minimum Time Reached.  Beginning RH checks..."
             msg += "Minimum Time of ${rhMinTime} minutes Reached.  Beginning RH checks..."
@@ -185,7 +185,7 @@ def rhHandler(evt)
     
     if (state.minTime) {
         log.debug "state.minTime"
-        if (currVal <= rhMin && curVal <= state.prevRH) {
+        if (currVal <= rhMin && (curVal <= state.prevRH || curVal <= state.rh)) {
             log.debug "rhMin value reached.  Turning off fan..."
             msg += "rhMin value ${rhMin}% reached.  Turning off fan..."
             fan.off()
