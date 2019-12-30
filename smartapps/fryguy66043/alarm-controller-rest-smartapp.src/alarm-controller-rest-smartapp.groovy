@@ -1017,14 +1017,27 @@ def getStatus() {
     def br3Contacts = []
     def br3Temps = []
 
-	def sunrise = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",location.currentValue("sunriseTime")).format("EEE h:mm a", location.timeZone)
-    def sunset = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",location.currentValue("sunsetTime")).format("EEE h:mm a", location.timeZone)
+	def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",location.currentValue("sunriseTime"))
+    def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",location.currentValue("sunsetTime"))
+	def sunrise = sunriseTime.format("EEE h:mm a", location.timeZone)
+    def sunset = sunsetTime.format("EEE h:mm a", location.timeZone)
+    def sunTime = ""
 	log.debug "Sunset: ${sunset} / Sunrise: ${sunrise}"
 
+	if (sunriseTime < sunsetTime) {
+    	sunTime = "Next Sunrise: ${sunrise}  /  Sunset: ${sunset}"
+    }
+    else {
+    	sunTime = "Next Sunset: ${sunset}  /  Sunrise: ${sunrise}"
+    }
+    
 	resp << [name: "sunrise", value: "Sunrise"]
     resp << [name: "val", value: sunrise]
     resp << [name: "sunset", value: "Sunset"]
     resp << [name: "val", value: sunset]
+	
+    resp << [name: "suntime", value: "Next Sunrise and Sunset"]
+    resp << [name: "val", value: sunTime]
 
     resp << [name: "alarm", value: "Alarm Sensor"]
     resp << [name: "val", value: alarmSensor.currentValue("alarmState")]
