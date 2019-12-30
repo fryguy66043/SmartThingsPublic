@@ -46,9 +46,12 @@ def installed()
 {
 	state.minTime = false
     state.rh = 0
+    state.prevRH = 0
+    state.fanOn = false
     state.rhTime = now()
 	subscribe(fan, "switch", fanHandler)
     subscribe(rh, "humidity", rhHandler)
+    runEvery15Minutes(checkFan)
 }
 
 def updated()
@@ -64,8 +67,11 @@ def fanHandler(evt) {
     log.debug "fanHandler (${evt?.value})"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     def msg = "${getAppName()}: ${date}\n"
-
-    if (evt?.value == "on") {
+	def currVal = fan.currentValue("switch")
+    
+	state.fanOn = currVal == "on" ? true : false
+    
+    if (currVal == "on") {
         state.rh = rh.currentValue("humidity")
         msg += "Turning fan on.  Current RH: ${state.rh}%  Target RH: ${rhMin}%"
         state.rhTime = now()
@@ -80,9 +86,38 @@ def fanHandler(evt) {
             sendSms(phone, msg)
         }
     }
-    else if (evt?.value == "off") {
+    else if (currVal == "off") {
         state.minTime = false
         unschedule()
+    }
+}
+
+def checkFan(evt) {
+	log.debug "Checking fan status..."
+    def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
+    def msg = "${getAppName()}: ${date}\n"
+    
+    if (fan.currentValue("switch") == "on" && state.fanOn == false) {
+    	msg += "Fan Handler failed.  Turning state.fanOn to true"
+    	log.debug msg
+        if (sendPush) {
+            sendPush(msg)
+        }
+        if (phone) {
+            sendSms(phone, msg)
+        }
+        fanHandler()
+    }
+    else if (fan.currentValue("switch") == "off" && state.fanOn == true) {
+    	msg += "Fan Handler failed.  Turning state.fanOn to false"
+        log.debug msg
+        if (sendPush) {
+            sendPush(msg)
+        }
+        if (phone) {
+            sendSms(phone, msg)
+        }
+        fanHandler()
     }
 }
 
@@ -144,9 +179,13 @@ def rhHandler(evt)
     def msg = "${getAppName()}: ${date}\n"
 	def currVal = evt?.value.toInteger()
     
+    if (state.prevRH == 0) {
+    	state.prevRH = currVal
+    }
+    
     if (state.minTime) {
         log.debug "state.minTime"
-        if (currVal <= rhMin) {
+        if (currVal <= rhMin && curVal <= state.prevRH) {
             log.debug "rhMin value reached.  Turning off fan..."
             msg += "rhMin value ${rhMin}% reached.  Turning off fan..."
             fan.off()
@@ -182,4 +221,5 @@ def rhHandler(evt)
             sendSms(phone, msg)
         }
     }
+    state.prevRH = currVal
 }
