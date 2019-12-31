@@ -90,6 +90,7 @@ def button1Handler(evt) {
                 }
                 else {
                     if (button1_offOnly && button1_main.currentValue("switch") == "off") {
+                    	msg = msg + "Turning on ${button1_main}"
                         button1_main?.on()
                     }
                     else {
@@ -112,6 +113,7 @@ def button1Handler(evt) {
                 }
                 else {
                     if (button1_offOnly && button1_main.currentValue("switch") == "off") {
+                    	msg = msg + "Turning on ${button1_main}"
                         button1_main?.on()
                     }
                     else {                	
@@ -134,6 +136,7 @@ def button1Handler(evt) {
                 }
                 else {
                     if (button1_offOnly && button1_main.currentValue("switch") == "off") {
+                    	msg = msg + "Turning on ${button1_main}"
                         button1_main?.on()
                     }
                     else {
@@ -174,6 +177,7 @@ def button2Handler(evt) {
                 }
                 else {
                     if (button2_offOnly && button2_main.currentValue("switch") == "off") {
+                    	msg = msg + "Turning on ${button2_main}"
                         button2_main?.on()
                     }
                     else {
@@ -200,6 +204,7 @@ def button2Handler(evt) {
                 }
                 else {
                     if (button2_offOnly && button2_main.currentValue("switch") == "off") {
+                    	msg = msg + "Turning on ${button2_main}"
                         button2_main?.on()
                     }
                     else {
@@ -222,6 +227,7 @@ def button2Handler(evt) {
                 }
                 else {
                     if (button2_offOnly && button2_main.currentValue("switch") == "off") {
+                    	msg = msg + "Turning on ${button2_main}"
                         button2_main?.on()
                     }
                     else {
