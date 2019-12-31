@@ -95,6 +95,7 @@ def checkFan(evt) {
 	log.debug "Checking fan status..."
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     def msg = "${getAppName()}: ${date}\n"
+    def currVal = rh.currentValue("humidity")
     
     if (fan.currentValue("switch") == "on" && state.fanOn == false) {
     	msg += "Fan Handler failed.  Turning state.fanOn to true"
@@ -117,6 +118,18 @@ def checkFan(evt) {
             sendSms(phone, msg)
         }
         fanHandler()
+    }
+    else if (currVal <= rhMin && (currVal < state.prevRH || currVal <= state.rh)) {
+        log.debug "rhMin value reached.  Turning off fan..."
+        msg += "rhMin value ${rhMin}% reached.  Turning off fan..."
+        fan.off()
+        log.debug msg
+        if (sendPush) {
+            sendPush(msg)
+        }
+        if (phone) {
+            sendSms(phone, msg)
+        }
     }
 }
 
@@ -177,7 +190,7 @@ def rhHandler(evt)
     log.debug "rhHandler(${evt?.value})"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     def msg = "${getAppName()}: ${date}\n"
-	def currVal = evt?.value.toInteger()
+	def currVal = rh.currentValue("humidity")
     
     if (state.prevRH == 0) {
     	state.prevRH = currVal
@@ -185,7 +198,7 @@ def rhHandler(evt)
     
     if (state.minTime) {
         log.debug "state.minTime"
-        if (currVal <= rhMin && (curVal <= state.prevRH || curVal <= state.rh)) {
+        if (currVal <= rhMin && (currVal <= state.prevRH || currVal <= state.rh)) {
             log.debug "rhMin value reached.  Turning off fan..."
             msg += "rhMin value ${rhMin}% reached.  Turning off fan..."
             fan.off()
