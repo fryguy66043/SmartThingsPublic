@@ -1022,15 +1022,38 @@ def getStatus() {
 	def sunrise = sunriseTime.format("EEE h:mm a", location.timeZone)
     def sunset = sunsetTime.format("EEE h:mm a", location.timeZone)
     def sunTime = ""
-	log.debug "Sunset: ${sunset} / Sunrise: ${sunrise}"
+    def duration = 0
+    def hours = 0
+    def minutes = 0
+    
+    state.daylight = state?.daylight ? state.daylight : "?? Daylight"
+    state.dark = state?.dark ? state.dark : "?? Dark"
+    
+    log.debug "Sunset: ${sunset} / Sunrise: ${sunrise}"
 
 	if (sunriseTime < sunsetTime) {
+        duration = ((sunsetTime.time - sunriseTime.time) / 1000 / 60) as Integer
+        hours = (duration/60) as Integer
+        minutes = (duration-(hours*60)) as Integer
+        state.daylight = "${hours} hrs ${minutes} mins of Daylight"
     	sunTime = "Next Sunrise: ${sunrise}  /  Sunset: ${sunset}"
     }
     else {
+        duration = ((sunriseTime.time - sunsetTime.time) / 1000 / 60) as Integer
+        hours = (duration/60) as Integer
+        minutes = (duration-(hours*60)) as Integer
+        state.dark = "${hours} hrs ${minutes} mins of Dark"
+        hours = 24 - hours
+        if (minutes > 0) {
+        	hours -= 1
+        }
+        minutes = 60 - minutes
+        state.daylight = "${hours} hrs ${minutes} mins of Daylight"
     	sunTime = "Next Sunset: ${sunset}  /  Sunrise: ${sunrise}"
     }
-    
+    log.debug "${state.daylight} / ${state.dark}"
+	sunTime += " (${state.daylight})"
+
 	resp << [name: "sunrise", value: "Sunrise"]
     resp << [name: "val", value: sunrise]
     resp << [name: "sunset", value: "Sunset"]
