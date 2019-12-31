@@ -28,12 +28,16 @@ definition(
 preferences {
     section("Cyndi's Button") {
     	input "button1", "capability.button", required: false, title: "Select Cyndi's Button"
+        input "button1_main", "capability.switch", multiple: false, required: true, title: "What is the main switch for this button?"
+        input "button1_offOnly", "bool", multiple: false, required: true, title: "Do you only want to toggle the main switch and turn others off?"
         input "button1_pushed", "capability.switch", multiple: true, required: false, title: "What switches do you want to toggle when pressed?"
         input "button1_double", "capability.switch", multiple: true, required: false, title: "What switches do you want to toggle when double-pressed?"
         input "button1_held", "capability.switch", multiple: true, required: false, title: "What switches do you want to toggle when held?"
     }
     section("Jeff's Button") {
     	input "button2", "capability.button", required: false, title: "Select Jeff's Button"
+        input "button2_main", "capability.switch", multiple: false, required: true, title: "What is the main switch for this button?"
+        input "button2_offOnly", "bool", multiple: false, required: true, title: "Do you only want to toggle the main switch and turn others off?"
         input "button2_pushed", "capability.switch", multiple: true, required: false, title: "What switches do you want to toggle when pressed?"
         input "button2_double", "capability.switch", multiple: true, required: false, title: "What switches do you want to toggle when double-pressed?"
         input "button2_held", "capability.switch", multiple: true, required: false, title: "What switches do you want to toggle when held?"
@@ -77,7 +81,7 @@ def button1Handler(evt) {
     def msg = "${location} ${date}: ${evt.descriptionText}\n"
     switch (evt.value) {
     	case "pushed":
-        	if (button1_pushed) {
+            if (button1_pushed) {
                 log.debug "button1_pushed.currentSwitch == ${button1_pushed.find{it.currentSwitch == "on"}}"
                 if (button1_pushed.find{it.currentSwitch == "on"}) {
                     log.debug "Executing button1_pushed.off()"
@@ -85,30 +89,40 @@ def button1Handler(evt) {
                     msg = msg + "Turning off ${button1_pushed}"
                 }
                 else {
-                    log.debug "Executing button1_pushed.on()"
-                    button1_pushed?.on()
-                    msg = msg + "Turning on ${button1_pushed}"
+                    if (button1_offOnly && button1_main.currentValue("switch") == "off") {
+                        button1_main?.on()
+                    }
+                    else {
+                        log.debug "Executing button1_pushed.on()"
+                        button1_pushed?.on()
+                        msg = msg + "Turning on ${button1_pushed}"
+                    }
                 }
             }
             else {
-            	msg = msg + "No switches defined for this event!"
+                msg = msg + "No switches defined for this event!"
             }
             break
         case "double":
-        	if (button1_double) {
+            if (button1_double) {
                 if (button1_double.find{it.currentSwitch == "on"}) {
                     log.debug "Executing button1_double.off()"
                     button1_double?.off()
                     msg = msg + "Turning off ${button1_double}"
                 }
                 else {
-                    log.debug "Executing button1_double.on()"
-                    button1_double?.on()
-                    msg = msg + "Turning on ${button1_double}"
+                    if (button1_offOnly && button1_main.currentValue("switch") == "off") {
+                        button1_main?.on()
+                    }
+                    else {                	
+                        log.debug "Executing button1_double.on()"
+                        button1_double?.on()
+                        msg = msg + "Turning on ${button1_double}"
+                    }
                 }
             }
             else {
-            	msg = msg + "No switches defined for this event!"
+                msg = msg + "No switches defined for this event!"
             }
             break
         case "held":
@@ -119,9 +133,14 @@ def button1Handler(evt) {
                     msg = msg + "Turning off ${button1_held}"
                 }
                 else {
-                    log.debug "Executing button1_held.on()"
-                    button1_held?.on()
-                    msg = msg + "Turning on ${button1_held}"
+                    if (button1_offOnly && button1_main.currentValue("switch") == "off") {
+                        button1_main?.on()
+                    }
+                    else {
+                        log.debug "Executing button1_held.on()"
+                        button1_held?.on()
+                        msg = msg + "Turning on ${button1_held}"
+                    }
                 }
             }
             else {
@@ -154,9 +173,14 @@ def button2Handler(evt) {
                     msg = msg + "Turning off ${button2_pushed}\n"
                 }
                 else {
-                    log.debug "Executing button2_pushed.on()"
-                    button2_pushed?.on()
-                    msg = msg + "Turning on ${button2_pushed}\n"
+                    if (button2_offOnly && button2_main.currentValue("switch") == "off") {
+                        button2_main?.on()
+                    }
+                    else {
+                        log.debug "Executing button2_pushed.on()"
+                        button2_pushed?.on()
+                        msg = msg + "Turning on ${button2_pushed}\n"
+                    }
                 }
             }
             else {
@@ -175,9 +199,14 @@ def button2Handler(evt) {
                     msg = msg + "Turning off ${button2_double}\n"
                 }
                 else {
-                    log.debug "Executing button2_double.on()"
-                    button2_double?.on()
-                    msg = msg + "Turning on ${button2_double}\n"
+                    if (button2_offOnly && button2_main.currentValue("switch") == "off") {
+                        button2_main?.on()
+                    }
+                    else {
+                        log.debug "Executing button2_double.on()"
+                        button2_double?.on()
+                        msg = msg + "Turning on ${button2_double}\n"
+                    }
                 }
             }
             else {
@@ -192,9 +221,14 @@ def button2Handler(evt) {
                     msg = msg + "Turning off ${button2_held}\n"
                 }
                 else {
-                    log.debug "Executing button2_held.on()"
-                    button2_held?.on()
-                    msg = msg + "Turning on ${button2_held}\n"
+                    if (button2_offOnly && button2_main.currentValue("switch") == "off") {
+                        button2_main?.on()
+                    }
+                    else {
+                        log.debug "Executing button2_held.on()"
+                        button2_held?.on()
+                        msg = msg + "Turning on ${button2_held}\n"
+                    }
                 }
             }
             else {
