@@ -88,41 +88,42 @@ def powerCheckHandler(evt) {
     def msg = ""
     def status = appliance.getStatus()
     
-    if (appliance.currentSwitch == "off") {
-    	appliance.on()
-    }
-    if (appliance.currentPower > 0 || appliance.currentSwitch == "on") {
-        if (state.powerCheckAlert) {
-        	log.debug "Power has been restored!"
-            msg = "${location} ${date}: ${getAppName()}\n${appliance} has started reporting again.  Power has been restored."
+    if (status == "OFFLINE") {
+        log.debug "Looks like power might be out..."
+        state.powerCheckTime = state.powerCheckTime ?: now()
+        if (!state.powerCheckAlert && state.powerCheckTime < now() + (60 * 5)) {
             if (phone) {
-                sendSms(phone, msg)
-            }
-            if (sendPush) {
-            	sendPush(msg)
-            }
-        }
-    	log.debug "We have power.  Everything's good!"
-        state.powerCheckTime = now()
-        state.powerCheckAlert = false    	
-    }
-    else {
-    	if (status == "OFFLINE") {
-            log.debug "Looks like power might be out..."
-            state.powerCheckTime = state.powerCheckTime ?: now()
-            if (!state.powerCheckAlert && state.powerCheckTime < now() + (60 * 5)) {
+                log.debug "Sending possible loss of power message"
+                state.powerCheckAlert = true
+                msg = "${location} ${date}: ${getAppName()}\n${appliance} has stopped reporting.  Possible power outage."
                 if (phone) {
-                    log.debug "Sending possible loss of power message"
-                    state.powerCheckAlert = true
-                    msg = "${location} ${date}: ${getAppName()}\n${appliance} has stopped reporting.  Possible power outage."
-                    if (phone) {
-                        sendSms(phone, msg)
-                    }
-                    if (sendPush) {
-                        sendPush(msg)
-                    }
+                    sendSms(phone, msg)
+                }
+                if (sendPush) {
+                    sendPush(msg)
                 }
             }
+        }
+    }
+
+    else {    
+        if (appliance.currentSwitch == "off") {
+            appliance.on()
+        }
+        if (appliance.currentPower > 0 || appliance.currentSwitch == "on") {
+            if (state.powerCheckAlert) {
+                log.debug "Power has been restored!"
+                msg = "${location} ${date}: ${getAppName()}\n${appliance} has started reporting again.  Power has been restored."
+                if (phone) {
+                    sendSms(phone, msg)
+                }
+                if (sendPush) {
+                    sendPush(msg)
+                }
+            }
+            log.debug "We have power.  Everything's good!"
+            state.powerCheckTime = now()
+            state.powerCheckAlert = false    	
         }
     }
 }
