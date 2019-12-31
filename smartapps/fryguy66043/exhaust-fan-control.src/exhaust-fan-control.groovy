@@ -96,8 +96,9 @@ def checkFan(evt) {
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
     def msg = "${getAppName()}: ${date}\n"
     def currVal = rh.currentValue("humidity")
+    def fanVal = fan.currentValue("switch")
     
-    if (fan.currentValue("switch") == "on" && state.fanOn == false) {
+    if (fanVal == "on" && state.fanOn == false) {
     	msg += "Fan Handler failed.  Turning state.fanOn to true"
     	log.debug msg
         if (sendPush) {
@@ -108,7 +109,7 @@ def checkFan(evt) {
         }
         fanHandler()
     }
-    else if (fan.currentValue("switch") == "off" && state.fanOn == true) {
+    else if (fanVal == "off" && state.fanOn == true) {
     	msg += "Fan Handler failed.  Turning state.fanOn to false"
         log.debug msg
         if (sendPush) {
@@ -119,7 +120,7 @@ def checkFan(evt) {
         }
         fanHandler()
     }
-    else if (currVal <= rhMin && (currVal < state.prevRH || currVal <= state.rh)) {
+    else if (fanVal == "on" && currVal <= rhMin && (currVal < state.prevRH || currVal <= state.rh)) {
         log.debug "rhMin value reached.  Turning off fan..."
         msg += "rhMin value ${rhMin}% reached.  Turning off fan..."
         fan.off()
