@@ -1035,6 +1035,9 @@ def getStatus() {
         duration = ((sunsetTime.time - sunriseTime.time) / 1000 / 60) as Integer
         hours = (duration/60) as Integer
         minutes = (duration-(hours*60)) as Integer
+        if (minutes > 0) {
+        	hours -= 1
+        }
         state.daylight = "${hours} hrs ${minutes} mins of Daylight"
     	sunTime = "Next Sunrise: ${sunrise}  /  Sunset: ${sunset}"
     }
