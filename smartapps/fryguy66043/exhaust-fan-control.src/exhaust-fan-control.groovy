@@ -66,7 +66,7 @@ private getAppName() { return "Exhaust Fan Control" }
 def fanHandler(evt) {
     log.debug "fanHandler (${evt?.value})"
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
-    def msg = "${getAppName()}: ${date}\n"
+    def msg = "${getAppName()} / fanHandler: ${date}\n"
 	def currVal = fan.currentValue("switch")
     
 	state.fanOn = currVal == "on" ? true : false
@@ -94,7 +94,7 @@ def fanHandler(evt) {
 def checkFan(evt) {
 	log.debug "Checking fan status..."
     def date = new Date().format("MM/dd/yy h:mm:ss a", location.timeZone)
-    def msg = "${getAppName()}: ${date}\n"
+    def msg = "${getAppName()} / checkFan: ${date}\n"
     def currVal = rh.currentValue("humidity")
     def fanVal = fan.currentValue("switch")
     
@@ -120,7 +120,7 @@ def checkFan(evt) {
         }
         fanHandler()
     }
-    else if (fanVal == "on" && currVal <= rhMin && (currVal < state.prevRH || currVal <= state.rh)) {
+    else if (minTime && fanVal == "on" && currVal <= rhMin && (currVal < state.prevRH || currVal <= state.rh)) {
         log.debug "rhMin value reached.  Turning off fan..."
         msg += "rhMin value ${rhMin}% reached.  Turning off fan..."
         fan.off()
