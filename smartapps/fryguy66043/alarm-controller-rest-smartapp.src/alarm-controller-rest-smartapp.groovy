@@ -1035,10 +1035,13 @@ def getStatus() {
         duration = ((sunsetTime.time - sunriseTime.time) / 1000 / 60) as Integer
         hours = (duration/60) as Integer
         minutes = (duration-(hours*60)) as Integer
+        state.daylight = "${hours} hrs ${minutes} mins of Daylight"
+        hours = 24 - hours
         if (minutes > 0) {
         	hours -= 1
         }
-        state.daylight = "${hours} hrs ${minutes} mins of Daylight"
+        minutes = 60 - minutes
+        state.dark = "${hours} hrs ${minutes} mins of Dark"
     	sunTime = "Next Sunrise: ${sunrise}  /  Sunset: ${sunset}"
     }
     else {
@@ -1058,9 +1061,11 @@ def getStatus() {
 	sunTime += " (${state.daylight})"
 
 	resp << [name: "sunrise", value: "Sunrise"]
-    resp << [name: "val", value: sunrise]
+    resp << [name: "val", value: location.currentValue("sunriseTime")]
+//    resp << [name: "val", value: sunrise]
     resp << [name: "sunset", value: "Sunset"]
-    resp << [name: "val", value: sunset]
+    resp << [name: "val", value: location.currentValue("sunsetTime")]
+//    resp << [name: "val", value: sunset]
 	
     resp << [name: "suntime", value: "Next Sunrise and Sunset"]
     resp << [name: "val", value: sunTime]
