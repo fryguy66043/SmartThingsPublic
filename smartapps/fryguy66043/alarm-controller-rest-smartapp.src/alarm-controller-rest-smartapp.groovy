@@ -1017,6 +1017,9 @@ def getStatus() {
     def br3Contacts = []
     def br3Temps = []
 
+	def st = getSunriseAndSunset()
+    log.debug "st.sunrise: ${st.sunrise.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")} / st.sunset: ${st.sunset.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")}"
+    
 	def sunriseTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",location.currentValue("sunriseTime"))
     def sunsetTime = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",location.currentValue("sunsetTime"))
 	def sunrise = sunriseTime.format("EEE h:mm a", location.timeZone)
@@ -1061,11 +1064,11 @@ def getStatus() {
 	sunTime += " (${state.daylight})"
 
 	resp << [name: "sunrise", value: "Sunrise"]
-    resp << [name: "val", value: location.currentValue("sunriseTime")]
-//    resp << [name: "val", value: sunrise]
+    resp << [name: "val", value: st.sunrise.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")]
+//    resp << [name: "val", value: location.currentValue("sunriseTime")]
     resp << [name: "sunset", value: "Sunset"]
-    resp << [name: "val", value: location.currentValue("sunsetTime")]
-//    resp << [name: "val", value: sunset]
+    resp << [name: "val", value: st.sunset.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")]
+//    resp << [name: "val", value: location.currentValue("sunsetTime")]
 	
     resp << [name: "suntime", value: "Next Sunrise and Sunset"]
     resp << [name: "val", value: sunTime]
