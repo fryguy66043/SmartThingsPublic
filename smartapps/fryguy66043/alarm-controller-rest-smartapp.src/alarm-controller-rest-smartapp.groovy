@@ -1093,6 +1093,7 @@ def getStatus() {
         resp << [name: "val", value: thermostat.currentValue("humidity")]
 	}
     
+    /* Weather */
 	resp << [name: "weather", value: forecast.displayName]
     resp << [name: "val", value: forecast.currentValue("temperature")]
     resp << [name: "forecast", value: forecast.currentValue("weather")]
@@ -1105,6 +1106,9 @@ def getStatus() {
     resp << [name: "val", value: forecast.currentValue("percentPrecip")]
     resp << [name: "humidity", value: "Humidity"]
     resp << [name: "val", value: forecast.currentValue("humidity")]
+    resp << [name: "wxAlerts", value: "Weather Alerts"]
+    resp << [name: "val", value: forecast.currentValue("alert")]
+    log.debug "alerts: ${forecast.currentValue("alert")}"
 /*
     resp << [name: "dee", value: "Dee's Location"]
     resp << [name: "val", value: dee.currentValue("currentLocation")]
