@@ -31,6 +31,7 @@ preferences {
 	section("Turn on a light..."){
 		input "switch1", "capability.switch", multiple: true
         input "turnOnTime", "time", title: "Turn on at what time?"
+        input "weekdaysOnly", "bool", title: "Turn on only during weekdays?"
         input "colorHue", "number", required: false, title: "(Optional) Hue setting for color bulbs. (0 - 360)"
         input "colorSat", "number", required: false, title: "(Optional) Saturation setting for color bulbs. (0 - 100)"
         input "dimLevel", "number", required: false, title: "(Optional) Dim Level for dimmable bulbs/switches. (0 - 100)"
@@ -52,7 +53,7 @@ def installed()
 {
     subscribe(presence1, "presence.present", arrivalHandler)
     subscribe(presence1, "presence.not present", departureHandler)
-    subscribe(app, appHandler)
+     subscribe(app, appHandler)
     schedule(turnOnTime, onHandler)
 //    subscribe(location, "sunriseTime", sunriseHandler)
     state.hue = 0
@@ -80,7 +81,9 @@ def appHandler(evt) {
 	def now = new Date()
 	def sunTime = getSunriseAndSunset();
     def dark = (now <= sunTime.sunrise || now >= sunTime.sunset)
-	
+    def wkDay = (!now.format("E", location.timeZone).contains("S") || !weekdaysOnly) ? true : false
+	log.debug("Weekday = ${wkDay} / now = ${now.format("E", location.timeZone)} / weekdaysOnly = ${weekdaysOnly}")
+    
 //    turnOn()
 	onHandler()
 
@@ -113,6 +116,7 @@ def onHandler(evt) {
     def now = new Date()
 	def sunTime = getSunriseAndSunset()
     def dark = false
+    def wkDay = (!now.format("E", location.timeZone).contains("S") || !weekdaysOnly) ? true : false
     def offset = minutesOffset >= 0 ? minutesOffset * 60 * 1000 : 0
     if (offAtSunrise == "Before Sunrise") {
         	dark = (now.time < sunTime.sunrise.time - offset)
@@ -123,7 +127,7 @@ def onHandler(evt) {
     log.debug "Someone Home: ${someoneHome()} / Dark: ${dark}"
     def message = "${location}: Someone is home in the morning! Turning on ${switch1}."
     
-	if (someoneHome() && dark) {
+	if (someoneHome() && dark && wkDay) {
     	turnOn()
         log.debug message
         if (sendPush) {
