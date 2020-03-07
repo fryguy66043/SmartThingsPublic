@@ -43,6 +43,8 @@ metadata {
         attribute "moonPhase", "string"
         attribute "moonRise", "string"
         attribute "moonSet", "string"
+        attribute "moonRiseDate", "string"
+        attribute "moonSetDate", "string"
         attribute "moonPercentIlluminated", "string"
 		attribute "lastUpdate", "string"
         attribute "actualLow", "number"
@@ -494,6 +496,10 @@ def twcPoll() {
                 moonsetDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
                 localMoonset = moonsetDate.format("EEE h:mm a")
             }
+            
+            send(name: "moonRiseDate", value: moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonrise Date")
+            send(name: "moonSetDate", value: moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonset Date")
+            log.debug "moonRiseDate: ${moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")} / moonSetDate: ${moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")}"
             
             def localMoonPhase = a.moonPhase[0]
 
