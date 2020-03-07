@@ -1056,7 +1056,10 @@ def getStatus() {
         if (minutes > 0) {
         	hours -= 1
         }
-        minutes = 60 - minutes
+        log.debug "Minutes: ${minutes}"
+        if (minutes > 0) {
+	        minutes = 60 - minutes
+        }
         state.daylight = "${hours} hrs ${minutes} mins of Daylight"
     	sunTime = "Next Sunset: ${sunset}  /  Sunrise: ${sunrise}"
     }
@@ -1073,7 +1076,12 @@ def getStatus() {
     resp << [name: "suntime", value: "Next Sunrise and Sunset"]
     resp << [name: "val", value: sunTime]
 
-    resp << [name: "alarm", value: "Alarm Sensor"]
+    resp << [name: "moonrise", value: "moonRiseDate"]
+    resp << [name: "val", value: forecast.currentValue("moonRiseDate")]
+    resp << [name: "moonset", value: "moonSetDate"]
+    resp << [name: "val", value: forecast.currentValue("moonSetDate")]
+
+	resp << [name: "alarm", value: "Alarm Sensor"]
     resp << [name: "val", value: alarmSensor.currentValue("alarmState")]
     resp << [name: "alert", value: "Alert State"]
     resp << [name: "val", value: alarmSensor.currentValue("alertState")]
