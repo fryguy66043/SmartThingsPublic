@@ -497,17 +497,21 @@ def twcPoll() {
                 localMoonset = moonsetDate.format("EEE h:mm a")
             }
             
-            send(name: "moonRiseDate", value: moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonrise Date")
-            send(name: "moonSetDate", value: moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonset Date")
-            log.debug "moonRiseDate: ${moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")} / moonSetDate: ${moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")}"
-            
-            def localMoonPhase = a.moonPhase[0]
+            if (new Date() > moonsetDate) {
+                send(name: "moonRiseDate", value: moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonrise Date")
+                send(name: "moonSetDate", value: moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonset Date")
+                log.debug "moonRiseDate: ${moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")} / moonSetDate: ${moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")}"
 
-            send(name: "moonRise", value: localMoonrise, descriptionText: "Moonrise today is at $localMoonrise")
-            send(name: "moonSet", value: localMoonset, descriptionText: "Moonset today is at $localMoonset")
-            send(name: "moonPhase", value: localMoonPhase, descriptionText: "Current moon phase: $localMoonPhase")
+                def localMoonPhase = a.moonPhase[0]
 
-            sendEvent(name: "moon", value: "Moon Phase: ${localMoonPhase}\nRise: ${localMoonrise}\nSet: ${localMoonset}")
+                send(name: "moonRise", value: localMoonrise, descriptionText: "Moonrise today is at $localMoonrise")
+                send(name: "moonSet", value: localMoonset, descriptionText: "Moonset today is at $localMoonset")
+                send(name: "moonPhase", value: localMoonPhase, descriptionText: "Current moon phase: $localMoonPhase")
+	            sendEvent(name: "moon", value: "Moon Phase: ${localMoonPhase}\nRise: ${localMoonrise}\nSet: ${localMoonset}")
+			}
+            else {
+            	log.debug "Waiting for moonset to update lunar values..."
+            }
 
 /*
 			log.debug "***** estimated lux value"
@@ -792,7 +796,7 @@ def poll() {
 
                 def localMoonPhase = a.phaseofMoon
                 def localMoonIllumination = a.percentIlluminated
-
+				
                 send(name: "moonRise", value: localMoonrise, descriptionText: "Moonrise today is at $localMoonrise")
                 send(name: "moonSet", value: localMoonset, descriptionText: "Moonset today is at $localMoonset")
                 send(name: "moonPercentIlluminated", value: localMoonIllumination, descriptionText: "Percent moon illumination: $localMoonIllumination")
