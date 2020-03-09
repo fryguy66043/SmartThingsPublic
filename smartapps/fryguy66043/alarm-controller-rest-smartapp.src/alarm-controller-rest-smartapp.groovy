@@ -1076,6 +1076,8 @@ def getStatus() {
     resp << [name: "suntime", value: "Next Sunrise and Sunset"]
     resp << [name: "val", value: sunTime]
 
+    resp << [name: "moonPhase", value: "moonPhase"]
+    resp << [name: "val", value: forecast.currentValue("moonPhase")]
     resp << [name: "moonrise", value: "moonRiseDate"]
     resp << [name: "val", value: forecast.currentValue("moonRiseDate")]
     resp << [name: "moonset", value: "moonSetDate"]
