@@ -797,6 +797,8 @@ def poll() {
                 def localMoonPhase = a.phaseofMoon
                 def localMoonIllumination = a.percentIlluminated
 				
+                log.debug "a: ${a}"
+                
                 send(name: "moonRise", value: localMoonrise, descriptionText: "Moonrise today is at $localMoonrise")
                 send(name: "moonSet", value: localMoonset, descriptionText: "Moonset today is at $localMoonset")
                 send(name: "moonPercentIlluminated", value: localMoonIllumination, descriptionText: "Percent moon illumination: $localMoonIllumination")
