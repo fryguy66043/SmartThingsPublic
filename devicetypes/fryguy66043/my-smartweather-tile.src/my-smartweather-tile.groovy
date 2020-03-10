@@ -497,7 +497,8 @@ def twcPoll() {
                 localMoonset = moonsetDate.format("EEE h:mm a")
             }
             
-            if (new Date() > moonsetDate) {
+            def curDateTime = new Date()
+            if (curDateTime > moonsetDate || curDateTime < moonriseDate) {
                 send(name: "moonRiseDate", value: moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonrise Date")
                 send(name: "moonSetDate", value: moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonset Date")
                 log.debug "moonRiseDate: ${moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")} / moonSetDate: ${moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")}"
