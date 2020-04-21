@@ -1076,6 +1076,8 @@ def getStatus() {
     resp << [name: "suntime", value: "Next Sunrise and Sunset"]
     resp << [name: "val", value: sunTime]
 
+//	log.debug "moonrise: ${forecast.currentValue("moonRiseDate")} / moonset: ${forecast.currentValue("moonSetDate")}"
+
     resp << [name: "moonPhase", value: "moonPhase"]
     resp << [name: "val", value: forecast.currentValue("moonPhase")]
     resp << [name: "moonrise", value: "moonRiseDate"]
