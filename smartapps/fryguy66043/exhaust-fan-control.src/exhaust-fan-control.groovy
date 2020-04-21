@@ -30,6 +30,7 @@ preferences {
         input "rh", "capability.relativeHumidityMeasurement", required: true, multiple: false, title: "Select RH Sensor."
         input "rhMax", "number", required: true, multiple: false, title: "Select RH% to automatically turn on Exhaust Fan."
         input "rhMin", "number", required: true, multiple: false, title: "Select RH% to automatically turn off Exhaust Fan."
+        input "rhWindow", "number", required: true, multiple: false, title: "Select RH% change from starting RH% to turn off Exhaust Fan (0 = not used)."
         input "rhMinTime", "number", required: true, multiple: false, title: "Select Minimum Runtime (minutes) for Exhaust Fan to run."
         input "rhMaxTime", "number", required: true, multiple: false, title: "Select Maximum Runtime (minutes) for Exhause Fan to run.  (0 = forever)"
     }
@@ -48,6 +49,7 @@ def installed()
     state.rh = 0
     state.prevRH = 0
     state.maxRH = 0
+    state.minRH = 0
     state.fanOn = false
     state.rhTime = now()
 	subscribe(fan, "switch", fanHandler)
@@ -74,7 +76,8 @@ def fanHandler(evt) {
     
     if (currVal == "on") {
         state.maxRH = state.rh = rh.currentValue("humidity")
-        msg += "Turning fan on.  Current RH: ${state.rh}%  Target RH: ${rhMin}%"
+        state.minRH = (rhWindow > 0) ? state.rh + rhWindow : rhMin
+        msg += "Turning fan on.  Current RH: ${state.rh}%  Target RH: ${state.minRH}%"
         state.rhTime = now()
         runIn(rhMinTime * 60, delayHandler)
         if (rhMaxTime > rhMinTime) {
@@ -164,7 +167,7 @@ def delayHandler(evt)
     def currRH = rh.currentValue("humidity")
 
     if (fan.currentValue("switch") == "on") {
-        if (currRH > rhMin || currRH > state.rh) {
+        if (currRH > state.minRH || currRH > state.rh) {
             state.minTime = true
             log.debug "Minimum Time Reached.  Beginning RH checks..."
             msg += "Minimum Time of ${rhMinTime} minutes Reached.  Beginning RH checks..."
@@ -180,7 +183,7 @@ def delayHandler(evt)
             state.minTime = false
             fan.off()
             log.debug "Minimum Time Reached.  RH value at/below minumum.  Turning fan off..."
-            msg += "Minimum Time of ${rhMinTime} minutes Reached.  RH value at/below minumum of ${rhMin}%.  Turning fan off..."
+            msg += "Minimum Time of ${rhMinTime} minutes Reached.  RH value at/below minumum of ${state.minRH}%.  Turning fan off..."
 	        msg += "\n\nRH Start: ${state.rh}\nHigh: ${state.maxRH}\nCurrent: ${currRH}"
             if (sendPush) {
                 sendPush(msg)
@@ -208,9 +211,9 @@ def rhHandler(evt)
     
     if (state.minTime) {
         log.debug "state.minTime"
-        if (currVal <= rhMin && (currVal <= state.prevRH || currVal <= state.rh)) {
+        if (currVal <= state.minRH && (currVal <= state.prevRH || currVal <= state.rh)) {
             log.debug "rhMin value reached.  Turning off fan..."
-            msg += "rhMin value ${rhMin}% reached.  Turning off fan..."
+            msg += "rhMin value ${state.minRH}% reached.  Turning off fan..."
 	        msg += "\n\nRH Start: ${state.rh}\nHigh: ${state.maxRH}\nCurrent: ${currVal}"
             fan.off()
             if (sendPush) {
