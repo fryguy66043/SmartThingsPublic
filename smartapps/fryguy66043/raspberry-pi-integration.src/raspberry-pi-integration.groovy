@@ -139,7 +139,7 @@ def initialize()
     subscribe(cyndi, "presence", changeHandler)
     
     subscribe(forecast, "observation_json", wxObsHandler)
-    subscribe(forecast, "forecast_json", wxFcHandler)
+//    subscribe(forecast, "forecast_json", wxFcHandler)
 
 	subscribe(garage_lights, "switch", changeHandler)
     subscribe(garage_doors, "door", changeHandler)
@@ -273,12 +273,13 @@ def updateWxHandler(reply) {
 
 def wxObsHandler(evt) {
 	log.debug "wxObsHandler()"
-    log.debug "json: ${forecast.currentValue("observation_json")}"
+//    log.debug "json: ${forecast.currentValue("observation_json")}"
+    wxHandler(evt)
 }
 
 def wxFcHandler(evt) {
 	log.debug "wxFcHandler()"
-    log.debug "fc: ${moon:forecast.currentValue("forecast_json")}"
+//    log.debug "fc: ${moon:forecast.currentValue("forecast_json")}"
 }
 
 def getHomeAway() {
@@ -296,7 +297,7 @@ def getHomeAway() {
     if (!found) {
     	resp << [device: "Not Configured", status: "N/A"]
     }
-    log.debug "Reply: ${resp}"
+//    log.debug "Reply: ${resp}"
     return resp
 }
 
