@@ -323,7 +323,8 @@ def appHandler(evt) {
 
 def changeHandler(evt) {
 	log.debug "changeHandler()"
-    alarmSensor.tickler()
+// JDF - 4/27/20 - Removing this because I switch to the Raspberry Pi Integration SmartApp.      
+//    alarmSensor.tickler()
 }
 
 def initializeController() {
