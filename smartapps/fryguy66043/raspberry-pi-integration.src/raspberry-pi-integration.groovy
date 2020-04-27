@@ -123,7 +123,7 @@ def updated()
     
 	unsubscribe()
     initialize()
-    sendHubCommand(new physicalgraph.device.HubAction("""GET /update_req HTTP/1.1\r\nHOST: 192.168.2.128:5000\r\n\r\n""", 
+    sendHubCommand(new physicalgraph.device.HubAction("""GET /update_req HTTP/1.1\r\nHOST: 192.168.2.137:5000\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateReqHandler]))
@@ -172,12 +172,14 @@ def initialize()
     subscribe(basement_temps, "temperature", changeHandler)
 
 	subscribe(fr_lights, "switch", changeHandler)
+    subscribe(fr_lights, "level", changeHandler)
     subscribe(fr_doors, "door", changeHandler)
     subscribe(fr_locks, "lock", changeHandler)
     subscribe(fr_contacts, "contact", changeHandler)
     subscribe(fr_temps, "temperature", changeHandler)
 
 	subscribe(master_lights, "switch", changeHandler)
+	subscribe(master_lights, "level", changeHandler)
     subscribe(master_doors, "door", changeHandler)
     subscribe(master_locks, "lock", changeHandler)
     subscribe(master_contacts, "contact", changeHandler)
@@ -208,6 +210,8 @@ def initialize()
     subscribe(br3_locks, "lock", changeHandler)
     subscribe(br3_contacts, "contact", changeHandler)
     subscribe(br3_temps, "temperature", changeHandler)
+
+    subscribe(app, appHandler)
 }
 
 mappings {
@@ -229,6 +233,11 @@ mappings {
   path("/set_switch/:command") {
   	action: [
     	GET: "setSwitch"
+    ]
+  }
+  path("/set_level/:command") {
+  	action: [
+    	GET: "setLevel"
     ]
   }
   path("/set_lock/:command") {
@@ -258,10 +267,22 @@ mappings {
   }
 }
 
+def appHandler(evt) {
+	def capStr = ""
+    master_lights.each {dev ->
+    	capStr = "${dev.displayName}: "
+        def capabilities = dev.capabilities
+        for (cap in capabilities) {
+        	capStr += "${cap.name} / "
+        }
+        log.debug capStr
+    }
+}
+
 def wxHandler(evt) {
 	log.debug "wxHandler()"
     
-    sendHubCommand(new physicalgraph.device.HubAction("""GET /wx_obs_change HTTP/1.1\r\nHOST: 192.168.2.128:5000\r\n\r\n""", 
+    sendHubCommand(new physicalgraph.device.HubAction("""GET /wx_obs_change HTTP/1.1\r\nHOST: 192.168.2.137:5000\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateWxHandler]))
@@ -321,7 +342,7 @@ def getSwitch() {
 	log.debug "getSwitch"
     def found = false
     def resp = []
-    switch1.each { sw ->
+    fr_lights.each { sw ->
     	found = true
     	resp << [switch: sw.label, status: sw.currentValue("switch")]
     }
@@ -366,6 +387,43 @@ def setSwitch() {
         }
         if (phone) {
             sendSms(phone, status)
+        }
+    }
+    return status
+}
+
+def setLevel() {
+	log.debug "setLevel($params.command)"
+	def switches = [garage_lights, lr_lights, kitchen_lights, outside_lights, basement_lights, fr_lights, master_lights, mb_lights, br1_lights, br2_lights, br3_lights]
+    def cmd = ""
+    def sName = ""
+    def sLevel = ""
+    def status = "Error in parameters"
+    def command = params.command
+    cmd = command.split('&')
+    log.debug "cmd: ${cmd}"
+    for (String value : cmd) {
+        if (value.contains("switch")) {
+            def nCmd = [] 
+            nCmd = value.split('=')
+            log.debug "sName = ${nCmd[1]}"
+            sName = nCmd[1].trim()
+        }
+        else if (value.contains("level")) {
+        	def nCmd = []
+            nCmd = value.split('=')
+            log.debug "sLevel = ${nCmd[1]}"
+            sLevel = nCmd[1].trim()
+        }
+    }
+    switches.each {rm ->
+    	rm.each {dev ->
+        	log.debug "${dev.displayName} = ${sName} : ${dev.displayName == sName}"
+        	if (dev.displayName == sName) {
+            	log.debug "Setting $sName to $sLevel"
+                status = "OK - Setting $sName to $sLevel"
+            	dev?.setLevel(sLevel.toInteger())
+            }
         }
     }
     return status
@@ -455,7 +513,7 @@ def switchHandler(evt) {
 	def sname = URLEncoder.encode("${evt.displayName}", "UTF-8")
 	def cmd = "?switch=${sname}&state=${evt.value}"
     
-    sendHubCommand(new physicalgraph.device.HubAction("""GET /switch_change${cmd} HTTP/1.1\r\nHOST: 192.168.2.128:5000\r\n\r\n""", 
+    sendHubCommand(new physicalgraph.device.HubAction("""GET /switch_change${cmd} HTTP/1.1\r\nHOST: 192.168.2.137:5000\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateSwitchHandler]))
@@ -629,6 +687,12 @@ def changeHandler(evt) {
     	if (dev.displayName == evt.displayName) {
    			log.debug "Found $dev"
    			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            def capabilities = dev.capabilities
+            for (cap in capabilities) {
+            	if (cap.name == "Switch Level") {
+                	cmd += "&level=${dev.currentValue("level")}"
+                }
+            }
         }
     }
     
@@ -661,6 +725,12 @@ def changeHandler(evt) {
     	if (dev.displayName == evt.displayName) {
    			log.debug "Found $dev"
    			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            def capabilities = dev.capabilities
+            for (cap in capabilities) {
+            	if (cap.name == "Switch Level") {
+                	cmd += "&level=${dev.currentValue("level")}"
+                }
+            }
         }
     }
     
@@ -827,7 +897,7 @@ def changeHandler(evt) {
 
 	log.debug ("cmd: $cmd")
     
-    sendHubCommand(new physicalgraph.device.HubAction("""GET /device_change${cmd} HTTP/1.1\r\nHOST: 192.168.2.128:5000\r\n\r\n""", 
+    sendHubCommand(new physicalgraph.device.HubAction("""GET /device_change${cmd} HTTP/1.1\r\nHOST: 192.168.2.137:5000\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateSwitchHandler]))
@@ -838,7 +908,7 @@ def getWxObs() {
     def resp = []
     
     resp << [forecast.currentValue("observation_json")]
-    log.debug "${resp}"
+//    log.debug "${resp}"
     return resp
 }
 
@@ -847,7 +917,7 @@ def getWxFc() {
     def resp = []
     
     resp << [forecast:forecast.currentValue("forecast_json")]
-    log.debug "${resp}"
+//    log.debug "${resp}"
     return resp
 }
 def getRooms() {
@@ -1413,7 +1483,19 @@ def getRooms() {
 	        t_val = "OFFLINE"
         }
         itemCnt++
-		frLights << [device:"switch", name: t_name, value: t_val]
+        def capabilities = lr.capabilities
+        def dim = -1
+        for (cap in capabilities) {
+        	if (cap.name == "Switch Level") {
+            	dim = lr.currentValue("level")
+            }
+        }
+        if (dim > -1) {
+			frLights << [device:"switch", name: t_name, value: t_val, level: dim]
+        }
+        else {
+			frLights << [device:"switch", name: t_name, value: t_val]
+        }
     }
     
     fr_doors.each {lr ->
@@ -1505,7 +1587,20 @@ def getRooms() {
 	        t_val = "OFFLINE"
         }
         itemCnt++
-		masterLights << [device:"switch", name: t_name, value: t_val]
+        def capabilities = lr.capabilities
+        def dim = -1
+        for (cap in capabilities) {
+        	if (cap.name == "Switch Level") {
+            	dim = lr.currentValue("level")
+            }
+        }
+        if (dim > -1) {
+			masterLights << [device:"switch", name: t_name, value: t_val, level: dim]
+            log.debug masterLights
+        }
+        else {
+			masterLights << [device:"switch", name: t_name, value: t_val]
+        }
 	}
 
 	master_doors.each {lr ->
