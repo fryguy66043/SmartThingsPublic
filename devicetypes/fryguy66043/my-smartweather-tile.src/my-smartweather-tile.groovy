@@ -16,7 +16,7 @@
  *
  *  Date: July 3, 2018
  */
- 
+
 metadata {
 	definition (name: "My Smartweather Tile", namespace: "FryGuy66043", author: "Jeffrey Fry") {
 		capability "Illuminance Measurement"
@@ -68,6 +68,9 @@ metadata {
 
 		attribute "TWCIcons", "string"
 
+		attribute "observation_json", "string"
+        attribute "forecast_json", "string"
+        
 		command "resetIconList"
 		command "refresh"
         command "setActualLow"
@@ -460,6 +463,54 @@ def twcPoll() {
             send(name: "localSunset", value: localSunset, descriptionText: "Sunset today is at $localSunset")
             
             def a = getTwcForecast(zipCode)
+            if (a.size() > 0) {
+            	sendEvent(name: "forecast_json", value: a)
+            }
+            
+//            log.debug "moonrise: ${a.moonriseTimeLocal}"
+//            log.debug "moonset: ${a.moonsetTimeLocal}"
+
+		def moonphase1 = a.moonPhase[0]
+            def moonphase2 = a.moonPhase[1]
+            def localMoonPhase = moonphase1
+            def moonrise1 = a.moonriseTimeLocal[0]
+            def moonrise2 = ""
+            if (!moonrise1) {
+                moonrise1 = a.mooriseTimeLocal[1]
+                moonrise2 = a.moonriseTimeLocal[2]
+                moonphase1 = a.moonPhase[1]
+                moonphase2 = a.moonPhase[2]
+            }
+            else {
+                moonrise2 = a.moonriseTimeLocal[1]
+            }
+            log.debug "moonrise1: $moonrise1 / moonrise2: $moonrise2"
+            
+            moonrise1 = moonrise1.replace("T", " ")
+            moonrise1 = moonrise1.replace("-0500", "")
+            moonrise1 = moonrise1.replace("-0600", "")
+
+            moonrise2 = moonrise2.replace("T", " ")
+            moonrise2 = moonrise2.replace("-0500", "")
+            moonrise2 = moonrise2.replace("-0600", "")
+            
+            def moonset1 = a.moonsetTimeLocal[0]
+            def moonset2 = ""
+            if (!moonset1) {
+            	moonset1 = a.moonsetTimeLocal[1]
+                moonset2 = a.moonsetTimeLocal[2]
+            }
+            else {
+            	moonset2 = a.moonsetTimeLocal[1]
+            }
+            moonset1 = moonset1.replace("T", " ")
+            moonset1 = moonset1.replace("-0500", "")
+            moonset1 = moonset1.replace("-0600", "")
+            
+            moonset2 = moonset2.replace("T", " ")
+            moonset2 = moonset2.replace("-0500", "")
+            moonset2 = moonset2.replace("-0600", "")
+            
 			strDate = a.moonriseTimeLocal[0]
             if (!strDate) {
             	strDate = a.moonriseTimeLocal[1]
@@ -467,59 +518,102 @@ def twcPoll() {
             strDate = strDate.replace("T", " ")
             strDate = strDate.replace("-0500", "")
             strDate = strDate.replace("-0600", "")
-            log.debug "moonriseDate = $strDate"
+            log.debug "Next moonriseDate = $strDate"
 //            log.debug "a = $a"
             def moonriseDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
-            def localMoonrise = moonriseDate.format("EEE h:mm a")
+            def moonsetDate = moonriseDate
+//            def localMoonrise = moonriseDate.format("EEE h:mm a")
 
-			strDate = a.moonsetTimeLocal[0]
-            if (!strDate) {
-            	strDate = a.moonsetTimeLocal[1]
+			def moonriseDate1 = "??"
+            def moonriseDate2 = "??"
+            def moonsetDate1 = "??"
+            def moonsetDate2 = "??"
+            def curDateTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss", location.timeZone)
+            def curDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss", curDateTime)
+            log.debug "curDate: ${curDate} / lastMoonsetDate: ${lastMoonsetDate}"
+
+			try {
+				moonriseDate1 = Date.parse("yyyy-MM-dd HH:mm:ss", moonrise1)
             }
-            strDate = strDate.replace("T", " ")
-            strDate = strDate.replace("-0500", "")
-            strDate = strDate.replace("-0600", "")
-            log.debug "moonsetDate = $strDate"
-            def moonsetDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
-            def localMoonset = moonsetDate.format("EEE h:mm a")
-
-			if (moonsetDate < moonriseDate) {
-            	log.debug "Fixing moonrise..."
-                strDate = a.moonsetTimeLocal[1]
-                if (!strDate) {
-                    strDate = a.moonsetTimeLocal[2]
-                }
-                strDate = strDate.replace("T", " ")
-                strDate = strDate.replace("-0500", "")
-                strDate = strDate.replace("-0600", "")
-                log.debug "moonsetDate = $strDate"
-                moonsetDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
-                localMoonset = moonsetDate.format("EEE h:mm a")
+            catch(Exception e) {
+				moonriseDate1 = moonrise2
+                log.debug "Error with moonrise1: $moonrise1"
+            }
+            try {
+				moonriseDate2 = Date.parse("yyyy-MM-dd HH:mm:ss", moonrise2)
+            }
+            catch (Exception e) {
+				moonriseDate2 = moonriseDate
+                log.debug "Error with moonrise2: $moonrise2"
+            }
+            try {
+                moonsetDate1 = Date.parse("yyyy-MM-dd HH:mm:ss", moonset1)
+                log.debug "moonsetDate1 = $moonsetDate1"
+            }
+            catch (Exception e) {
+                moonsetDate1 = moonset2
+                log.debug "Error with moonset1: $moonset1"
+            }
+            try {
+                moonsetDate2 = Date.parse("yyyy-MM-dd HH:mm:ss", moonset2)
+            }
+            catch (Exception e) {
+                moonsetDate2 = moonsetDate
+                log.debug "Error with moonset2: $moonset2"
             }
             
-            def curDateTime = new Date()
-            if (curDateTime > moonsetDate || curDateTime < moonriseDate) {
-                send(name: "moonRiseDate", value: moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonrise Date")
-                send(name: "moonSetDate", value: moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonset Date")
-                log.debug "moonRiseDate: ${moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")} / moonSetDate: ${moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")}"
-
-                def localMoonPhase = a.moonPhase[0]
-
-                send(name: "moonRise", value: localMoonrise, descriptionText: "Moonrise today is at $localMoonrise")
-                send(name: "moonSet", value: localMoonset, descriptionText: "Moonset today is at $localMoonset")
-                send(name: "moonPhase", value: localMoonPhase, descriptionText: "Current moon phase: $localMoonPhase")
-	            sendEvent(name: "moon", value: "Moon Phase: ${localMoonPhase}\nRise: ${localMoonrise}\nSet: ${localMoonset}")
-			}
-            else {
-            	log.debug "Waiting for moonset to update lunar values..."
+//            def moonriseDate = "??"
+//            def moonsetDate = "??"
+            if (moonsetDate1 > curDate) {
+                if (moonriseDate1 < moonsetDate1) {
+                    moonriseDate = moonriseDate1
+                    moonsetDate = moonsetDate1
+                    localMoonPhase = moonphase1
+                }
+                else if (moonriseDate2 < moonsetDate1) {
+					moonriseDate = moonriseDate2
+                    moonsetDate = moonsetDate1
+                    localMoonPhase = moonphase1
+                }
+    			else {
+                	log.debug "Error with moon dates!"
+                }
             }
+            else if (moonsetDate2 > curDate) {
+            	if (moonriseDate2 < moonsetDate2) {
+                	moonriseDate = moonriseDate2
+                    moonsetDate = moonsetDate2
+                    localMoonPhase = moonphase2
+                }
+                else if (moonriseDate1 < moonsetDate2) {
+                	moonriseDate = moonriseDate1
+                    moonsetDate = moonsetDate2
+                    localMoonPhase = moonphase1
+                }
+                else {
+                	log.debug "Error with moon dates, path2!"
+                }
+            }
+            else {
+            	log.debug "Error with moon dates, path3!"
+            }
+            
+            def lastMoonsetDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", device.currentValue("moonSetDate"))
+            def lastMoonriseDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", device.currentValue("moonRiseDate"))
+            
+			log.debug "*** moonsetDate = $moonsetDate / moonriseDate = $moonriseDate"
 
-/*
-			log.debug "***** estimated lux value"
-            def luxVal = estimateLux(sunriseDate, sunsetDate, weatherIcon)
-            send(name: "illuminance", value: luxVal)
-            send(name: "luxValue", value: luxVal)
-*/
+                    send(name: "moonRiseDate", value: moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonrise Date")
+                    send(name: "moonSetDate", value: moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonset Date")
+                    log.debug "moonRiseDate: ${moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")} / moonSetDate: ${moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")}"
+
+					def localMoonrise = moonriseDate.format("EEE h:mm a")
+                    def localMoonset = moonsetDate.format("EEE h:mm a")
+                    
+                    send(name: "moonRise", value: localMoonrise, descriptionText: "Moonrise today is at $localMoonrise")
+                    send(name: "moonSet", value: localMoonset, descriptionText: "Moonset today is at $localMoonset")
+                    send(name: "moonPhase", value: localMoonPhase, descriptionText: "Current moon phase: $localMoonPhase")
+                    sendEvent(name: "moon", value: "Moon Phase: ${localMoonPhase}\nRise: ${localMoonrise}\nSet: ${localMoonset}")
 
             // Forecast
             def f = a
@@ -536,9 +630,6 @@ def twcPoll() {
             def shortForecastDisp = f.daypart[0].daypartName[i] + ": " + f.daypart[0].wxPhraseLong[i]
             def forecastDisp = f.daypart[0].daypartName[i] + ": " + f.daypart[0].narrative[i]
             forecastDisp += "  " + f.daypart[0].daypartName[i+1] + ": " + f.daypart[0].narrative[i+1]
-//			log.debug "shortForecast = ${shortForecastDisp}"
-//            log.debug "longForecast = ${forecastDisp}"
-//            log.debug "f = ${f.daypart}"
 
             send(name: "percentPrecip", value: value, unit: "%")
             send(name: "forecastIcon", value: icon, displayed: false)
@@ -570,7 +661,7 @@ def twcPoll() {
 //            log.debug "alerts = ${alerts}"
 			def newKeys = []
             def alertMsg = ""
-			for (i = 0; i < alerts.size(); i++) {
+			for (i = 0; i < alerts?.size(); i++) {
             	if (!newKeys.contains(alerts[i].eventDescription)) {
                     newKeys.add(alerts[i].eventDescription)
                     alertMsg += "[${alerts[i].eventDescription}]\n"
@@ -581,7 +672,7 @@ def twcPoll() {
             }
     		log.debug "WUSTATION: newKeys = $newKeys / alertMsg = $alertMsg"
             
-            def oldKeys = device.currentState("alertKeys")?.jsonValue
+			def oldKeys = device.currentState("alertKeys")?.jsonValue
 
             def noneString = "no current weather alerts"
             if (!newKeys && oldKeys == null) {
@@ -596,30 +687,66 @@ def twcPoll() {
                 }
                 send(name: "alertKeys", value: newKeys.encodeAsJSON(), displayed: false)
 				send(name: "alert", value: alertMsg, description: "Alerts", isStateChange: true)
-/*
-                def newAlerts = false
-                def alertMsg = ""
-                log.debug "alerts.size() = ${alerts.size()}"
-                alerts.each {alert ->
-//                    if (!oldKeys.contains(alert.eventDescription)) {
-                        alertMsg += "${alert.eventDescription}\n"
-                        log.debug "alrtMsg = ${alertMsg}"
-//                        send(name: "alert", value: pad(alert.eventDescription), descriptionText: alertMsg, isStateChange: true)
-                        newAlerts = true
-//                    }
-                }
-                if (alertMsg) {
-                    send(name: "alert", value: pad(alert.eventDescription), descriptionText: alertMsg, isStateChange: true)
-                }
-
-                if (!newAlerts && device.currentValue("alert") != noneString) {
-                    send(name: "alert", value: noneString, descriptionText: "${device.displayName} has no current weather alerts", isStateChange: true)
-                }
-*/                
             }
             else {
             	log.debug "path 3..."
             }
+            def forecastStr = ""
+            def forecastLong = []
+            def today_idx = 0
+            log.debug "** 0 = ${a.daypart[0]?.dayOrNight[0]} / 1 = ${a.daypart[0]?.dayOrNight[1]}"
+            if (a.daypart[0]?.dayOrNight[0] == null) {
+            	today_idx = 1
+            }
+            else {
+            	forecastStr = "Today: ${a.daypart[0].narrative[0]}"
+            }
+            forecastStr += "Tonight: ${a.daypart[0].narrative[1]}"
+            forecastLong.add(forecastStr)
+            
+            def day_idx = []
+            log.debug "dayOrNight size: ${a.daypart[0].dayOrNight.size()}"
+            for (i = today_idx + 1; i < a.daypart[0].dayOrNight.size(); i++) {
+            	if (a?.daypart[0]?.dayOrNight[i] == "D") {
+                	day_idx.add(i)
+                    forecastStr = a.daypart[0].daypartName[i] + ": " + a.daypart[0].narrative[i] + " "
+                    forecastStr += a.daypart[0].daypartName[i+1] + ": " + a.daypart[0].narrative[i+1]
+                    forecastLong.add(forecastStr)
+                }
+            }
+           
+            log.debug "day_idx:${day_idx.size()}"
+            log.debug "moonrise: ${a.moonriseTimeLocal}\nmoonset: ${a.moonsetTimeLocal}"
+//            log.debug "qpf: ${a.daypart[0].qpf[5] + a.daypart[0].qpf[8]} / ${a.daypart[0].qpf}"
+//            log.debug "Temps: ${a.daypart[0].temperature}\nHeat: ${a.daypart[0].temperatureHeatIndex}\nChill: ${a.daypart[0].temperatureWindChill}"
+//            log.debug "sunriseTimeLocal:${a?.sunriseTimeLocal[day_idx[0]]}"
+            
+            alertMsg = alertMsg.replaceAll("\n", "")
+            def sun_idx = 0
+            def moon_idx = []
+			
+            def x = 1
+            for (i = 1; i < a.moonriseTimeLocal.size(); i++) {
+            	if (a?.moonriseTimeLocal[i] ) {
+                	if (a?.moonsetTimeLocal[x]) {
+                    	while (a.moonriseTimeLocal[i] > a.moonsetTimeLocal[x]) {
+                        	x++
+                        }
+                        moon_idx << [moonrise:a.moonriseTimeLocal[i], moonset:a.moonsetTimeLocal[x]]
+                    }
+                }
+                x++
+            }
+            def obs_json = "{'days':[{'day':'${a.daypart[0]?.daypartName[today_idx]}','temp':'${Math.round(obs.temperature)}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[0]}','feelLow':'${a.daypart[0].temperatureWindChill[0]}','high':'${a.temperatureMax[0] ? a.temperatureMax[0] : obs.temperatureMax24Hour}','low':'${obs.temperatureMin24Hour}','conditions':'${obs.wxPhraseLong}','forecast':'${a.daypart[0].wxPhraseLong[today_idx]}','forecastLong':'${forecastLong[0]}','humidity':'${obs.relativeHumidity}','precip':'${obs.precip24Hour}','chance':'${a.daypart[0].precipChance[today_idx]}','wind':'${obs.windSpeed}','sunrise':'${obs.sunriseTimeLocal}','sunset':'${obs.sunsetTimeLocal}','moonphase':'${a.moonPhase[sun_idx]}','moonrise':'${device.currentValue("moonRiseDate")}','moonset':'${device.currentValue("moonSetDate")}','moonday':'${a.moonPhaseDay[sun_idx]}','alerts':'${alertMsg}'},"
+            obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[0]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[0]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[0]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[0]]}','high':'${a.daypart[0].temperature[day_idx[0]]}','low':'${a.daypart[0].temperature[day_idx[0]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[0]]}','forecastLong':'${forecastLong[1]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[0]]}','precip':'${a.daypart[0].qpf[day_idx[0]] + a.daypart[0].qpf[day_idx[0]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[0]]}','wind':'${a?.daypart[0].windSpeed[day_idx[0]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+1]}','sunset':'${a?.sunsetTimeLocal[sun_idx+1]}','moonphase':'${a?.moonPhase[sun_idx+1]}','moonrise':'${moon_idx[0].moonrise}','moonset':'${moon_idx[0].moonset}','moonday':'${a.moonPhaseDay[sun_idx+1]}','alerts':'${alertMsg}'},"
+            obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[1]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[1]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[1]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[1]]}','high':'${a.daypart[0].temperature[day_idx[1]]}','low':'${a.daypart[0].temperature[day_idx[1]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[1]]}','forecastLong':'${forecastLong[2]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[1]]}','precip':'${a.daypart[0].qpf[day_idx[1]] + a.daypart[0].qpf[day_idx[1]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[1]]}','wind':'${a?.daypart[0].windSpeed[day_idx[1]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+2]}','sunset':'${a?.sunsetTimeLocal[sun_idx+2]}','moonphase':'${a?.moonPhase[sun_idx+2]}','moonrise':'${moon_idx[1].moonrise}','moonset':'${moon_idx[1].moonset}','moonday':'${a.moonPhaseDay[sun_idx+2]}','alerts':'${alertMsg}'},"
+            obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[2]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[2]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[2]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[2]]}','high':'${a.daypart[0].temperature[day_idx[2]]}','low':'${a.daypart[0].temperature[day_idx[2]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[2]]}','forecastLong':'${forecastLong[3]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[2]]}','precip':'${a.daypart[0].qpf[day_idx[2]] + a.daypart[0].qpf[day_idx[2]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[2]]}','wind':'${a?.daypart[0].windSpeed[day_idx[2]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+3]}','sunset':'${a?.sunsetTimeLocal[sun_idx+3]}','moonphase':'${a?.moonPhase[sun_idx+3]}','moonrise':'${moon_idx[2].moonrise}','moonset':'${moon_idx[2].moonset}','moonday':'${a.moonPhaseDay[sun_idx+3]}','alerts':'${alertMsg}'},"
+            obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[3]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[3]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[3]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[3]]}','high':'${a.daypart[0].temperature[day_idx[3]]}','low':'${a.daypart[0].temperature[day_idx[3]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[3]]}','forecastLong':'${forecastLong[4]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[3]]}','precip':'${a.daypart[0].qpf[day_idx[3]] + a.daypart[0].qpf[day_idx[3]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[3]]}','wind':'${a?.daypart[0].windSpeed[day_idx[3]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+4]}','sunset':'${a?.sunsetTimeLocal[sun_idx+4]}','moonphase':'${a?.moonPhase[sun_idx+4]}','moonrise':'${moon_idx[3].moonrise}','moonset':'${moon_idx[3].moonset}','moonday':'${a.moonPhaseDay[sun_idx+4]}','alerts':'${alertMsg}'},"
+            obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[4]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[4]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[4]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[4]]}','high':'${a.daypart[0].temperature[day_idx[4]]}','low':'${a.daypart[0].temperature[day_idx[4]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[4]]}','forecastLong':'${forecastLong[5]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[4]]}','precip':'${a.daypart[0].qpf[day_idx[4]] + a.daypart[0].qpf[day_idx[4]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[4]]}','wind':'${a?.daypart[0].windSpeed[day_idx[4]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+5]}','sunset':'${a?.sunsetTimeLocal[sun_idx+5]}','moonphase':'${a?.moonPhase[sun_idx+5]}','moonrise':'${moon_idx[4].moonrise}','moonset':'${moon_idx[4].moonset}','moonday':'${a.moonPhaseDay[sun_idx+5]}','alerts':'${alertMsg}'}]}"
+            sendEvent(name:"observation_json", value: obs_json.encodeAsJSON())
+
+			log.debug "....updating observation_json: ${a.daypart[0].daypartName[day_idx[0]]}"
+
         }
         else {
             if (!obs) {
@@ -795,7 +922,7 @@ def poll() {
                 def localMoonrise = "${tf.format(moonriseDate)}"
                 def localMoonset = "${tf.format(moonsetDate)}"
 
-                def localMoonPhase = a.phaseofMoon
+                //def localMoonPhase = a.phaseofMoon
                 def localMoonIllumination = a.percentIlluminated
 				
                 log.debug "a: ${a}"
