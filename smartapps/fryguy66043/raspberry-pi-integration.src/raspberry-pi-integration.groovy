@@ -13,57 +13,72 @@ preferences {
     	input "forecast", "device.mySmartweatherTile", required: false, title: "Select Forecast Provider."
         input "jeff", "capability.presenceSensor", required: false, title: "Select Jeff's Phone."
         input "cyndi", "capability.presenceSensor", required: false, title: "Select Cyndi's Phone."
+        input "server", "text", required: true, title: "Enter the IP Address for the Server."
+        input "port", "text", required: true, title: "Enter the Port for the Server."
     }
     section ("Garage") {
     	input "garage_display", "text", required: false, title: "Enter Display Name for Garage."
+        input "garage_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "garage_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Garage."
         input "garage_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Garage."
         input "garage_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Garage."
         input "garage_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Garage."
         input "garage_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Garage."
+        input "garage_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Garage."
     }
     section ("Living Room") {
     	input "lr_display", "text", required: false, title: "Enter Display Name for Living Room."
+        input "lr_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "lr_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Living Room."
         input "lr_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Living Room."
         input "lr_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Living Room."
         input "lr_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Living Room."
         input "lr_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Living Room."
+        input "lr_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Living Room."
     }
     section ("Kitchen") {
     	input "kitchen_display", "text", required: false, title: "Enter Display Name for Kitchen."
+        input "kitchen_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "kitchen_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Kitchen."
         input "kitchen_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Kitchen."
         input "kitchen_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Kitchen."
         input "kitchen_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Kitchen."
         input "kitchen_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Kitchen."
+        input "kitchen_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Kitchen."
     }
     section ("Outside") {
     	input "outside_display", "text", required: false, title: "Enter Display Name for Outside."
+        input "outside_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "outside_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Outside."
         input "outside_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Outside."
         input "outside_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Outside."
         input "outside_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Outside."
         input "outside_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Outside."
+        input "outside_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Outside."
     }
     section ("Basement") {
     	input "basement_display", "text", required: false, title: "Enter Display Name for Basement."
+        input "basement_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "basement_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Basement."
         input "basement_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Basement."
         input "basement_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Basement."
         input "basement_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Basement."
         input "basement_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Basement."
+        input "basement_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Basement."
     }
     section ("Family Room") {
     	input "fr_display", "text", required: false, title: "Enter Display Name for Family Room."
+        input "fr_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "fr_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Family Room."
         input "fr_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Family Room."
         input "fr_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Family Room."
         input "fr_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Family Room."
         input "fr_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Family Room."
+        input "fr_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Family Room."
     }
     section ("Master") {
     	input "master_display", "text", required: false, title: "Enter Display Name for Master."
+        input "master_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "master_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Master."
         input "master_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Master."
         input "master_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Master."
@@ -73,6 +88,7 @@ preferences {
     }
     section ("Master Bath") {
     	input "mb_display", "text", required: false, title: "Enter Display Name for Master Bath."
+        input "mb_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "mb_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Master Bath."
         input "mb_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Master Bath."
         input "mb_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Master Bath."
@@ -82,27 +98,33 @@ preferences {
     }
     section ("Bedroom1") {
     	input "br1_display", "text", required: false, title: "Enter Display Name for Bedroom1."
+        input "br1_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "br1_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Bedroom1."
         input "br1_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Bedroom1."
         input "br1_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Bedroom1."
         input "br1_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Bedroom1."
         input "br1_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Bedroom1."
+        input "br1_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Bedroom1."
     }
     section ("Bedroom2") {
     	input "br2_display", "text", required: false, title: "Enter Display Name for Bedroom1."
+        input "br2_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "br2_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Bedroom2."
         input "br2_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Bedroom2."
         input "br2_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Bedroom2."
         input "br2_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Bedroom2."
         input "br2_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Bedroom2."
+        input "br2_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Bedroom2."
     }
     section ("Bedroom3") {
     	input "br3_display", "text", required: false, title: "Enter Display Name for Bedroom3."
+        input "br3_idx", "number", required: false, title: "What order do you want this to display in?"
     	input "br3_lights", "capability.switch", required: false, multiple: true, title: "Select Lights and Switches for Bedroom3."
         input "br3_doors", "capability.doorControl", required: false, multiple: true, title: "Select Door Controls for Bedroom3."
         input "br3_locks", "capability.lock", required: false, multiple: true, title: "Select Locks for Bedroom3."
         input "br3_contacts", "capability.contactSensor", required: false, multiple: true, title: "Select Contacts for Bedroom3."
         input "br3_temps", "capability.temperatureMeasurement", required: false, multiple: false, title: "Select Temperature Sensor for Bedroom3."
+        input "br3_humid", "capability.relativeHumidityMeasurement", required: false, multiple: false, title: "Select Humidity Sensor for Bedroom3."
     }
 	section("Send Push Notification Reminder?") {
         input "sendPush", "bool", required: false, title: "Yes or No?"
@@ -123,7 +145,8 @@ def updated()
     
 	unsubscribe()
     initialize()
-    sendHubCommand(new physicalgraph.device.HubAction("""GET /update_req HTTP/1.1\r\nHOST: 192.168.2.137:5000\r\n\r\n""", 
+    def server_addr = "${server}:${port}"
+    sendHubCommand(new physicalgraph.device.HubAction("""GET /update_req HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateReqHandler]))
@@ -146,30 +169,35 @@ def initialize()
     subscribe(garage_locks, "lock", changeHandler)
     subscribe(garage_contacts, "contact", changeHandler)
     subscribe(garage_temps, "temperature", changeHandler)
+    subscribe(garage_humid, "humidity", changeHandler)
 
 	subscribe(lr_lights, "switch", changeHandler)
     subscribe(lr_doors, "door", changeHandler)
     subscribe(lr_locks, "lock", changeHandler)
     subscribe(lr_contacts, "contact", changeHandler)
     subscribe(lr_temps, "temperature", changeHandler)
+    subscribe(lr_humid, "humidity", changeHandler)
 
 	subscribe(kitchen_lights, "switch", changeHandler)
     subscribe(kitchen_doors, "door", changeHandler)
     subscribe(kitchen_locks, "lock", changeHandler)
     subscribe(kitchen_contacts, "contact", changeHandler)
     subscribe(kitchen_temps, "temperature", changeHandler)
+    subscribe(kitchen_humid, "humidity", changeHandler)
 
 	subscribe(outside_lights, "switch", changeHandler)
     subscribe(outside_doors, "door", changeHandler)
     subscribe(outside_locks, "lock", changeHandler)
     subscribe(outside_contacts, "contact", changeHandler)
     subscribe(outside_temps, "temperature", changeHandler)
+    subscribe(outside_humid, "humidity", changeHandler)
 
 	subscribe(basement_lights, "switch", changeHandler)
     subscribe(basement_doors, "door", changeHandler)
     subscribe(basement_locks, "lock", changeHandler)
     subscribe(basement_contacts, "contact", changeHandler)
     subscribe(basement_temps, "temperature", changeHandler)
+    subscribe(basement_humid, "humidity", changeHandler)
 
 	subscribe(fr_lights, "switch", changeHandler)
     subscribe(fr_lights, "level", changeHandler)
@@ -177,6 +205,7 @@ def initialize()
     subscribe(fr_locks, "lock", changeHandler)
     subscribe(fr_contacts, "contact", changeHandler)
     subscribe(fr_temps, "temperature", changeHandler)
+    subscribe(fr_humid, "humidity", changeHandler)
 
 	subscribe(master_lights, "switch", changeHandler)
 	subscribe(master_lights, "level", changeHandler)
@@ -198,18 +227,21 @@ def initialize()
     subscribe(br1_locks, "lock", changeHandler)
     subscribe(br1_contacts, "contact", changeHandler)
     subscribe(br1_temps, "temperature", changeHandler)
+    subscribe(br1_humid, "humidity", changeHandler)
 
 	subscribe(br2_lights, "switch", changeHandler)
     subscribe(br2_doors, "door", changeHandler)
     subscribe(br2_locks, "lock", changeHandler)
     subscribe(br2_contacts, "contact", changeHandler)
     subscribe(br2_temps, "temperature", changeHandler)
+    subscribe(br2_humid, "humidity", changeHandler)
 
 	subscribe(br3_lights, "switch", changeHandler)
     subscribe(br3_doors, "door", changeHandler)
     subscribe(br3_locks, "lock", changeHandler)
     subscribe(br3_contacts, "contact", changeHandler)
     subscribe(br3_temps, "temperature", changeHandler)
+    subscribe(br3_humid, "humidity", changeHandler)
 
     subscribe(app, appHandler)
 }
@@ -282,7 +314,8 @@ def appHandler(evt) {
 def wxHandler(evt) {
 	log.debug "wxHandler()"
     
-    sendHubCommand(new physicalgraph.device.HubAction("""GET /wx_obs_change HTTP/1.1\r\nHOST: 192.168.2.137:5000\r\n\r\n""", 
+    def server_addr = "${server}:${port}"
+    sendHubCommand(new physicalgraph.device.HubAction("""GET /wx_obs_change HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateWxHandler]))
@@ -309,33 +342,17 @@ def getHomeAway() {
     def resp = []
     if (jeff) {
     	found = true
-	    resp << [device: jeff.label, status: jeff.currentPresence]
+	    resp << [device: jeff.displayName, status: jeff.currentPresence]
     }
     if (cyndi) {
     	found = true
-	    resp << [device: cyndi.label, status: cyndi.currentPresence]
+	    resp << [device: cyndi.displayName, status: cyndi.currentPresence]
     }
     if (!found) {
     	resp << [device: "Not Configured", status: "N/A"]
     }
 //    log.debug "Reply: ${resp}"
     return resp
-}
-
-def sendMessage() {
-	log.debug "sendMessage($params.command)"
-    def cmd = params.command
-    def idx = cmd.indexOf("=")
-    def status = "Error"
-    if (idx > -1) {
-    	def message = cmd.substring(idx+1)
-    	status = "Received Message: ${message}"
-        log.debug status
-        if (phone) {
-            sendSms(phone, message)
-        }
-    }
-    return status
 }
 
 def getSwitch() {
@@ -513,7 +530,8 @@ def switchHandler(evt) {
 	def sname = URLEncoder.encode("${evt.displayName}", "UTF-8")
 	def cmd = "?switch=${sname}&state=${evt.value}"
     
-    sendHubCommand(new physicalgraph.device.HubAction("""GET /switch_change${cmd} HTTP/1.1\r\nHOST: 192.168.2.137:5000\r\n\r\n""", 
+    def server_addr = "${server}:${port}"
+    sendHubCommand(new physicalgraph.device.HubAction("""GET /switch_change${cmd} HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateSwitchHandler]))
@@ -559,6 +577,12 @@ def changeHandler(evt) {
         }
     }
 
+    garage_humid.each {dev ->
+    	if (dev.displayName == evt.displayName) {
+        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+        }
+    }
+
 	lr_lights.each {dev ->
     	if (dev.displayName == evt.displayName) {
    			log.debug "Found $dev"
@@ -587,6 +611,12 @@ def changeHandler(evt) {
     lr_temps.each {dev ->
     	if (dev.displayName == evt.displayName) {
         	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+        }
+    }
+
+    lr_humid.each {dev ->
+    	if (dev.displayName == evt.displayName) {
+        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
         }
     }
 
@@ -621,6 +651,12 @@ def changeHandler(evt) {
         }
     }
 
+    kitchen_humid.each {dev ->
+    	if (dev.displayName == evt.displayName) {
+        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+        }
+    }
+
 	outside_lights.each {dev ->
     	if (dev.displayName == evt.displayName) {
    			log.debug "Found $dev"
@@ -652,6 +688,12 @@ def changeHandler(evt) {
         }
     }
 
+    outside_humid.each {dev ->
+    	if (dev.displayName == evt.displayName) {
+        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+        }
+    }
+
 	basement_lights.each {dev ->
     	if (dev.displayName == evt.displayName) {
    			log.debug "Found $dev"
@@ -680,6 +722,12 @@ def changeHandler(evt) {
     basement_temps.each {dev ->
     	if (dev.displayName == evt.displayName) {
         	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+        }
+    }
+
+    basement_humid.each {dev ->
+    	if (dev.displayName == evt.displayName) {
+        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
         }
     }
 
@@ -720,6 +768,12 @@ def changeHandler(evt) {
         }
     }
 
+
+    fr_humid.each {dev ->
+    	if (dev.displayName == evt.displayName) {
+        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+        }
+    }
 
 	master_lights.each {dev ->
     	if (dev.displayName == evt.displayName) {
@@ -833,6 +887,12 @@ def changeHandler(evt) {
         }
     }
 
+    br1_humid.each {dev ->
+    	if (dev.displayName == evt.displayName) {
+        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+        }
+    }
+
 	br2_lights.each {dev ->
     	if (dev.displayName == evt.displayName) {
    			log.debug "Found $dev"
@@ -861,6 +921,12 @@ def changeHandler(evt) {
     br2_temps.each {dev ->
     	if (dev.displayName == evt.displayName) {
         	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+        }
+    }
+
+    br2_humid.each {dev ->
+    	if (dev.displayName == evt.displayName) {
+        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
         }
     }
 
@@ -895,9 +961,16 @@ def changeHandler(evt) {
         }
     }
 
+    br3_humid.each {dev ->
+    	if (dev.displayName == evt.displayName) {
+        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+        }
+    }
+
 	log.debug ("cmd: $cmd")
     
-    sendHubCommand(new physicalgraph.device.HubAction("""GET /device_change${cmd} HTTP/1.1\r\nHOST: 192.168.2.137:5000\r\n\r\n""", 
+    def server_addr = "${server}:${port}"
+    sendHubCommand(new physicalgraph.device.HubAction("""GET /device_change${cmd} HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateSwitchHandler]))
@@ -930,36 +1003,42 @@ def getRooms() {
     def garageLocks = []
     def garageContacts = []
     def garageTemps = []
+    def garageHumid = []
 
 	def lrLights = []
     def lrDoors = []
     def lrLocks = []
     def lrContacts = []
     def lrTemps = []
+    def lrHumid = []
 
 	def kitchenLights = []
     def kitchenDoors = []
     def kitchenLocks = []
     def kitchenContacts = []
     def kitchenTemps = []
+    def kitchenHumid = []
 
 	def outsideLights = []
     def outsideDoors = []
     def outsideLocks = []
     def outsideContacts = []
     def outsideTemps = []
+    def outsideHumid = []
 
 	def basementLights = []
     def basementDoors = []
     def basementLocks = []
     def basementContacts = []
     def basementTemps = []
+    def basementHumid = []
 
 	def frLights = []
     def frDoors = []
     def frLocks = []
     def frContacts = []
     def frTemps = []
+    def frHumid = []
 
 	def masterLights = []
     def masterColorLights = []
@@ -981,18 +1060,21 @@ def getRooms() {
     def br1Locks = []
     def br1Contacts = []
     def br1Temps = []
+    def br1Humid = []
 
 	def br2Lights = []
     def br2Doors = []
     def br2Locks = []
     def br2Contacts = []
     def br2Temps = []
+    def br2Humid = []
 
 	def br3Lights = []
     def br3Doors = []
     def br3Locks = []
     def br3Contacts = []
     def br3Temps = []
+    def br3Humid = []
 
 	def home = []
     
@@ -1011,6 +1093,7 @@ def getRooms() {
 
 /* Garage */
 	def itemCnt = 0
+    def index = 0
 
 	garage_lights.each {gl ->
     	t_name = "${gl}"
@@ -1067,9 +1150,18 @@ def getRooms() {
         garageTemps << [device:"temp", name: t_name, value: t_val]
     }
     
+    garage_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        itemCnt++
+        garageHumid << [device:"humidity", name: t_name, value: t_val]
+    }
+
+    
     if (itemCnt > 0) {
     	def g_devices = []
         t_val = "Garage"
+        index = garage_idx ? garage_idx : ++index
         if (garage_display?.size() > 0) {
             t_val = garage_display
         }
@@ -1098,7 +1190,13 @@ def getRooms() {
         garageTemps.each {gt ->
         	g_devices << [device:"temp", name: gt.name, value: gt.value]
         }
-        rooms << [room: t_val, devices:g_devices]
+        
+        garageHumid.sort{it.name}
+        garageHumid.each {lr ->
+        	g_devices << [device:"humidity", name: lr.name, value: lr.value]
+        }
+            
+        rooms << [room: t_val, devices:g_devices, index:index]
 //        log.debug "rooms: ${rooms}"
     }
 //    return rooms
@@ -1160,10 +1258,18 @@ def getRooms() {
         itemCnt++
         lrTemps << [device:"temp", name: t_name, value: t_val]
     }
+    
+    lr_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        itemCnt++
+        lrHumid << [device:"humidity", name: t_name, value: t_val]
+    }
 
 	if (itemCnt > 0) {
     	def l_devices = []
         t_val = "Living Room"
+        index = lr_idx ? lr_idx : ++index
         if (lr_display?.size() > 0) {
             t_val = lr_display
         }
@@ -1192,7 +1298,12 @@ def getRooms() {
         lrTemps.each {lr ->
         	l_devices << lr
         }
-        rooms << [room: t_val, devices:l_devices]
+        
+        lrHumid.sort{it.name}
+        lrHumid.each {lr ->
+        	l_devices << lr
+        }
+        rooms << [room: t_val, devices:l_devices, index:index]
     }
 
 /* Kitchen */
@@ -1250,12 +1361,20 @@ def getRooms() {
     	t_name = "${lr}"
         t_val = lr.currentValue("temperature")
         itemCnt++
-        lrTemps << [device:"temp", name: t_name, value: t_val]
+        kitchenTemps << [device:"temp", name: t_name, value: t_val]
+    }
+    
+    kitchen_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        itemCnt++
+        kitchenHumid << [device:"humidity", name: t_name, value: t_val]
     }
 
     if (itemCnt > 0) {
     	def k_devices = []
         t_val = "Kitchen"
+        index = kitchen_idx ? kitchen_idx : ++index
         if (kitchen_display?.size() > 0) {
             t_val = kitchen_display
         }
@@ -1284,7 +1403,13 @@ def getRooms() {
         kitchenTemps.each {lr ->
         	k_devices << lr
         }
-        rooms << [room: t_val, devices:k_devices]
+        
+        kitchenHumid.sort{it.name}
+        kitchenHumid.each {lr ->
+        	k_devices << lr
+        }
+        
+        rooms << [room: t_val, devices:k_devices, index:index]
     }
 
 /* Outside */
@@ -1344,9 +1469,17 @@ def getRooms() {
         itemCnt++
         outsideTemps << [device:"temp", name: t_name, value: t_val]
     }
-
+    
+    outside_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        itemCnt++
+        outsideHumid << [device:"humidity", name: t_name, value: t_val]
+    }
+    
     if (itemCnt > 0) {
         t_val = "Outside"
+        index = outside_idx ? outside_idx : ++index
         def o_devices = []
         if (outside_display?.size() > 0) {
             t_val = outside_display
@@ -1376,7 +1509,13 @@ def getRooms() {
         outsideTemps.each {lr ->
         	o_devices << lr
         }
-        rooms << [room: t_val, devices:o_devices]
+        
+        outsideHumid.sort{it.name}
+        outsideHumid.each {lr ->
+        	o_devices << lr
+        }
+        
+        rooms << [room: t_val, devices:o_devices, index:index]
     }
 
 /* Basement */
@@ -1437,8 +1576,16 @@ def getRooms() {
         basementTemps << [device:"temp", name: t_name, value: t_val]
     }
     
+    basement_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        itemCnt++
+        basementHumid << [device:"humidity", name: t_name, value: t_val]
+    }
+    
     if (itemCnt > 0) {
         t_val = "Basement"
+        index = basement_idx ? basement_idx : ++index
         def b_devices = []
         if (basement_display?.size() > 0) {
             t_val = basement_display
@@ -1468,7 +1615,13 @@ def getRooms() {
         basementTemps.each {lr ->
         	b_devices << lr
         }
-        rooms << [room: t_val, devices:b_devices]
+        
+        basementHumid.sort{it.name}
+        basementHumid.each {lr ->
+        	b_devices << lr
+        }
+        
+        rooms << [room: t_val, devices:b_devices, index:index]
     }
 
 /* Family Room */
@@ -1541,8 +1694,16 @@ def getRooms() {
         frTemps << [device:"temp", name: t_name, value: t_val]
     }
     
+    fr_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        itemCnt++
+        frHumid << [device:"humidity", name: t_name, value: t_val]
+    }
+    
     if (itemCnt > 0) {
         t_val = "Family Room"
+        index = fr_idx ? fr_idx : ++index
         def l_devices = []
         if (fr_display?.size() > 0) {
             t_val = fr_display
@@ -1572,7 +1733,13 @@ def getRooms() {
         frTemps.each {lr ->
         	l_devices << lr
         }
-        rooms << [room: t_val, devices:l_devices]
+        
+        frHumid.sort{it.name}
+        frHumid.each {lr ->
+        	l_devices << lr
+        }
+        
+        rooms << [room: t_val, devices:l_devices, index:index]
     }
 
 /* Master */
@@ -1655,6 +1822,7 @@ def getRooms() {
 
     if (itemCnt > 0) {
         t_val = "Master"
+        index = master_idx ? master_idx : ++index
         def m_devices = []
         if (master_display?.size() > 0) {
             t_val = master_display
@@ -1689,7 +1857,7 @@ def getRooms() {
         masterHumid.each {lr ->
         	m_devices << lr
         }
-        rooms << [room: t_val, devices:m_devices]
+        rooms << [room: t_val, devices:m_devices, index:index]
     }
 
 /* Master Bath */
@@ -1759,6 +1927,7 @@ def getRooms() {
 
     if (itemCnt > 0) {
         t_val = "Master Bath"
+        index = mb_idx ? mb_idx : ++index
         def m_devices = []
         if (mb_display?.size() > 0) {
             t_val = mb_display
@@ -1792,7 +1961,7 @@ def getRooms() {
         mbHumid.each {lr ->
         	m_devices << lr
         }
-        rooms << [room: t_val, devices:m_devices]
+        rooms << [room: t_val, devices:m_devices, index:index]
     }
 
 
@@ -1853,9 +2022,17 @@ def getRooms() {
         itemCnt++
         br1Temps << [device:"temp", name: t_name, value: t_val]
     }
+    
+    br1_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        itemCnt++
+        br1Humid << [device:"humidity", name: t_name, value: t_val]
+    }
 
     if (itemCnt > 0) {
         t_val = "Bedroom 1"
+        index = br1_idx ? br1_idx : ++index
         def b_devices = []
         if (br1_display?.size() > 0) {
             t_val = br1_display
@@ -1885,7 +2062,13 @@ def getRooms() {
         br1Temps.each {lr ->
         	b_devices << lr
         }
-        rooms << [room: t_val, devices:b_devices]
+        
+        br1Humid.sort{it.name}
+        br1Humid.each {lr ->
+        	b_devices << lr
+        }
+        
+        rooms << [room: t_val, devices:b_devices, index:index]
     }
 
 /* Bedroom 2 */
@@ -1946,8 +2129,16 @@ def getRooms() {
         br2Temps << [device:"temp", name: t_name, value: t_val]
     }
     
+    br2_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        itemCnt++
+        br2Humid << [device:"humidity", name: t_name, value: t_val]
+    }
+    
     if (itemCnt > 0) {
         t_val = "Bedroom 2"
+        index = br2_idx ? br2_idx : ++index
         def b_devices = []
         if (br2_display?.size() > 0) {
             t_val = br2_display
@@ -1977,7 +2168,13 @@ def getRooms() {
         br2Temps.each {lr ->
         	b_devices << lr
         }
-        rooms << [room: t_val, devices:b_devices]
+        
+        br2Humid.sort{it.name}
+        br2Humid.each {lr ->
+        	b_devices << lr
+        }
+        
+        rooms << [room: t_val, devices:b_devices, index:index]
     }
 
 /* Bedroom 3 */
@@ -2037,9 +2234,18 @@ def getRooms() {
         itemCnt++
         br3Temps << [device:"temp", name: t_name, value: t_val]
     }
+    
+    br3_humid.each {lr ->
+    	t_name = "${lr}"
+        t_val = lr.currentValue("humidity")
+        itemCnt++
+        br3Humid << [device:"humidity", name: t_name, value: t_val]
+    }
 
     if (itemCnt > 0) {
         t_val = "Bedroom 3"
+        index = br3_idx ? br3_idx : ++index
+        log.debug "br3_idx: ${br3_idx} / index: ${index} br3_idx > 0: ${br3_idx > 0}"
         def b_devices = []
         if (br3_display?.size() > 0) {
             t_val = br3_display
@@ -2069,9 +2275,16 @@ def getRooms() {
         br3Temps.each {lr ->
         	b_devices << lr
         }
-        rooms << [room: t_val, devices:b_devices]
+        
+        br3Humid.sort{it.name}
+        br3Humid.each {lr ->
+        	b_devices << lr
+        }
+        
+        rooms << [room: t_val, devices:b_devices, index:index]
     }
 
+	rooms.sort{it.index}
     log.debug rooms
     return rooms
 }
