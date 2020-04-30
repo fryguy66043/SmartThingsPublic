@@ -657,11 +657,13 @@ def twcPoll() {
             // Alerts
             def alerts = getTwcAlerts("${locLat},${locLong}")
 //            alerts = alerts?.alerts
-			log.debug "Nbr Alerts = ${alerts.size()}"
-//            log.debug "alerts = ${alerts}"
+//			log.debug "Nbr Alerts = ${alerts.alerts?.size()}\nAlerts: ${alerts}"
 			def newKeys = []
             def alertMsg = ""
+            def alert_json = ""
+            def alert_msg = []
 			for (i = 0; i < alerts?.size(); i++) {
+            	alert_msg << [alert:alerts[i].eventDescription, start: alerts[i].effectiveTimeLocal, end: alerts[i].expireTimeLocal]
             	if (!newKeys.contains(alerts[i].eventDescription)) {
                     newKeys.add(alerts[i].eventDescription)
                     alertMsg += "[${alerts[i].eventDescription}]\n"
@@ -670,7 +672,22 @@ def twcPoll() {
                 	log.debug "Duplicate alert found..."
                 }
             }
-    		log.debug "WUSTATION: newKeys = $newKeys / alertMsg = $alertMsg"
+/* Testing Alerts
+			if (alert_msg.size() == 0) {
+            	alert_msg << [alert:"[Wind Advisary]", start:"", end:"2020-05-03T08:00:00-0500"]
+            	alert_msg << [alert:"[Flood Warning]", start:"2020-05-01T08:00:00-0500", end:"2020-05-01T08:00:00-0500"]
+            }
+*/            
+            alert_json = "["
+            def al = 0
+            def comma = ""
+            for (al = 0; al < alert_msg.size(); al++) {
+            	alert_json += "${comma}{'alert':'${alert_msg[al].alert}','start':'${alert_msg[al].start}','end':'${alert_msg[al].end}'}"
+                comma = ","
+            }
+            alert_json += "]"
+            
+    		log.debug "WUSTATION: newKeys = $newKeys / alertMsg = $alertMsg\nalert_msg[]: ${alert_msg}"
             
 			def oldKeys = device.currentState("alertKeys")?.jsonValue
 
@@ -695,13 +712,19 @@ def twcPoll() {
             def forecastLong = []
             def today_qpf = 0
             def today_idx = 0
-            log.debug "** 0 = ${a.daypart[0]?.dayOrNight[0]} / 1 = ${a.daypart[0]?.dayOrNight[1]}"
-            if (a.daypart[0]?.dayOrNight[0] == null) {
-            	today_idx = 1
-                today_qpf = a.daypart[0].qpf[today_idx]
+//            log.debug "** 0 = ${a.daypart[0]?.dayOrNight[0]} / 1 = ${a.daypart[0]?.dayOrNight[1]}"
+			try {
+                if (a?.daypart[0]?.dayOrNight[0] == null) {
+                    today_idx = 1
+                    today_qpf = a.daypart[0].qpf[today_idx]
+                }
+                else {
+                    forecastStr = "Today: ${a.daypart[0].narrative[0]}"
+                    today_qpf = a.daypart[0].qpf[today_idx] + a.daypart[0].qpf[today_idx+1]
+                }
             }
-            else {
-            	forecastStr = "Today: ${a.daypart[0].narrative[0]}"
+            catch (err) {
+                forecastStr = "Today: ${a.daypart[0].narrative[0]}"
                 today_qpf = a.daypart[0].qpf[today_idx] + a.daypart[0].qpf[today_idx+1]
             }
             forecastStr += "Tonight: ${a.daypart[0].narrative[1]}"
@@ -719,7 +742,7 @@ def twcPoll() {
             }
            
             log.debug "day_idx:${day_idx.size()}"
-            log.debug "moonrise: ${a.moonriseTimeLocal}\nmoonset: ${a.moonsetTimeLocal}"
+//            log.debug "moonrise: ${a.moonriseTimeLocal}\nmoonset: ${a.moonsetTimeLocal}"
 //            log.debug "qpf: ${a.daypart[0].qpf[5] + a.daypart[0].qpf[8]} / ${a.daypart[0].qpf}"
 //            log.debug "Temps: ${a.daypart[0].temperature}\nHeat: ${a.daypart[0].temperatureHeatIndex}\nChill: ${a.daypart[0].temperatureWindChill}"
 //            log.debug "sunriseTimeLocal:${a?.sunriseTimeLocal[day_idx[0]]}"
@@ -740,13 +763,14 @@ def twcPoll() {
                 }
                 x++
             }
-            def obs_json = "{'days':[{'day':'${a.daypart[0]?.daypartName[today_idx]}','temp':'${Math.round(obs.temperature)}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[0]}','feelLow':'${a.daypart[0].temperatureWindChill[0]}','high':'${a.temperatureMax[0] ? a.temperatureMax[0] : obs.temperatureMax24Hour}','low':'${obs.temperatureMin24Hour}','conditions':'${obs.wxPhraseLong}','forecast':'${a.daypart[0].wxPhraseLong[today_idx]}','forecastLong':'${forecastLong[0]}','humidity':'${obs.relativeHumidity}','precip':'${obs.precip24Hour}','chance':'${a.daypart[0].precipChance[today_idx]}','expectedPrecip':'${today_qpf}','wind':'${obs.windSpeed}','sunrise':'${obs.sunriseTimeLocal}','sunset':'${obs.sunsetTimeLocal}','moonphase':'${a.moonPhase[sun_idx]}','moonrise':'${device.currentValue("moonRiseDate")}','moonset':'${device.currentValue("moonSetDate")}','moonday':'${a.moonPhaseDay[sun_idx]}','alerts':'${alertMsg}'},"
+            log.debug "alert_json: ${alert_json}"
+            def obs_json = "{'days':[{'day':'${a.daypart[0]?.daypartName[today_idx]}','temp':'${Math.round(obs.temperature)}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[0]}','feelLow':'${a.daypart[0].temperatureWindChill[0]}','high':'${a.temperatureMax[0] ? a.temperatureMax[0] : obs.temperatureMax24Hour}','low':'${obs.temperatureMin24Hour}','conditions':'${obs.wxPhraseLong}','forecast':'${a.daypart[0].wxPhraseLong[today_idx]}','forecastLong':'${forecastLong[0]}','humidity':'${obs.relativeHumidity}','precip':'${obs.precip24Hour}','chance':'${a.daypart[0].precipChance[today_idx]}','expectedPrecip':'${today_qpf}','wind':'${obs.windSpeed}','sunrise':'${obs.sunriseTimeLocal}','sunset':'${obs.sunsetTimeLocal}','moonphase':'${a.moonPhase[sun_idx]}','moonrise':'${device.currentValue("moonRiseDate")}','moonset':'${device.currentValue("moonSetDate")}','moonday':'${a.moonPhaseDay[sun_idx]}','alerts':'${alertMsg}','alertMsg':${alert_json}},"
             obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[0]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[0]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[0]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[0]]}','high':'${a.daypart[0].temperature[day_idx[0]]}','low':'${a.daypart[0].temperature[day_idx[0]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[0]]}','forecastLong':'${forecastLong[1]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[0]]}','precip':'${a.daypart[0].qpf[day_idx[0]] + a.daypart[0].qpf[day_idx[0]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[0]]}','wind':'${a?.daypart[0].windSpeed[day_idx[0]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+1]}','sunset':'${a?.sunsetTimeLocal[sun_idx+1]}','moonphase':'${a?.moonPhase[sun_idx+1]}','moonrise':'${moon_idx[0].moonrise}','moonset':'${moon_idx[0].moonset}','moonday':'${a.moonPhaseDay[sun_idx+1]}','alerts':'${alertMsg}'},"
             obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[1]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[1]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[1]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[1]]}','high':'${a.daypart[0].temperature[day_idx[1]]}','low':'${a.daypart[0].temperature[day_idx[1]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[1]]}','forecastLong':'${forecastLong[2]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[1]]}','precip':'${a.daypart[0].qpf[day_idx[1]] + a.daypart[0].qpf[day_idx[1]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[1]]}','wind':'${a?.daypart[0].windSpeed[day_idx[1]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+2]}','sunset':'${a?.sunsetTimeLocal[sun_idx+2]}','moonphase':'${a?.moonPhase[sun_idx+2]}','moonrise':'${moon_idx[1].moonrise}','moonset':'${moon_idx[1].moonset}','moonday':'${a.moonPhaseDay[sun_idx+2]}','alerts':'${alertMsg}'},"
             obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[2]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[2]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[2]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[2]]}','high':'${a.daypart[0].temperature[day_idx[2]]}','low':'${a.daypart[0].temperature[day_idx[2]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[2]]}','forecastLong':'${forecastLong[3]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[2]]}','precip':'${a.daypart[0].qpf[day_idx[2]] + a.daypart[0].qpf[day_idx[2]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[2]]}','wind':'${a?.daypart[0].windSpeed[day_idx[2]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+3]}','sunset':'${a?.sunsetTimeLocal[sun_idx+3]}','moonphase':'${a?.moonPhase[sun_idx+3]}','moonrise':'${moon_idx[2].moonrise}','moonset':'${moon_idx[2].moonset}','moonday':'${a.moonPhaseDay[sun_idx+3]}','alerts':'${alertMsg}'},"
             obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[3]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[3]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[3]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[3]]}','high':'${a.daypart[0].temperature[day_idx[3]]}','low':'${a.daypart[0].temperature[day_idx[3]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[3]]}','forecastLong':'${forecastLong[4]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[3]]}','precip':'${a.daypart[0].qpf[day_idx[3]] + a.daypart[0].qpf[day_idx[3]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[3]]}','wind':'${a?.daypart[0].windSpeed[day_idx[3]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+4]}','sunset':'${a?.sunsetTimeLocal[sun_idx+4]}','moonphase':'${a?.moonPhase[sun_idx+4]}','moonrise':'${moon_idx[3].moonrise}','moonset':'${moon_idx[3].moonset}','moonday':'${a.moonPhaseDay[sun_idx+4]}','alerts':'${alertMsg}'},"
             obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[4]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[4]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[4]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[4]]}','high':'${a.daypart[0].temperature[day_idx[4]]}','low':'${a.daypart[0].temperature[day_idx[4]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[4]]}','forecastLong':'${forecastLong[5]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[4]]}','precip':'${a.daypart[0].qpf[day_idx[4]] + a.daypart[0].qpf[day_idx[4]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[4]]}','wind':'${a?.daypart[0].windSpeed[day_idx[4]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+5]}','sunset':'${a?.sunsetTimeLocal[sun_idx+5]}','moonphase':'${a?.moonPhase[sun_idx+5]}','moonrise':'${moon_idx[4].moonrise}','moonset':'${moon_idx[4].moonset}','moonday':'${a.moonPhaseDay[sun_idx+5]}','alerts':'${alertMsg}'}]}"
-            sendEvent(name:"observation_json", value: obs_json.encodeAsJSON())
+			sendEvent(name:"observation_json", value: obs_json.encodeAsJSON())
 
 			log.debug "....updating observation_json: ${a.daypart[0].daypartName[day_idx[0]]}"
 
