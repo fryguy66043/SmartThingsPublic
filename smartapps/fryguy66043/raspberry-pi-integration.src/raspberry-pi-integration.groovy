@@ -542,14 +542,17 @@ def updateSwitchHandler(reply) {
 }
 
 def changeHandler(evt) {
-	log.debug "changeHandler(${evt.displayName}/${evt.value})"
+	log.debug "changeHandler(${evt.displayName} / ${evt.value})"
+    log.debug "name: ${evt.name} / unit: ${evt.unit}"
     def cmd = ""
     def path = "/device_change"
 	def sname = URLEncoder.encode("${evt.displayName}", "UTF-8")
-    
-    garage_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+
+	if (evt.name == "switch") {
+        garage_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            }
         }
     }
     
@@ -571,22 +574,28 @@ def changeHandler(evt) {
         }
     }
     
-    garage_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        garage_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
         }
     }
 
-    garage_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+    if (evt.name == "humidity") {
+        garage_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
-	lr_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-   			log.debug "Found $dev"
-   			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+	if (evt.name == "switch") {
+        lr_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                log.debug "Found $dev"
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            }
         }
     }
     
@@ -608,22 +617,28 @@ def changeHandler(evt) {
         }
     }
 
-    lr_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        lr_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
         }
     }
 
-    lr_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+    if (evt.name == "humidity") {
+        lr_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
-	kitchen_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-   			log.debug "Found $dev"
-   			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+	if (evt.name == "switch") {
+        kitchen_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                log.debug "Found $dev"
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            }
         }
     }
     
@@ -645,22 +660,28 @@ def changeHandler(evt) {
         }
     }
 
-    kitchen_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        kitchen_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
         }
     }
 
-    kitchen_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+    if (evt.name == "humidity") {
+        kitchen_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
-	outside_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-   			log.debug "Found $dev"
-   			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+	if (evt.name == "switch") {
+        outside_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                log.debug "Found $dev"
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            }
         }
     }
     
@@ -682,22 +703,27 @@ def changeHandler(evt) {
         }
     }
 
-    outside_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        outside_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
+        }
+	}
+    if (evt.name == "humidity") {
+        outside_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
-    outside_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
-        }
-    }
-
-	basement_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-   			log.debug "Found $dev"
-   			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+	if (evt.name == "switch") {
+        basement_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                log.debug "Found $dev"
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            }
         }
     }
     
@@ -719,26 +745,32 @@ def changeHandler(evt) {
         }
     }
 
-    basement_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        basement_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
         }
     }
 
-    basement_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+    if (evt.name == "humidity") {
+        basement_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
-	fr_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-   			log.debug "Found $dev"
-   			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
-            def capabilities = dev.capabilities
-            for (cap in capabilities) {
-            	if (cap.name == "Switch Level") {
-                	cmd += "&level=${dev.currentValue("level")}"
+	if (evt.name == "switch") {
+        fr_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                log.debug "Found $dev"
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+                def capabilities = dev.capabilities
+                for (cap in capabilities) {
+                    if (cap.name == "Switch Level") {
+                        cmd += "&level=${dev.currentValue("level")}"
+                    }
                 }
             }
         }
@@ -762,27 +794,33 @@ def changeHandler(evt) {
         }
     }
 
-    fr_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        fr_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
         }
     }
 
 
-    fr_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+    if (evt.name == "humidity") {
+        fr_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
-	master_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-   			log.debug "Found $dev"
-   			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
-            def capabilities = dev.capabilities
-            for (cap in capabilities) {
-            	if (cap.name == "Switch Level") {
-                	cmd += "&level=${dev.currentValue("level")}"
+	if (evt.name == "switch") {
+        master_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                log.debug "Found $dev"
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+                def capabilities = dev.capabilities
+                for (cap in capabilities) {
+                    if (cap.name == "Switch Level") {
+                        cmd += "&level=${dev.currentValue("level")}"
+                    }
                 }
             }
         }
@@ -806,22 +844,28 @@ def changeHandler(evt) {
         }
     }
 
-    master_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        master_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
         }
     }
 
-    master_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+    if (evt.name == "humidity") {
+        master_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
-	mb_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-   			log.debug "Found $dev"
-   			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+	if (evt.name == "switch") {
+        mb_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                log.debug "Found $dev"
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            }
         }
     }
     
@@ -843,23 +887,29 @@ def changeHandler(evt) {
         }
     }
 
-    mb_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        mb_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
         }
     }
 
-    mb_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+    if (evt.name == "humidity") {
+        mb_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
 
-	br1_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-   			log.debug "Found $dev"
-   			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+	if (evt.name == "switch") {
+        br1_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                log.debug "Found $dev"
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            }
         }
     }
     
@@ -881,22 +931,28 @@ def changeHandler(evt) {
         }
     }
 
-    br1_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        br1_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
         }
     }
 
-    br1_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+    if (evt.name == "humidity") {
+        br1_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
-	br2_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-   			log.debug "Found $dev"
-   			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+	if (evt.name == "switch") {
+        br2_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                log.debug "Found $dev"
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            }
         }
     }
     
@@ -918,22 +974,28 @@ def changeHandler(evt) {
         }
     }
 
-    br2_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        br2_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
         }
     }
 
-    br2_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+    if (evt.name == "humidity") {
+        br2_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
-	br3_lights.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-   			log.debug "Found $dev"
-   			cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+	if (evt.name == "switch") {
+        br3_lights.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                log.debug "Found $dev"
+                cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
+            }
         }
     }
     
@@ -955,15 +1017,19 @@ def changeHandler(evt) {
         }
     }
 
-    br3_temps.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+	if (evt.name == "temperature") {
+        br3_temps.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=temp&name=${sname}&value=${dev.currentTemperature}"
+            }
         }
     }
 
-    br3_humid.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+    if (evt.name == "humidity") {
+        br3_humid.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=humidity&name=${sname}&value=${dev.currentValue("humidity")}"
+            }
         }
     }
 
