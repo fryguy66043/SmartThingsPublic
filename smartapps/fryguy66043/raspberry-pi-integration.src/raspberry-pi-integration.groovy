@@ -145,6 +145,12 @@ def updated()
     
 	unsubscribe()
     initialize()
+    scheduledUpdates()
+    runEvery5Minutes(scheduledUpdates)
+}
+
+def scheduledUpdates() {
+	log.debug "scheduledUpdates()"
     def server_addr = "${server}:${port}"
     sendHubCommand(new physicalgraph.device.HubAction("""GET /update_req HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
@@ -313,7 +319,12 @@ def appHandler(evt) {
 
 def wxHandler(evt) {
 	log.debug "wxHandler()"
-    
+	wxScheduledUpdate()
+    runEvery5Minutes(wxScheduledUpdate)
+}
+
+def wxScheduledUpdate(evt) {
+	log.debug "wxScheduledUpdate"
     def server_addr = "${server}:${port}"
     sendHubCommand(new physicalgraph.device.HubAction("""GET /wx_obs_change HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
@@ -556,21 +567,27 @@ def changeHandler(evt) {
         }
     }
     
-    garage_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        garage_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    garage_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        garage_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
     
-    garage_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        garage_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
     
@@ -599,21 +616,27 @@ def changeHandler(evt) {
         }
     }
     
-    lr_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        lr_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    lr_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        lr_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
 
-    lr_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        lr_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
 
@@ -642,21 +665,27 @@ def changeHandler(evt) {
         }
     }
     
-    kitchen_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        kitchen_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    kitchen_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        kitchen_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
 
-    kitchen_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        kitchen_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
 
@@ -685,21 +714,27 @@ def changeHandler(evt) {
         }
     }
     
-    outside_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        outside_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    outside_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        outside_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
 
-    outside_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        outside_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
 
@@ -727,21 +762,27 @@ def changeHandler(evt) {
         }
     }
     
-    basement_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        basement_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    basement_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        basement_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
 
-    basement_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        basement_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
 
@@ -776,21 +817,27 @@ def changeHandler(evt) {
         }
     }
     
-    fr_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        fr_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    fr_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        fr_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
 
-    fr_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        fr_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
 
@@ -826,21 +873,27 @@ def changeHandler(evt) {
         }
     }
     
-    master_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        master_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    master_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        master_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
 
-    master_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        master_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
 
@@ -869,21 +922,27 @@ def changeHandler(evt) {
         }
     }
     
-    mb_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        mb_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    mb_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        mb_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
 
-    mb_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        mb_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
 
@@ -913,21 +972,27 @@ def changeHandler(evt) {
         }
     }
     
-    br1_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        br1_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    br1_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        br1_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
 
-    br1_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        br1_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
 
@@ -956,21 +1021,27 @@ def changeHandler(evt) {
         }
     }
     
-    br2_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        br2_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    br2_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        br2_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
 
-    br2_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        br2_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
 
@@ -999,21 +1070,27 @@ def changeHandler(evt) {
         }
     }
     
-    br3_doors.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+    if (evt.name == "door") {
+        br3_doors.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=door&name=${sname}&value=${dev.currentValue("door")}"
+            }
         }
     }
     
-    br3_locks.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+    if (evt.name == "lock") {
+        br3_locks.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=lock&name=${sname}&value=${dev.currentValue("lock")}"
+            }
         }
     }
 
-    br3_contacts.each {dev ->
-    	if (dev.displayName == evt.displayName) {
-        	cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+    if (evt.name == "contact") {
+        br3_contacts.each {dev ->
+            if (dev.displayName == evt.displayName) {
+                cmd = "?device=contact&name=${sname}&value=${dev.currentValue("contact")}"
+            }
         }
     }
 
