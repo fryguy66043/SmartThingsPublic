@@ -377,7 +377,7 @@ def getSwitch() {
     if (!found) {
     	resp << [switch: "Not Configured", status: "N/A"]
     }
-    log.debug "Reply: ${resp}"
+//    log.debug "Reply: ${resp}"
     return resp
 }
 
@@ -393,22 +393,22 @@ def setSwitch() {
     	status = "OK"
     	def sName = cmd.substring(nidx+1, amp)
         def sState = cmd.substring(sidx+1)
-        log.debug "sName: $sName / sState: $sState"
+//        log.debug "sName: $sName / sState: $sState"
         status = "$sName was turned $sState"
         switches.each {rm ->
         	rm.each {dev ->
                 if (sName == dev.displayName) {
                     if (sState == "on") {
-                        log.debug "...turning on $sName"
+//                        log.debug "...turning on $sName"
                         dev.on()
                     }
                     else if (sState == "off") {
-                        log.debug "...turning off $sName"
+//                        log.debug "...turning off $sName"
                         dev.off()
                     }
                     else {
                         status = "Invalid Switch Command: $sState"
-                        log.debug status
+//                        log.debug status
                     }
                 }
             }
@@ -429,27 +429,27 @@ def setLevel() {
     def status = "Error in parameters"
     def command = params.command
     cmd = command.split('&')
-    log.debug "cmd: ${cmd}"
+//    log.debug "cmd: ${cmd}"
     for (String value : cmd) {
         if (value.contains("switch")) {
             def nCmd = [] 
             nCmd = value.split('=')
-            log.debug "sName = ${nCmd[1]}"
+//            log.debug "sName = ${nCmd[1]}"
             sName = nCmd[1].trim()
         }
         else if (value.contains("level")) {
         	def nCmd = []
             nCmd = value.split('=')
-            log.debug "sLevel = ${nCmd[1]}"
+//            log.debug "sLevel = ${nCmd[1]}"
             sLevel = nCmd[1].trim()
         }
     }
     switches.each {rm ->
     	rm.each {dev ->
-        	log.debug "${dev.displayName} = ${sName} : ${dev.displayName == sName}"
+//        	log.debug "${dev.displayName} = ${sName} : ${dev.displayName == sName}"
         	if (dev.displayName == sName) {
-            	log.debug "Setting $sName to $sLevel"
-                status = "OK - Setting $sName to $sLevel"
+            	log.debug "Setting $sName dim level to $sLevel"
+                status = "OK - Setting $sName dim level to $sLevel"
             	dev?.setLevel(sLevel.toInteger())
             }
         }
@@ -469,17 +469,17 @@ def setLock() {
     	status = "OK"
     	def sName = cmd.substring(nidx+1, amp)
         def sState = cmd.substring(sidx+1)
-        log.debug "sName: $sName / sState: $sState"
-        status = "$sName was turned $sState"
+//        log.debug "sName: $sName / sState: $sState"
+        status = "$sName was sent the command: $sState"
         locks.each {rm ->
         	rm.each {dev ->
                 if (sName == dev.displayName) {
                     if (sState == "lock") {
-                        log.debug "...locking $sName"
+//                        log.debug "...locking $sName"
                         dev.lock()
                     }
                     else if (sState == "unlock") {
-                        log.debug "...unlocking $sName"
+//                        log.debug "...unlocking $sName"
                         dev.unlock()
                     }
                     else {
@@ -508,17 +508,17 @@ def setDoor() {
     	status = "OK"
     	def sName = cmd.substring(nidx+1, amp)
         def sState = cmd.substring(sidx+1)
-        log.debug "sName: $sName / sState: $sState"
+//        log.debug "sName: $sName / sState: $sState"
         status = "$sName was sent the command: $sState"
         rm_doors.each {rm ->
         	rm.each {dev ->
                 if (sName == dev.displayName) {
                     if (sState == "open") {
-                        log.debug "...opening $sName"
+//                        log.debug "...opening $sName"
                         dev.open()
                     }
                     else if (sState == "close") {
-                        log.debug "...closinging $sName"
+//                        log.debug "...closinging $sName"
                         dev.close()
                     }
                     else {
@@ -553,8 +553,7 @@ def updateSwitchHandler(reply) {
 }
 
 def changeHandler(evt) {
-	log.debug "changeHandler(${evt.displayName} / ${evt.value})"
-    log.debug "name: ${evt.name} / unit: ${evt.unit}"
+	log.debug "changeHandler(${evt.displayName} / ${evt.name} / ${evt.value})"
     def cmd = ""
     def path = "/device_change"
 	def sname = URLEncoder.encode("${evt.displayName}", "UTF-8")
@@ -610,7 +609,6 @@ def changeHandler(evt) {
 	if (evt.name == "switch") {
         lr_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
-                log.debug "Found $dev"
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
             }
         }
@@ -659,7 +657,6 @@ def changeHandler(evt) {
 	if (evt.name == "switch") {
         kitchen_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
-                log.debug "Found $dev"
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
             }
         }
@@ -708,7 +705,6 @@ def changeHandler(evt) {
 	if (evt.name == "switch") {
         outside_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
-                log.debug "Found $dev"
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
             }
         }
@@ -756,7 +752,6 @@ def changeHandler(evt) {
 	if (evt.name == "switch") {
         basement_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
-                log.debug "Found $dev"
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
             }
         }
@@ -805,7 +800,6 @@ def changeHandler(evt) {
 	if (evt.name == "switch") {
         fr_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
-                log.debug "Found $dev"
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
                 def capabilities = dev.capabilities
                 for (cap in capabilities) {
@@ -861,7 +855,6 @@ def changeHandler(evt) {
 	if (evt.name == "switch") {
         master_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
-                log.debug "Found $dev"
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
                 def capabilities = dev.capabilities
                 for (cap in capabilities) {
@@ -916,7 +909,6 @@ def changeHandler(evt) {
 	if (evt.name == "switch") {
         mb_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
-                log.debug "Found $dev"
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
             }
         }
@@ -966,7 +958,6 @@ def changeHandler(evt) {
 	if (evt.name == "switch") {
         br1_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
-                log.debug "Found $dev"
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
             }
         }
@@ -1015,7 +1006,6 @@ def changeHandler(evt) {
 	if (evt.name == "switch") {
         br2_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
-                log.debug "Found $dev"
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
             }
         }
@@ -1064,7 +1054,6 @@ def changeHandler(evt) {
 	if (evt.name == "switch") {
         br3_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
-                log.debug "Found $dev"
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
             }
         }
@@ -1340,9 +1329,7 @@ def getRooms() {
         }
             
         rooms << [room: t_val, devices:g_devices, index:index]
-//        log.debug "rooms: ${rooms}"
     }
-//    return rooms
 
 /* Living Room */
 	itemCnt = 0
@@ -1906,7 +1893,6 @@ def getRooms() {
         }
         if (dim > -1) {
 			masterLights << [device:"switch", name: t_name, value: t_val, level: dim]
-            log.debug masterLights
         }
         else {
 			masterLights << [device:"switch", name: t_name, value: t_val]
@@ -2388,7 +2374,6 @@ def getRooms() {
     if (itemCnt > 0) {
         t_val = "Bedroom 3"
         index = br3_idx ? br3_idx : ++index
-        log.debug "br3_idx: ${br3_idx} / index: ${index} br3_idx > 0: ${br3_idx > 0}"
         def b_devices = []
         if (br3_display?.size() > 0) {
             t_val = br3_display
@@ -2428,6 +2413,6 @@ def getRooms() {
     }
 
 	rooms.sort{it.index}
-    log.debug rooms
+//    log.debug rooms
     return rooms
 }
