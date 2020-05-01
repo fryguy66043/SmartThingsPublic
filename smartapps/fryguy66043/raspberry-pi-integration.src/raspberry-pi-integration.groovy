@@ -307,14 +307,34 @@ mappings {
 
 def appHandler(evt) {
 	def capStr = ""
+
+
     master_lights.each {dev ->
-    	capStr = "${dev.displayName}: "
+    	capStr = "${dev.displayName}[${dev.typeName}]: "
         def capabilities = dev.capabilities
         for (cap in capabilities) {
         	capStr += "${cap.name} / "
         }
-        log.debug capStr
+        def attributes = dev.supportedAttributes
+        capStr += "\nattributes: "
+        for (att in attributes) {
+        	capStr += "${att.name}:${dev.currentValue(att.name)} / "
+        }
+        def commands = dev.supportedCommands
+        capStr += "\ncommands: "
+        for (cmd in commands) {
+        	capStr += "${cmd.name} / "
+        }
+        log.debug "master_lights capabilities: ${capStr}"
     }
+
+    def commands = forecast.supportedCommands
+    capStr = ""
+    for (cmd in commands) {
+        capStr += "${cmd.name} / "
+    }
+    log.debug "${forecast.displayName} commands: ${capStr}"
+
 }
 
 def wxHandler(evt) {
@@ -554,6 +574,7 @@ def updateSwitchHandler(reply) {
 
 def changeHandler(evt) {
 	log.debug "changeHandler(${evt.displayName} / ${evt.name} / ${evt.value})"
+    log.debug "device: ${evt.device}"
     def cmd = ""
     def path = "/device_change"
 	def sname = URLEncoder.encode("${evt.displayName}", "UTF-8")
