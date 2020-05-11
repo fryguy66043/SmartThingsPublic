@@ -470,16 +470,17 @@ def twcPoll() {
 //            log.debug "moonrise: ${a.moonriseTimeLocal}"
 //            log.debug "moonset: ${a.moonsetTimeLocal}"
 
+		log.debug "moonriseTimeLocal: ${a?.moonriseTimeLocal[1]}"
 		def moonphase1 = a.moonPhase[0]
             def moonphase2 = a.moonPhase[1]
             def localMoonPhase = moonphase1
-            def moonrise1 = a.moonriseTimeLocal[0]
+            def moonrise1 = a?.moonriseTimeLocal[0]
             def moonrise2 = ""
             if (!moonrise1) {
-                moonrise1 = a.mooriseTimeLocal[1]
-                moonrise2 = a.moonriseTimeLocal[2]
-                moonphase1 = a.moonPhase[1]
-                moonphase2 = a.moonPhase[2]
+                moonrise1 = a?.moonriseTimeLocal[1]
+                moonrise2 = a?.moonriseTimeLocal[2]
+                moonphase1 = a?.moonPhase[1]
+                moonphase2 = a?.moonPhase[2]
             }
             else {
                 moonrise2 = a.moonriseTimeLocal[1]
