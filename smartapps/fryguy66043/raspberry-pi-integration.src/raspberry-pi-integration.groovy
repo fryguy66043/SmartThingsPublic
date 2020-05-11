@@ -152,10 +152,15 @@ def updated()
 def scheduledUpdates() {
 	log.debug "scheduledUpdates()"
     def server_addr = "${server}:${port}"
-    sendHubCommand(new physicalgraph.device.HubAction("""GET /update_req HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
-    				physicalgraph.device.Protocol.LAN, 
-                    "" ,
-                    [callback: updateReqHandler]))
+    if (server && port) {
+        sendHubCommand(new physicalgraph.device.HubAction("""GET /update_req HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
+                        physicalgraph.device.Protocol.LAN, 
+                        "" ,
+                        [callback: updateReqHandler]))
+    }
+    else {
+    	log.debug "Raspberry Pi Server not configured!"
+    }
 }
 
 def updateReqHandler(reply) {
@@ -346,10 +351,16 @@ def wxHandler(evt) {
 def wxScheduledUpdate(evt) {
 	log.debug "wxScheduledUpdate"
     def server_addr = "${server}:${port}"
+    
+    if (server && port) {
     sendHubCommand(new physicalgraph.device.HubAction("""GET /wx_obs_change HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateWxHandler]))
+    }
+    else {
+    	log.debug "Raspberry Pi Server not configured!"
+    }
 }
 
 def updateWxHandler(reply) {
@@ -562,10 +573,16 @@ def switchHandler(evt) {
 	def cmd = "?switch=${sname}&state=${evt.value}"
     
     def server_addr = "${server}:${port}"
+    
+    if (server && port) {
     sendHubCommand(new physicalgraph.device.HubAction("""GET /switch_change${cmd} HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateSwitchHandler]))
+    }
+    else {
+    	log.debug "Raspberry Pi Server not configured!"
+    }
 }
 
 def updateSwitchHandler(reply) {
@@ -1123,10 +1140,16 @@ def changeHandler(evt) {
 	log.debug ("cmd: $cmd")
     
     def server_addr = "${server}:${port}"
+    
+    if (server && port) {
     sendHubCommand(new physicalgraph.device.HubAction("""GET /device_change${cmd} HTTP/1.1\r\nHOST: ${server_addr}\r\n\r\n""", 
     				physicalgraph.device.Protocol.LAN, 
                     "" ,
                     [callback: updateSwitchHandler]))
+    }
+    else {
+    	log.debug "Raspberry Pi Server not configured!"
+    }
 }
 
 def getWxObs() {
