@@ -288,6 +288,7 @@ def parse(String description) {
 
 def installed() {
 	twcPoll()
+    //getWxData()
 	runEvery10Minutes(twcPoll)
 }
 
@@ -342,6 +343,124 @@ def setActualHigh(val) {
 }
 
 
+def getWxData() {
+	log.debug "getWxData()"
+
+	// Current conditions
+	def obs = getTwcConditions(zipCode)
+    if (!obs) {
+    	sendEvent(name: "message", value: msg + "TCW Conditions call failed...")
+        log.error "TCW Conditions call failed..."
+	    return
+    }
+
+    def a = getTwcForecast(zipCode)
+    if (!a) {
+    	log.error "TWC Forecast call failed..."
+        return
+    }
+
+    def loc = getTwcLocation(zipCode)
+    if (!loc) {
+    	log.error "TWC Locacation call failed..."
+        return
+    }
+    def locLat = loc.location.latitude as String
+    def locLong = loc.location.longitude as String
+
+	def alerts = getTwcAlerts("${locLat},${locLong}")
+    log.debug "alerts: $alerts"
+    log.debug "Completed TWC Calls"
+
+	def newKeys = []
+    def alertMsg = ""
+    def alert_json = ""
+    def alert_msg = []
+    def i = 0
+    for (i = 0; i < alerts?.size(); i++) {
+        alert_msg << [alert:alerts[i].eventDescription, start: alerts[i].effectiveTimeLocal, end: alerts[i].expireTimeLocal]
+        if (!newKeys.contains(alerts[i].eventDescription)) {
+            newKeys.add(alerts[i].eventDescription)
+            alertMsg += "[${alerts[i].eventDescription}]\n"
+        }
+        else {
+            log.debug "Duplicate alert found..."
+        }
+    }
+    alert_json = "["
+    def al = 0
+    def comma = ""
+    for (al = 0; al < alert_msg.size(); al++) {
+        alert_json += "${comma}{'alert':'${alert_msg[al].alert}','start':'${alert_msg[al].start}','end':'${alert_msg[al].end}'}"
+        comma = ","
+    }
+    alert_json += "]"
+
+            def forecastStr = ""
+            def forecastLong = []
+            def today_qpf = 0
+            def today_idx = 0
+//            log.debug "** 0 = ${a.daypart[0]?.dayOrNight[0]} / 1 = ${a.daypart[0]?.dayOrNight[1]}"
+			try {
+                if (a?.daypart[0]?.dayOrNight[0] == null) {
+                    today_idx = 1
+                    today_qpf = a.daypart[0].qpf[today_idx]
+                }
+                else {
+                    forecastStr = "Today: ${a.daypart[0].narrative[0]}"
+                    today_qpf = a.daypart[0].qpf[today_idx] + a.daypart[0].qpf[today_idx+1]
+                }
+            }
+            catch (err) {
+                forecastStr = "Today: ${a.daypart[0].narrative[0]}"
+                today_qpf = a.daypart[0].qpf[today_idx] + a.daypart[0].qpf[today_idx+1]
+            }
+            forecastStr += "Tonight: ${a.daypart[0].narrative[1]}"
+            forecastLong.add(forecastStr)
+            
+            def day_idx = []
+  //          log.debug "dayOrNight size: ${a.daypart[0].dayOrNight.size()}"
+            for (i = today_idx + 1; i < a.daypart[0].dayOrNight.size(); i++) {
+            	if (a?.daypart[0]?.dayOrNight[i] == "D") {
+                	day_idx.add(i)
+                    forecastStr = a.daypart[0].daypartName[i] + ": " + a.daypart[0].narrative[i] + " "
+                    forecastStr += a.daypart[0].daypartName[i+1] + ": " + a.daypart[0].narrative[i+1]
+                    forecastLong.add(forecastStr)
+                }
+            }
+           
+            log.debug "day_idx:${day_idx.size()}"
+            
+            alertMsg = alertMsg.replaceAll("\n", "")
+            def sun_idx = 0
+            def moon_idx = []
+			
+//            log.debug "a.moonriseTimeLocal: ${a.moonriseTimeLocal}\na.moonsetTimeLocal: ${a.moonsetTimeLocal}"
+            def x = 0
+            for (i = 0; i < a.moonriseTimeLocal.size(); i++) {
+            	if (a?.moonriseTimeLocal[i] ) {
+                	if (a?.moonsetTimeLocal[x]) {
+                    	while (a.moonriseTimeLocal[i] > a.moonsetTimeLocal[x] && x < a.moonsetTimeLocal.size()) {
+                        	x++
+                        }
+                        moon_idx << [moonrise:a.moonriseTimeLocal[i], moonset:a.moonsetTimeLocal[x]]
+//                        log.debug "moon_idx: ${moon_idx}"
+                    }
+                }
+                x++
+            }
+
+    def obs_json = "{'days':[{'day':'${a.daypart[0]?.daypartName[today_idx]}','temp':'${Math.round(obs.temperature)}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[0]}','feelLow':'${a.daypart[0].temperatureWindChill[0]}','high':'${a.temperatureMax[0] ? a.temperatureMax[0] : obs.temperatureMax24Hour}','low':'${obs.temperatureMin24Hour}','conditions':'${obs.wxPhraseLong}','forecast':'${a.daypart[0].wxPhraseLong[today_idx]}','forecastLong':'${forecastLong[0]}','humidity':'${obs.relativeHumidity}','precip':'${obs.precip24Hour}','chance':'${a.daypart[0].precipChance[today_idx]}','expectedPrecip':'${today_qpf}','wind':'${obs.windSpeed}','windPhrase':'${a?.daypart[0].windPhrase[today_idx]}','sunrise':'${obs.sunriseTimeLocal}','sunset':'${obs.sunsetTimeLocal}','moonphase':'${a.moonPhase[sun_idx]}','moonrise':'${device.currentValue("moonRiseDate")}','moonset':'${device.currentValue("moonSetDate")}','moonday':'${a.moonPhaseDay[sun_idx]}','alerts':'${alertMsg}','alertMsg':${alert_json}},"
+    obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[0]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[0]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[0]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[0]]}','high':'${a.daypart[0].temperature[day_idx[0]]}','low':'${a.daypart[0].temperature[day_idx[0]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[0]]}','forecastLong':'${forecastLong[1]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[0]]}','precip':'${a.daypart[0].qpf[day_idx[0]] + a.daypart[0].qpf[day_idx[0]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[0]]}','wind':'${a?.daypart[0].windSpeed[day_idx[0]]}','windPhrase':'${a?.daypart[0].windPhrase[day_idx[0]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+1]}','sunset':'${a?.sunsetTimeLocal[sun_idx+1]}','moonphase':'${a?.moonPhase[sun_idx+1]}','moonrise':'${moon_idx[0].moonrise}','moonset':'${moon_idx[0].moonset}','moonday':'${a.moonPhaseDay[sun_idx+1]}','alerts':'${alertMsg}'},"
+    obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[1]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[1]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[1]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[1]]}','high':'${a.daypart[0].temperature[day_idx[1]]}','low':'${a.daypart[0].temperature[day_idx[1]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[1]]}','forecastLong':'${forecastLong[2]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[1]]}','precip':'${a.daypart[0].qpf[day_idx[1]] + a.daypart[0].qpf[day_idx[1]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[1]]}','wind':'${a?.daypart[0].windSpeed[day_idx[1]]}','windPhrase':'${a?.daypart[0].windPhrase[day_idx[1]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+2]}','sunset':'${a?.sunsetTimeLocal[sun_idx+2]}','moonphase':'${a?.moonPhase[sun_idx+2]}','moonrise':'${moon_idx[1].moonrise}','moonset':'${moon_idx[1].moonset}','moonday':'${a.moonPhaseDay[sun_idx+2]}','alerts':'${alertMsg}'},"
+    obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[2]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[2]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[2]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[2]]}','high':'${a.daypart[0].temperature[day_idx[2]]}','low':'${a.daypart[0].temperature[day_idx[2]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[2]]}','forecastLong':'${forecastLong[3]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[2]]}','precip':'${a.daypart[0].qpf[day_idx[2]] + a.daypart[0].qpf[day_idx[2]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[2]]}','wind':'${a?.daypart[0].windSpeed[day_idx[2]]}','windPhrase':'${a?.daypart[0].windPhrase[day_idx[2]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+3]}','sunset':'${a?.sunsetTimeLocal[sun_idx+3]}','moonphase':'${a?.moonPhase[sun_idx+3]}','moonrise':'${moon_idx[2].moonrise}','moonset':'${moon_idx[2].moonset}','moonday':'${a.moonPhaseDay[sun_idx+3]}','alerts':'${alertMsg}'},"
+    obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[3]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[3]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[3]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[3]]}','high':'${a.daypart[0].temperature[day_idx[3]]}','low':'${a.daypart[0].temperature[day_idx[3]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[3]]}','forecastLong':'${forecastLong[4]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[3]]}','precip':'${a.daypart[0].qpf[day_idx[3]] + a.daypart[0].qpf[day_idx[3]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[3]]}','wind':'${a?.daypart[0].windSpeed[day_idx[3]]}','windPhrase':'${a?.daypart[0].windPhrase[day_idx[3]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+4]}','sunset':'${a?.sunsetTimeLocal[sun_idx+4]}','moonphase':'${a?.moonPhase[sun_idx+4]}','moonrise':'${moon_idx[3].moonrise}','moonset':'${moon_idx[3].moonset}','moonday':'${a.moonPhaseDay[sun_idx+4]}','alerts':'${alertMsg}'},"
+    obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[4]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[4]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[4]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[4]]}','high':'${a.daypart[0].temperature[day_idx[4]]}','low':'${a.daypart[0].temperature[day_idx[4]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[4]]}','forecastLong':'${forecastLong[5]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[4]]}','precip':'${a.daypart[0].qpf[day_idx[4]] + a.daypart[0].qpf[day_idx[4]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[4]]}','wind':'${a?.daypart[0].windSpeed[day_idx[4]]}','windPhrase':'${a?.daypart[0].windPhrase[day_idx[4]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+5]}','sunset':'${a?.sunsetTimeLocal[sun_idx+5]}','moonphase':'${a?.moonPhase[sun_idx+5]}','moonrise':'${moon_idx[4].moonrise}','moonset':'${moon_idx[4].moonset}','moonday':'${a.moonPhaseDay[sun_idx+5]}','alerts':'${alertMsg}'}]}"
+    sendEvent(name:"observation_json", value: obs_json.encodeAsJSON())
+
+    log.debug "....updating observation_json: ${a.daypart[0].daypartName[day_idx[0]]}"
+}
+
 
 def twcPoll() {
 	log.debug "TWC: Executing 'poll', location: ${location.name}"
@@ -361,7 +480,7 @@ def twcPoll() {
 	def rep = getTwcConditions(zipCode)
     if (!rep) {
     	sendEvent(name: "message", value: msg + "TCW Conditions call failed...")
-        log.debug "TCW Conditions call failed..."
+        log.error "TCW Conditions call failed..."
 	    return
     }
     
@@ -383,7 +502,7 @@ def twcPoll() {
 //            def weatherIcon = obs.iconCodeExtend as String
             def weatherIcon = obs.iconCode as String
 
-			log.debug "wxIcon = ${weatherIcon}"
+//			log.debug "wxIcon = ${weatherIcon}"
             if (obs.dayOrNight == "N") {
             	weatherIcon += "N"
             }
@@ -414,7 +533,7 @@ def twcPoll() {
             send(name: "weather", value: obs.wxPhraseLong)
             send(name: "TWCwxIcon", value: weatherIcon, displayed: false)
             send(name: "wind", value: Math.round(obs.windSpeed) as String, unit: "MPH") // as String because of bug in determining state change of 0 numbers
-			log.debug "TWCwxIcon = ${device.currentValue("TWCwxIcon")}"
+//			log.debug "TWCwxIcon = ${device.currentValue("TWCwxIcon")}"
 
 			def strIcons = device.currentValue("TWCIcons") ? device.currentValue("TWCIcons") : ""
 //            if (strIcons) {
@@ -422,7 +541,7 @@ def twcPoll() {
                     strIcons += "[${weatherIcon} : ${obs.dayOrNight}-${obs.wxPhraseLong}]"
                     sendEvent(name: "TWCIcons", value: strIcons)
                 }
-            	log.debug "TWCIcons = ${device.currentValue("TWCIcons")}"
+//            	log.debug "TWCIcons = ${device.currentValue("TWCIcons")}"
 //            }
             
             send(name: "zipCode", value: zipCode)
@@ -470,7 +589,7 @@ def twcPoll() {
 //            log.debug "moonrise: ${a.moonriseTimeLocal}"
 //            log.debug "moonset: ${a.moonsetTimeLocal}"
 
-		log.debug "moonriseTimeLocal: ${a?.moonriseTimeLocal[1]}"
+//		log.debug "moonriseTimeLocal: ${a?.moonriseTimeLocal[1]}"
 		def moonphase1 = a.moonPhase[0]
             def moonphase2 = a.moonPhase[1]
             def localMoonPhase = moonphase1
@@ -485,7 +604,7 @@ def twcPoll() {
             else {
                 moonrise2 = a.moonriseTimeLocal[1]
             }
-            log.debug "moonrise1: $moonrise1 / moonrise2: $moonrise2"
+//            log.debug "moonrise1: $moonrise1 / moonrise2: $moonrise2"
             
             moonrise1 = moonrise1.replace("T", " ")
             moonrise1 = moonrise1.replace("-0500", "")
@@ -519,7 +638,7 @@ def twcPoll() {
             strDate = strDate.replace("T", " ")
             strDate = strDate.replace("-0500", "")
             strDate = strDate.replace("-0600", "")
-            log.debug "Next moonriseDate = $strDate"
+//            log.debug "Next moonriseDate = $strDate"
 //            log.debug "a = $a"
             def moonriseDate = Date.parse("yyyy-MM-dd HH:mm:ss", strDate)
             def moonsetDate = moonriseDate
@@ -531,7 +650,7 @@ def twcPoll() {
             def moonsetDate2 = "??"
             def curDateTime = new Date().format("yyyy-MM-dd'T'HH:mm:ss", location.timeZone)
             def curDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss", curDateTime)
-            log.debug "curDate: ${curDate} / lastMoonsetDate: ${lastMoonsetDate}"
+//            log.debug "curDate: ${curDate} / lastMoonsetDate: ${lastMoonsetDate}"
 
 			try {
 				moonriseDate1 = Date.parse("yyyy-MM-dd HH:mm:ss", moonrise1)
@@ -602,7 +721,7 @@ def twcPoll() {
             def lastMoonsetDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", device.currentValue("moonSetDate"))
             def lastMoonriseDate = Date.parse("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", device.currentValue("moonRiseDate"))
             
-			log.debug "*** moonsetDate = $moonsetDate / moonriseDate = $moonriseDate"
+//			log.debug "*** moonsetDate = $moonsetDate / moonriseDate = $moonriseDate"
 
                     send(name: "moonRiseDate", value: moonriseDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonrise Date")
                     send(name: "moonSetDate", value: moonsetDate.format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"), descriptionText: "Moonset Date")
@@ -643,9 +762,9 @@ def twcPoll() {
             def loc = getTwcLocation(zipCode)
             //log.debug "loc = ${loc}"
             def locLat = loc.location.latitude as String
-            log.debug "latitude = ${locLat}"
+//            log.debug "latitude = ${locLat}"
             def locLong = loc.location.longitude as String
-            log.debug "longitude = ${locLong}" 
+//            log.debug "longitude = ${locLong}" 
 
 
             def cityValue = "${loc.location.city}, ${loc.location.adminDistrictCode}"
@@ -673,12 +792,6 @@ def twcPoll() {
                 	log.debug "Duplicate alert found..."
                 }
             }
-/* Testing Alerts
-			if (alert_msg.size() == 0) {
-            	alert_msg << [alert:"[Wind Advisary]", start:"", end:"2020-05-03T08:00:00-0500"]
-            	alert_msg << [alert:"[Flood Warning]", start:"2020-05-01T08:00:00-0500", end:"2020-05-01T08:00:00-0500"]
-            }
-*/            
             alert_json = "["
             def al = 0
             def comma = ""
@@ -732,7 +845,7 @@ def twcPoll() {
             forecastLong.add(forecastStr)
             
             def day_idx = []
-            log.debug "dayOrNight size: ${a.daypart[0].dayOrNight.size()}"
+  //          log.debug "dayOrNight size: ${a.daypart[0].dayOrNight.size()}"
             for (i = today_idx + 1; i < a.daypart[0].dayOrNight.size(); i++) {
             	if (a?.daypart[0]?.dayOrNight[i] == "D") {
                 	day_idx.add(i)
@@ -752,11 +865,11 @@ def twcPoll() {
             def sun_idx = 0
             def moon_idx = []
 			
-            def x = 1
-            for (i = 1; i < a.moonriseTimeLocal.size(); i++) {
+            def x = 0
+            for (i = 0; i < a.moonriseTimeLocal.size(); i++) {
             	if (a?.moonriseTimeLocal[i] ) {
                 	if (a?.moonsetTimeLocal[x]) {
-                    	while (a.moonriseTimeLocal[i] > a.moonsetTimeLocal[x]) {
+                    	while (a.moonriseTimeLocal[i] > a.moonsetTimeLocal[x] && x < a.moonsetTimeLocal.size()) {
                         	x++
                         }
                         moon_idx << [moonrise:a.moonriseTimeLocal[i], moonset:a.moonsetTimeLocal[x]]
@@ -764,7 +877,7 @@ def twcPoll() {
                 }
                 x++
             }
-            log.debug "alert_json: ${alert_json}"
+//            log.debug "alert_json: ${alert_json}"
             def obs_json = "{'days':[{'day':'${a.daypart[0]?.daypartName[today_idx]}','temp':'${Math.round(obs.temperature)}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[0]}','feelLow':'${a.daypart[0].temperatureWindChill[0]}','high':'${a.temperatureMax[0] ? a.temperatureMax[0] : obs.temperatureMax24Hour}','low':'${obs.temperatureMin24Hour}','conditions':'${obs.wxPhraseLong}','forecast':'${a.daypart[0].wxPhraseLong[today_idx]}','forecastLong':'${forecastLong[0]}','humidity':'${obs.relativeHumidity}','precip':'${obs.precip24Hour}','chance':'${a.daypart[0].precipChance[today_idx]}','expectedPrecip':'${today_qpf}','wind':'${obs.windSpeed}','windPhrase':'${a?.daypart[0].windPhrase[today_idx]}','sunrise':'${obs.sunriseTimeLocal}','sunset':'${obs.sunsetTimeLocal}','moonphase':'${a.moonPhase[sun_idx]}','moonrise':'${device.currentValue("moonRiseDate")}','moonset':'${device.currentValue("moonSetDate")}','moonday':'${a.moonPhaseDay[sun_idx]}','alerts':'${alertMsg}','alertMsg':${alert_json}},"
             obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[0]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[0]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[0]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[0]]}','high':'${a.daypart[0].temperature[day_idx[0]]}','low':'${a.daypart[0].temperature[day_idx[0]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[0]]}','forecastLong':'${forecastLong[1]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[0]]}','precip':'${a.daypart[0].qpf[day_idx[0]] + a.daypart[0].qpf[day_idx[0]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[0]]}','wind':'${a?.daypart[0].windSpeed[day_idx[0]]}','windPhrase':'${a?.daypart[0].windPhrase[day_idx[0]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+1]}','sunset':'${a?.sunsetTimeLocal[sun_idx+1]}','moonphase':'${a?.moonPhase[sun_idx+1]}','moonrise':'${moon_idx[0].moonrise}','moonset':'${moon_idx[0].moonset}','moonday':'${a.moonPhaseDay[sun_idx+1]}','alerts':'${alertMsg}'},"
             obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[1]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[1]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[1]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[1]]}','high':'${a.daypart[0].temperature[day_idx[1]]}','low':'${a.daypart[0].temperature[day_idx[1]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[1]]}','forecastLong':'${forecastLong[2]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[1]]}','precip':'${a.daypart[0].qpf[day_idx[1]] + a.daypart[0].qpf[day_idx[1]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[1]]}','wind':'${a?.daypart[0].windSpeed[day_idx[1]]}','windPhrase':'${a?.daypart[0].windPhrase[day_idx[1]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+2]}','sunset':'${a?.sunsetTimeLocal[sun_idx+2]}','moonphase':'${a?.moonPhase[sun_idx+2]}','moonrise':'${moon_idx[1].moonrise}','moonset':'${moon_idx[1].moonset}','moonday':'${a.moonPhaseDay[sun_idx+2]}','alerts':'${alertMsg}'},"
@@ -773,7 +886,7 @@ def twcPoll() {
             obs_json += "{'day':'${a?.daypart[0]?.daypartName[day_idx[4]]}','temp':'${Math.round(a.daypart[0].temperature[day_idx[4]])}','feel':'${Math.round(obs.temperatureFeelsLike)}','feelHigh':'${a.daypart[0].temperatureHeatIndex[day_idx[4]]}','feelLow':'${a.daypart[0].temperatureWindChill[day_idx[4]]}','high':'${a.daypart[0].temperature[day_idx[4]]}','low':'${a.daypart[0].temperature[day_idx[4]-1]}','conditions':'${obs.wxPhraseLong}','forecast':'${a?.daypart[0].wxPhraseLong[day_idx[4]]}','forecastLong':'${forecastLong[5]}','humidity':'${a?.daypart[0].relativeHumidity[day_idx[4]]}','precip':'${a.daypart[0].qpf[day_idx[4]] + a.daypart[0].qpf[day_idx[4]+1]}','chance':'${a?.daypart[0].precipChance[day_idx[4]]}','wind':'${a?.daypart[0].windSpeed[day_idx[4]]}','windPhrase':'${a?.daypart[0].windPhrase[day_idx[4]]}','sunrise':'${a?.sunriseTimeLocal[sun_idx+5]}','sunset':'${a?.sunsetTimeLocal[sun_idx+5]}','moonphase':'${a?.moonPhase[sun_idx+5]}','moonrise':'${moon_idx[4].moonrise}','moonset':'${moon_idx[4].moonset}','moonday':'${a.moonPhaseDay[sun_idx+5]}','alerts':'${alertMsg}'}]}"
 			sendEvent(name:"observation_json", value: obs_json.encodeAsJSON())
 
-			log.debug "....updating observation_json: ${a.daypart[0].daypartName[day_idx[0]]}"
+			log.debug "....updating observation_json"
 
         }
         else {
@@ -1071,6 +1184,7 @@ def refresh() {
 	state.refreshCnt = state.refreshCnt ? state.refreshCnt + 1 : 1
     if (state.refreshCnt < 3) {
 		twcPoll()
+        //getWxData()
     }
     else {
     	log.debug "Need to reset data to start over..."
@@ -1102,41 +1216,6 @@ private pad(String s, size = 25) {
 	else {
 		return s
 	}
-}
-
-private get(feature) {
-//	log.debug "feature = ${feature}"
-//    log.debug "zipCode = ${zipCode} / pws = ${pws}"
-	def options = zipCode
-    def results = ""
-	if (feature == "conditions") { 
-    	if (pws && state.failCnt < 4) {
-        	def pwsString = pws
-        	if (!pws.contains("pws:")) {
-            	log.debug "pws missing 'pws:' prefix - Adding..."
-            	pwsString = "pws:${pws}"
-            }
-            log.debug "pwsString = ${pwsString}"
-        	options = pwsString
-        }
-        else {
-        	if (state.failCnt > 3) {
-                log.debug "failCnt > 3: ${state.failCnt}"
-                options = ""
-            }
-        }
-    }
-    log.debug "${feature} / ${options}"
-    if (state.failCnt < 1000) {
-    	log.debug "state.failCnt = ${state.failCnt}"
-	    results = getWeatherFeature(feature, options)
-    }
-    else {
-    	log.debug "Failed too many times.  Stopped calling"
-        results = ""
-    }
-//    log.debug "${feature}: ${results}"
-    return results
 }
 
 private localDate(timeZone) {
