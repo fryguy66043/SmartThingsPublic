@@ -435,16 +435,27 @@ def getWxData() {
             def sun_idx = 0
             def moon_idx = []
 			
-//            log.debug "a.moonriseTimeLocal: ${a.moonriseTimeLocal}\na.moonsetTimeLocal: ${a.moonsetTimeLocal}"
-            def x = 0
-            for (i = 0; i < a.moonriseTimeLocal.size(); i++) {
+            try {
+                log.debug "a.moonriseTimeLocal: ${a?.moonriseTimeLocal}"
+            }
+            catch (e) {
+            	log.debug "moonriseTimeLocal Fail"
+            }
+            try {
+	            log.debug "a.moonsetTimeLocal: ${a?.moonsetTimeLocal}"
+            }
+            catch (e) {
+            	log.debug "moonsetTimeLocal Fail"
+            }
+            def x = 1
+            for (i = 1; i < a.moonriseTimeLocal.size(); i++) {
             	if (a?.moonriseTimeLocal[i] ) {
                 	if (a?.moonsetTimeLocal[x]) {
                     	while (a.moonriseTimeLocal[i] > a.moonsetTimeLocal[x] && x < a.moonsetTimeLocal.size()) {
                         	x++
                         }
                         moon_idx << [moonrise:a.moonriseTimeLocal[i], moonset:a.moonsetTimeLocal[x]]
-//                        log.debug "moon_idx: ${moon_idx}"
+                        log.debug "moon_idx: ${moon_idx}"
                     }
                 }
                 x++
@@ -865,8 +876,8 @@ def twcPoll() {
             def sun_idx = 0
             def moon_idx = []
 			
-            def x = 0
-            for (i = 0; i < a.moonriseTimeLocal.size(); i++) {
+            def x = 1
+            for (i = 1; i < a.moonriseTimeLocal.size(); i++) {
             	if (a?.moonriseTimeLocal[i] ) {
                 	if (a?.moonsetTimeLocal[x]) {
                     	while (a.moonriseTimeLocal[i] > a.moonsetTimeLocal[x] && x < a.moonsetTimeLocal.size()) {
