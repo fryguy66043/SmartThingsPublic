@@ -835,7 +835,7 @@ def changeHandler(evt) {
         }
     }
 
-	if (evt.name == "switch") {
+	if (evt.name == "switch" || evt.name == "level") {
         fr_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
@@ -890,7 +890,7 @@ def changeHandler(evt) {
         }
     }
 
-	if (evt.name == "switch") {
+	if (evt.name == "switch" || evt.name == "level") {
         master_lights.each {dev ->
             if (dev.displayName == evt.displayName) {
                 cmd = "?device=switch&name=${sname}&value=${dev.currentSwitch}"
