@@ -412,6 +412,36 @@ def getSwitch() {
     return resp
 }
 
+def sendMessage() {
+	log.debug "sendMessage($params.command)"
+    def phoneNbr = ""
+    def msg = ""
+    def resp = "Failed"
+    def command = params.command
+    def cmd = command.split('&')
+//    log.debug "cmd: ${cmd}"
+    for (String value : cmd) {
+        if (value.contains("phone")) {
+            def nCmd = [] 
+            nCmd = value.split('=')
+//            log.debug "sName = ${nCmd[1]}"
+            phoneNbr = nCmd[1].trim()
+        }
+        else if (value.contains("msg")) {
+        	def nCmd = []
+            nCmd = value.split('=')
+//            log.debug "sLevel = ${nCmd[1]}"
+            msg = nCmd[1].trim()
+        }
+    }
+    if (phoneNbr && msg) {
+    	resp = "Message Sent!"
+    	sendSms(phoneNbr, msg)
+    }
+    
+    return resp
+}
+
 def setSwitch() {
 	log.debug "setSwitch($params.command)"
 	def switches = [garage_lights, lr_lights, kitchen_lights, outside_lights, basement_lights, fr_lights, master_lights, mb_lights, br1_lights, br2_lights, br3_lights]
